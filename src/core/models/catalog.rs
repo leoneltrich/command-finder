@@ -1,5 +1,5 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CommandCatalog {
+pub struct ToolCatalog {
     pub tool_name: String,
     pub description: String,
     pub keywords: Vec<String>,
