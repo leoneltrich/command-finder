@@ -4,6 +4,7 @@ mod adapters;
 
 use std::env;
 use crate::adapters::cli_controller::CliController;
+use crate::adapters::persistence::PersistenceAdapter;
 use crate::core::query_orchestrator::QueryOrchestrator;
 use crate::core::models::EndUserConfig;
 use crate::core::errors::AppError;
@@ -11,13 +12,16 @@ use crate::core::errors::AppError;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    // 1. Instantiate the Core Orchestrator (implements UserCommandPort)
-    let query_orchestrator = QueryOrchestrator::new();
+    // 1. Instantiate the Storage/Persistence Adapter (outbound StoragePort implementation)
+    let storage = PersistenceAdapter::new();
 
-    // 2. Instantiate the CLI Controller adapter
+    // 2. Instantiate the Core Orchestrator with the storage port injected
+    let query_orchestrator = QueryOrchestrator::new(storage);
+
+    // 3. Instantiate the CLI Controller adapter wrapping the orchestrator
     let controller = CliController::new(query_orchestrator);
 
-    // 3. Routing commands manually (lightweight parsing)
+    // 4. Routing commands manually (lightweight parsing)
     if args.len() < 2 {
         print_help();
         return;
@@ -57,7 +61,8 @@ fn main() {
             let payload = &args[3];
             let auth_key = env::var("AUTH_KEY").unwrap_or_else(|_| "dummy_auth_key".to_string());
 
-            let catalog_manager = crate::core::catalog_lifecycle_manager::CatalogLifecycleManager::new();
+            // Instantiate CatalogLifecycleManager with the storage port injected
+            let catalog_manager = crate::core::catalog_lifecycle_manager::CatalogLifecycleManager::new(storage);
             let ingestion_api = crate::adapters::ingestion_api::IngestionApi::new(catalog_manager);
 
             match action.as_str() {

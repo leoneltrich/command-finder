@@ -3,6 +3,7 @@ use crate::core::errors::AppError;
 use crate::core::models::{ToolCatalog, CatalogMaintainer, EndUserConfig};
 
 /// Persistence adapter implementing the outbound StoragePort.
+#[derive(Clone, Copy)]
 pub struct PersistenceAdapter;
 
 impl PersistenceAdapter {

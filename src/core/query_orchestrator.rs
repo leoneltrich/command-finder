@@ -1,36 +1,30 @@
 use crate::ports::inbound::user_command::UserCommandPort;
+use crate::ports::outbound::storage::StoragePort;
 use crate::core::errors::AppError;
 use crate::core::models::EndUserConfig;
 
-/// Dummy implementation of the Query Orchestrator.
-/// Implements the UserCommandPort interface.
-pub struct QueryOrchestrator;
+/// Core interactor responsible for query resolution and user configuration.
+pub struct QueryOrchestrator<S: StoragePort> {
+    storage_port: S,
+}
 
-impl QueryOrchestrator {
+impl<S: StoragePort> QueryOrchestrator<S> {
     /// Creates a new instance of the QueryOrchestrator.
-    pub fn new() -> Self {
-        Self
+    pub fn new(storage_port: S) -> Self {
+        Self { storage_port }
     }
 }
 
-impl Default for QueryOrchestrator {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl UserCommandPort for QueryOrchestrator {
+impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
     fn resolve_query(&self, raw_query: &str) -> Result<String, AppError> {
         Ok(format!("dummy_command_resolved_for: {}", raw_query))
     }
 
-    fn update_configuration(&self, _config: &EndUserConfig) -> Result<bool, AppError> {
-        Ok(true)
+    fn update_configuration(&self, config: &EndUserConfig) -> Result<bool, AppError> {
+        self.storage_port.save_configuration(config)
     }
 
     fn read_configuration(&self) -> Result<EndUserConfig, AppError> {
-        Ok(EndUserConfig {
-            logging_opt_in: false,
-        })
+        self.storage_port.load_configuration()
     }
 }
