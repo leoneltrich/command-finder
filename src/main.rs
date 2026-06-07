@@ -47,6 +47,71 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "catalog" => {
+            if args.len() < 4 {
+                eprintln!("Error: Missing action or payload.");
+                eprintln!("Usage: local-assistant catalog <add|update|delete> <payload>");
+                std::process::exit(1);
+            }
+            let action = &args[2];
+            let payload = &args[3];
+            let auth_key = env::var("AUTH_KEY").unwrap_or_else(|_| "dummy_auth_key".to_string());
+
+            let catalog_manager = crate::core::catalog_lifecycle_manager::CatalogLifecycleManager::new();
+            let ingestion_api = crate::adapters::ingestion_api::IngestionApi::new(catalog_manager);
+
+            match action.as_str() {
+                "add" => {
+                    match serde_json::from_str::<crate::core::models::ToolCatalog>(payload) {
+                        Ok(catalog) => {
+                            match ingestion_api.ingest(&catalog, &auth_key) {
+                                Ok(_) => println!("Catalog successfully added."),
+                                Err(err) => {
+                                    eprintln!("Error adding catalog: {}", err);
+                                    std::process::exit(1);
+                                }
+                            }
+                        }
+                        Err(err) => {
+                            eprintln!("Error parsing JSON catalog: {}", err);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                "update" => {
+                    match serde_json::from_str::<crate::core::models::ToolCatalog>(payload) {
+                        Ok(catalog) => {
+                            match ingestion_api.update(&catalog, &auth_key) {
+                                Ok(_) => println!("Catalog successfully updated."),
+                                Err(err) => {
+                                    eprintln!("Error updating catalog: {}", err);
+                                    std::process::exit(1);
+                                }
+                            }
+                        }
+                        Err(err) => {
+                            eprintln!("Error parsing JSON catalog: {}", err);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                "delete" => {
+                    // For delete, payload is the catalog ID (tool name)
+                    match ingestion_api.delete(payload, &auth_key) {
+                        Ok(_) => println!("Catalog successfully deleted."),
+                        Err(err) => {
+                            eprintln!("Error deleting catalog: {}", err);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                _ => {
+                    eprintln!("Error: Unknown catalog action '{}'.", action);
+                    print_help();
+                    std::process::exit(1);
+                }
+            }
+        }
         _ => {
             eprintln!("Error: Unknown command '{}'.", args[1]);
             print_help();
@@ -58,8 +123,9 @@ fn main() {
 fn print_help() {
     println!("local-assistant - Natural Language Command Option Retrieval");
     println!("\nUsage:");
-    println!("  local-assistant query \"<text>\"  Resolve natural language query");
-    println!("  local-assistant config          Manage user configuration interactively");
+    println!("  local-assistant query \"<text>\"                         Resolve natural language query");
+    println!("  local-assistant config                                 Manage user configuration interactively");
+    println!("  local-assistant catalog <add|update|delete> <payload>  Manage tool catalogs");
 }
 
 fn handle_config_flow<P>(controller: &CliController<P>) -> Result<(), AppError>
