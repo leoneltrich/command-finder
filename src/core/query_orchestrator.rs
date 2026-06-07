@@ -4,12 +4,14 @@ use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
 use crate::core::models::EndUserConfig;
 use crate::core::syntactical_validator::SyntacticalValidator;
+use crate::core::similarity_rank_aggregator::SimilarityRankAggregator;
 
 /// Core interactor responsible for query resolution and user configuration.
 pub struct QueryOrchestrator<S: StoragePort> {
     storage_port: S,
     matching_engines: Vec<Box<dyn MatchingStrategyPort>>,
     validator: SyntacticalValidator,
+    rank_aggregator: SimilarityRankAggregator,
 }
 
 impl<S: StoragePort> QueryOrchestrator<S> {
@@ -19,6 +21,7 @@ impl<S: StoragePort> QueryOrchestrator<S> {
             storage_port,
             matching_engines,
             validator: SyntacticalValidator::new(),
+            rank_aggregator: SimilarityRankAggregator::new(),
         }
     }
 }
@@ -39,16 +42,18 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
             all_engine_results.push(similarities);
         }
 
-        // Log receipt of the matching results
-        println!("[QueryOrchestrator] Received matching results from {} engines.", all_engine_results.len());
-        for (i, results) in all_engine_results.iter().enumerate() {
-            if let Some(first_group) = results.first() {
-                if let Some(candidate) = first_group.first() {
-                    println!(
-                        "  Engine {} matched candidate option base '{}' (score: {})",
-                        i, candidate.option.base, candidate.score
-                    );
-                }
+        // 3. Aggregate all results via the SimilarityRankAggregator
+        let aggregated_results = self.rank_aggregator.aggregate(&all_engine_results)?;
+
+        // Log the aggregated candidate base commands
+        println!("[QueryOrchestrator] Aggregation finished. Top candidates resolved:");
+        for (i, group) in aggregated_results.iter().enumerate() {
+            println!("  Group {}:", i);
+            for candidate in group {
+                println!(
+                    "    - Candidate option base '{}' (score: {})",
+                    candidate.option.base, candidate.score
+                );
             }
         }
 
