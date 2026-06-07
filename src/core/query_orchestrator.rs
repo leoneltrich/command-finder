@@ -1,5 +1,6 @@
 use crate::ports::inbound::user_command::UserCommandPort;
 use crate::ports::outbound::storage::StoragePort;
+use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
 use crate::core::models::EndUserConfig;
 use crate::core::syntactical_validator::SyntacticalValidator;
@@ -7,14 +8,16 @@ use crate::core::syntactical_validator::SyntacticalValidator;
 /// Core interactor responsible for query resolution and user configuration.
 pub struct QueryOrchestrator<S: StoragePort> {
     storage_port: S,
+    matching_engines: Vec<Box<dyn MatchingStrategyPort>>,
     validator: SyntacticalValidator,
 }
 
 impl<S: StoragePort> QueryOrchestrator<S> {
     /// Creates a new instance of the QueryOrchestrator.
-    pub fn new(storage_port: S) -> Self {
+    pub fn new(storage_port: S, matching_engines: Vec<Box<dyn MatchingStrategyPort>>) -> Self {
         Self {
             storage_port,
+            matching_engines,
             validator: SyntacticalValidator::new(),
         }
     }
@@ -22,6 +25,33 @@ impl<S: StoragePort> QueryOrchestrator<S> {
 
 impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
     fn resolve_query(&self, raw_query: &str) -> Result<String, AppError> {
+        // 1. Construct UserQuery object
+        let user_query = crate::core::models::UserQuery {
+            query: raw_query.to_string(),
+            n_grams: None,
+        };
+
+        // 2. Load engines and calculate similarities
+        let mut all_engine_results = Vec::new();
+        for engine in &self.matching_engines {
+            engine.load_engines()?;
+            let similarities = engine.calculate_similarities(&user_query)?;
+            all_engine_results.push(similarities);
+        }
+
+        // Log receipt of the matching results
+        println!("[QueryOrchestrator] Received matching results from {} engines.", all_engine_results.len());
+        for (i, results) in all_engine_results.iter().enumerate() {
+            if let Some(first_group) = results.first() {
+                if let Some(candidate) = first_group.first() {
+                    println!(
+                        "  Engine {} matched candidate option base '{}' (score: {})",
+                        i, candidate.option.base, candidate.score
+                    );
+                }
+            }
+        }
+
         // Fetch default catalog definitions from storage
         let catalog = self.storage_port.fetch_catalog("ls")?;
 

@@ -15,13 +15,22 @@ fn main() {
     // 1. Instantiate the Storage/Persistence Adapter (outbound StoragePort implementation)
     let storage = PersistenceAdapter::new();
 
-    // 2. Instantiate the Core Orchestrator with the storage port injected
-    let query_orchestrator = QueryOrchestrator::new(storage);
+    // 2. Instantiate concrete matching engines
+    let keyword_engine = crate::adapters::matching::keyword::KeywordMatchingEngine::new();
+    let embedding_engine = crate::adapters::matching::embedding::EmbeddingMatchingEngine::new();
 
-    // 3. Instantiate the CLI Controller adapter wrapping the orchestrator
+    let matching_engines: Vec<Box<dyn crate::ports::outbound::matching_strategy::MatchingStrategyPort>> = vec![
+        Box::new(keyword_engine),
+        Box::new(embedding_engine),
+    ];
+
+    // 3. Instantiate the Core Orchestrator with the storage and matching engines injected
+    let query_orchestrator = QueryOrchestrator::new(storage, matching_engines);
+
+    // 4. Instantiate the CLI Controller adapter wrapping the orchestrator
     let controller = CliController::new(query_orchestrator);
 
-    // 4. Routing commands manually (lightweight parsing)
+    // 5. Routing commands manually (lightweight parsing)
     if args.len() < 2 {
         print_help();
         return;
