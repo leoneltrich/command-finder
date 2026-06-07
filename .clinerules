@@ -1,0 +1,6 @@
+# Global Coding Rules
+
+## Rule 1: No Unsolicited Implementation
+- **Strict Limitation**: You are forbidden from implementing even a single line of code more than what you are explicitly instructed to do.
+- **No Proactive Implementations**: Do not proactively create, stub out, or implement extra ports, adapters, structs, methods, helper functions, files, or any other code/logic that has not been explicitly requested by the user.
+- **Strict Adherence**: Strictly restrict all edits and creations to the precise instructions given in the user's prompt.
