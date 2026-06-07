@@ -12,7 +12,7 @@ pub struct ToolCatalog {
 pub struct CommandOption {
     pub intent: String,
     pub keywords: Vec<String>,
-    pub base: String,
+    pub option: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

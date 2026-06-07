@@ -52,7 +52,7 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
             for candidate in group {
                 println!(
                     "    - Candidate option base '{}' (score: {})",
-                    candidate.option.base, candidate.score
+                    candidate.option.option, candidate.score
                 );
             }
         }

@@ -29,7 +29,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             option: CommandOption {
                 intent: format!("Embedding match result for: {}", query.query),
                 keywords: vec!["embedding".to_string()],
-                base: "-la".to_string(),
+                option: "-la".to_string(),
             },
             score: 0.95,
         }]])

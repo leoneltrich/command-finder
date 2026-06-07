@@ -29,7 +29,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
             option: CommandOption {
                 intent: format!("Keyword match result for: {}", query.query),
                 keywords: vec!["keyword".to_string()],
-                base: "-la".to_string(),
+                option: "-la".to_string(),
             },
             score: 0.85,
         }]])
