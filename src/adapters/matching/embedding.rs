@@ -104,7 +104,28 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             data_type: "BLOB".to_string(),
         });
 
-        let options = catalog.options.iter().map(OptimizedCommandOption::from).collect();
+        let mut options = Vec::new();
+        for opt in &catalog.options {
+            let processed_opt_text = format!(
+                "title: {} {} | text: {} Keywords: {}",
+                catalog.tool_name, opt.option_name, opt.description, opt.keywords
+            );
+            let opt_raw_emb = compute_embedding(&model, &mut ctx, &processed_opt_text)?;
+            let opt_normalized_emb = l2_normalize(opt_raw_emb);
+            let opt_data_bytes = serialize_embedding(&opt_normalized_emb);
+
+            options.push(OptimizedCommandOption {
+                option_name: opt.option_name.clone(),
+                description: opt.description.clone(),
+                user_friendly_description: opt.user_friendly_description.clone(),
+                keywords: opt.keywords.clone(),
+                optimized_data: Some(OptimizedData {
+                    key: "gemma_embedding".to_string(),
+                    data: opt_data_bytes,
+                    data_type: "BLOB".to_string(),
+                }),
+            });
+        }
 
         Ok(OptimizedToolCatalog {
             tool_name: catalog.tool_name.clone(),
@@ -208,7 +229,14 @@ mod tests {
             user_friendly_description: "search".to_string(),
             keywords: "find search grep".to_string(),
             version: "1.0".to_string(),
-            options: vec![],
+            options: vec![
+                CommandOption {
+                    option_name: "--recursive".to_string(),
+                    description: "Search subdirectories recursively".to_string(),
+                    user_friendly_description: "recursive search".to_string(),
+                    keywords: "recursive subdirectories all depth".to_string(),
+                }
+            ],
             rules: CommandRules(serde_json::json!({})),
         };
 
@@ -237,6 +265,27 @@ mod tests {
             }
             let norm = sum_sq.sqrt();
             assert!((norm - 1.0).abs() < 1e-4);
+
+            // Assert option embedding was generated & L2 normalized
+            assert_eq!(optimized.options.len(), 1);
+            let opt_opt = &optimized.options[0];
+            let opt_opt_data = opt_opt.optimized_data.as_ref().unwrap();
+            assert_eq!(opt_opt_data.key, "gemma_embedding");
+            assert_eq!(opt_opt_data.data_type, "BLOB");
+            assert!(!opt_opt_data.data.is_empty());
+            assert_eq!(opt_opt_data.data.len() % 4, 0);
+
+            let mut opt_floats = Vec::new();
+            for chunk in opt_opt_data.data.chunks_exact(4) {
+                let arr: [u8; 4] = chunk.try_into().unwrap();
+                opt_floats.push(f32::from_le_bytes(arr));
+            }
+            let mut opt_sum_sq = 0.0;
+            for &f in &opt_floats {
+                opt_sum_sq += f * f;
+            }
+            let opt_norm = opt_sum_sq.sqrt();
+            assert!((opt_norm - 1.0).abs() < 1e-4);
         } else {
             assert!(result.is_err());
         }
