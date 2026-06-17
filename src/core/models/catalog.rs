@@ -21,3 +21,26 @@ pub struct CommandOption {
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct CommandRules(pub serde_json::Value);
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptimizedToolCatalog {
+    pub tool_name: String,
+    pub description: String,
+    pub user_friendly_description: String,
+    pub keywords: String,
+    pub version: String,
+    pub options: Vec<OptimizedCommandOption>,
+    pub rules: CommandRules,
+    pub optimized_data: Option<Vec<u8>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptimizedCommandOption {
+    pub option_name: String,
+    pub description: String,
+    pub user_friendly_description: String,
+    pub keywords: String,
+    pub optimized_data: Option<Vec<u8>>,
+}
