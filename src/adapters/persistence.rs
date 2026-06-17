@@ -1,6 +1,6 @@
 use crate::ports::outbound::storage::StoragePort;
 use crate::core::errors::AppError;
-use crate::core::models::{ToolCatalog, CatalogMaintainer, EndUserConfig, OptimizedToolCatalog, OptimizedCommandOption, OptimizedData};
+use crate::core::models::{ToolCatalog, CatalogMaintainer, EndUserConfig, OptimizedToolCatalog, OptimizedCommandOption, OptimizedData, CommandRules};
 
 /// Persistence adapter implementing the outbound StoragePort using a normalized SQLite schema with embedding columns.
 #[derive(Clone, Copy)]
@@ -103,7 +103,8 @@ impl Default for PersistenceAdapter {
     }
 }
 
-// Helper functions for dynamic custom column schema updates
+// --- Dynamic Columns & Schema Helpers ---
+
 fn column_exists(conn: &rusqlite::Connection, table_name: &str, column_name: &str) -> bool {
     if let Ok(mut stmt) = conn.prepare(&format!("PRAGMA table_info({});", table_name)) {
         if let Ok(mut rows) = stmt.query([]) {
@@ -165,6 +166,113 @@ fn extract_optimized_data(row: &rusqlite::Row, col_names: &[&str], standard_cols
     None
 }
 
+// Ensures custom dynamic columns exist for both parent catalog and child options
+fn ensure_custom_columns_exist(conn: &rusqlite::Connection, catalog: &OptimizedToolCatalog) -> Result<(), AppError> {
+    if let Some(ref opt_data) = catalog.optimized_data {
+        add_column_if_not_exists(conn, "tool_catalogs", &opt_data.key, &opt_data.data_type)?;
+    }
+    for option in &catalog.options {
+        if let Some(ref opt_data) = option.optimized_data {
+            add_column_if_not_exists(conn, "command_options", &opt_data.key, &opt_data.data_type)?;
+        }
+    }
+    Ok(())
+}
+
+// --- Dynamic Query Execution Helpers ---
+
+// Helper to insert command options of an optimized catalog
+fn insert_catalog_options(conn: &rusqlite::Connection, catalog: &OptimizedToolCatalog) -> Result<(), AppError> {
+    for option in &catalog.options {
+        let (option_sql, option_params) = if let Some(ref opt_data) = option.optimized_data {
+            let sql = format!(
+                "INSERT INTO command_options (tool_name, option_name, description, user_friendly_description, keywords, {}) VALUES (?, ?, ?, ?, ?, ?)",
+                opt_data.key
+            );
+            (sql, rusqlite::params![
+                catalog.tool_name,
+                option.option_name,
+                option.description,
+                option.user_friendly_description,
+                option.keywords,
+                opt_data.data
+            ])
+        } else {
+            let sql = "INSERT INTO command_options (tool_name, option_name, description, user_friendly_description, keywords) VALUES (?, ?, ?, ?, ?)".to_string();
+            (sql, rusqlite::params![
+                catalog.tool_name,
+                option.option_name,
+                option.description,
+                option.user_friendly_description,
+                option.keywords
+            ])
+        };
+
+        conn.execute(&option_sql, option_params).map_err(|e| AppError::Storage(e.to_string()))?;
+    }
+    Ok(())
+}
+
+// Helper to fetch options of a tool
+fn fetch_catalog_options(conn: &rusqlite::Connection, tool_name: &str) -> Result<Vec<OptimizedCommandOption>, AppError> {
+    let mut options_stmt = conn.prepare(
+        "SELECT * FROM command_options WHERE tool_name = ?"
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    let opt_col_names: Vec<String> = options_stmt.column_names().iter().map(|s| s.to_string()).collect();
+    let opt_col_names_refs: Vec<&str> = opt_col_names.iter().map(|s| s.as_str()).collect();
+
+    let mut rows = options_stmt.query(rusqlite::params![tool_name])
+        .map_err(|e| AppError::Storage(e.to_string()))?;
+
+    let mut options = Vec::new();
+    while let Some(option_row) = rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
+        let option_name: String = option_row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
+        let description: String = option_row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
+        let user_friendly_description: String = option_row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
+        let keywords: String = option_row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        let opt_optimized_data = extract_optimized_data(option_row, &opt_col_names_refs, STANDARD_OPTION_COLS);
+
+        options.push(OptimizedCommandOption {
+            option_name,
+            description,
+            user_friendly_description,
+            keywords,
+            optimized_data: opt_optimized_data,
+        });
+    }
+    Ok(options)
+}
+
+// Helper to map a database row to an OptimizedToolCatalog
+fn map_row_to_catalog(row: &rusqlite::Row, col_names: &[&str], options: Vec<OptimizedCommandOption>) -> Result<OptimizedToolCatalog, AppError> {
+    let tool_name: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
+    let description: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
+    let user_friendly_description: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
+    let version: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
+    let rules_json: String = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
+    let keywords: String = row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    let rules: CommandRules = serde_json::from_str(&rules_json)
+        .map_err(|e| AppError::Storage(e.to_string()))?;
+
+    let optimized_data = extract_optimized_data(row, col_names, STANDARD_TOOL_COLS);
+
+    Ok(OptimizedToolCatalog {
+        tool_name,
+        description,
+        user_friendly_description,
+        keywords,
+        version,
+        options,
+        rules,
+        optimized_data,
+    })
+}
+
+// --- StoragePort Implementation ---
+
 impl StoragePort for PersistenceAdapter {
     // --- Catalog Management ---
     fn save_catalog(&self, catalog: &OptimizedToolCatalog) -> Result<bool, AppError> {
@@ -189,20 +297,11 @@ impl StoragePort for PersistenceAdapter {
             }
         }
 
+        // Schema verification & Custom column creation
+        ensure_custom_columns_exist(&tx, catalog)?;
+
         let rules_json = serde_json::to_string(&catalog.rules)
             .map_err(|e| AppError::Storage(e.to_string()))?;
-
-        // Ensure custom dynamic column for tool is added if present
-        if let Some(ref opt_data) = catalog.optimized_data {
-            add_column_if_not_exists(&tx, "tool_catalogs", &opt_data.key, &opt_data.data_type)?;
-        }
-
-        // Ensure custom dynamic columns for options are added if present
-        for option in &catalog.options {
-            if let Some(ref opt_data) = option.optimized_data {
-                add_column_if_not_exists(&tx, "command_options", &opt_data.key, &opt_data.data_type)?;
-            }
-        }
 
         // 1. Insert parent tool catalog
         let (insert_sql, params) = if let Some(ref opt_data) = catalog.optimized_data {
@@ -234,33 +333,7 @@ impl StoragePort for PersistenceAdapter {
         tx.execute(&insert_sql, params).map_err(|e| AppError::Storage(e.to_string()))?;
 
         // 2. Insert children options
-        for option in &catalog.options {
-            let (option_sql, option_params) = if let Some(ref opt_data) = option.optimized_data {
-                let sql = format!(
-                    "INSERT INTO command_options (tool_name, option_name, description, user_friendly_description, keywords, {}) VALUES (?, ?, ?, ?, ?, ?)",
-                    opt_data.key
-                );
-                (sql, rusqlite::params![
-                    catalog.tool_name,
-                    option.option_name,
-                    option.description,
-                    option.user_friendly_description,
-                    option.keywords,
-                    opt_data.data
-                ])
-            } else {
-                let sql = "INSERT INTO command_options (tool_name, option_name, description, user_friendly_description, keywords) VALUES (?, ?, ?, ?, ?)".to_string();
-                (sql, rusqlite::params![
-                    catalog.tool_name,
-                    option.option_name,
-                    option.description,
-                    option.user_friendly_description,
-                    option.keywords
-                ])
-            };
-
-            tx.execute(&option_sql, option_params).map_err(|e| AppError::Storage(e.to_string()))?;
-        }
+        insert_catalog_options(&tx, catalog)?;
 
         tx.commit().map_err(|e| AppError::Storage(e.to_string()))?;
         Ok(true)
@@ -270,20 +343,11 @@ impl StoragePort for PersistenceAdapter {
         let mut conn = self.connect()?;
         let tx = conn.transaction().map_err(|e| AppError::Storage(e.to_string()))?;
 
+        // Schema verification & Custom column creation
+        ensure_custom_columns_exist(&tx, catalog)?;
+
         let rules_json = serde_json::to_string(&catalog.rules)
             .map_err(|e| AppError::Storage(e.to_string()))?;
-
-        // Ensure custom dynamic column for tool is added if present
-        if let Some(ref opt_data) = catalog.optimized_data {
-            add_column_if_not_exists(&tx, "tool_catalogs", &opt_data.key, &opt_data.data_type)?;
-        }
-
-        // Ensure custom dynamic columns for options are added if present
-        for option in &catalog.options {
-            if let Some(ref opt_data) = option.optimized_data {
-                add_column_if_not_exists(&tx, "command_options", &opt_data.key, &opt_data.data_type)?;
-            }
-        }
 
         // 1. Update parent tool catalog info
         let (update_sql, params) = if let Some(ref opt_data) = catalog.optimized_data {
@@ -330,33 +394,7 @@ impl StoragePort for PersistenceAdapter {
         ).map_err(|e| AppError::Storage(e.to_string()))?;
 
         // 3. Re-insert updated child options
-        for option in &catalog.options {
-            let (option_sql, option_params) = if let Some(ref opt_data) = option.optimized_data {
-                let sql = format!(
-                    "INSERT INTO command_options (tool_name, option_name, description, user_friendly_description, keywords, {}) VALUES (?, ?, ?, ?, ?, ?)",
-                    opt_data.key
-                );
-                (sql, rusqlite::params![
-                    catalog.tool_name,
-                    option.option_name,
-                    option.description,
-                    option.user_friendly_description,
-                    option.keywords,
-                    opt_data.data
-                ])
-            } else {
-                let sql = "INSERT INTO command_options (tool_name, option_name, description, user_friendly_description, keywords) VALUES (?, ?, ?, ?, ?)".to_string();
-                (sql, rusqlite::params![
-                    catalog.tool_name,
-                    option.option_name,
-                    option.description,
-                    option.user_friendly_description,
-                    option.keywords
-                ])
-            };
-
-            tx.execute(&option_sql, option_params).map_err(|e| AppError::Storage(e.to_string()))?;
-        }
+        insert_catalog_options(&tx, catalog)?;
 
         tx.commit().map_err(|e| AppError::Storage(e.to_string()))?;
         Ok(true)
@@ -384,7 +422,7 @@ impl StoragePort for PersistenceAdapter {
     fn fetch_catalog(&self, tool_name: &str) -> Result<OptimizedToolCatalog, AppError> {
         let conn = self.connect()?;
         
-        // 1. Fetch parent tool catalog info
+        // Fetch parent tool catalog info
         let mut parent_stmt = conn.prepare(
             "SELECT * FROM tool_catalogs WHERE tool_name = ?"
         ).map_err(|e| AppError::Storage(e.to_string()))?;
@@ -396,59 +434,9 @@ impl StoragePort for PersistenceAdapter {
             .map_err(|e| AppError::Storage(e.to_string()))?;
 
         if let Some(row) = parent_rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
-            let tool_name: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
-            let description: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
-            let user_friendly_description: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
-            let version: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
-            let rules_json: String = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
-            let keywords: String = row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
-
-            let rules: crate::core::models::CommandRules = serde_json::from_str(&rules_json)
-                .map_err(|e| AppError::Storage(e.to_string()))?;
-
-            // Extract dynamic custom optimized data
-            let optimized_data = extract_optimized_data(row, &col_names_refs, STANDARD_TOOL_COLS);
-
-            // 2. Fetch children options
-            let mut options_stmt = conn.prepare(
-                "SELECT * FROM command_options WHERE tool_name = ?"
-            ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-            let opt_col_names: Vec<String> = options_stmt.column_names().iter().map(|s| s.to_string()).collect();
-            let opt_col_names_refs: Vec<&str> = opt_col_names.iter().map(|s| s.as_str()).collect();
-
-            // Prepare dynamic column inspection mapping
-            let mut rows = options_stmt.query(rusqlite::params![tool_name])
-                .map_err(|e| AppError::Storage(e.to_string()))?;
-
-            let mut options = Vec::new();
-            while let Some(option_row) = rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
-                let option_name: String = option_row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
-                let description: String = option_row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
-                let user_friendly_description: String = option_row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
-                let keywords: String = option_row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
-
-                let opt_optimized_data = extract_optimized_data(option_row, &opt_col_names_refs, STANDARD_OPTION_COLS);
-
-                options.push(OptimizedCommandOption {
-                    option_name,
-                    description,
-                    user_friendly_description,
-                    keywords,
-                    optimized_data: opt_optimized_data,
-                });
-            }
-
-            Ok(OptimizedToolCatalog {
-                tool_name,
-                description,
-                user_friendly_description,
-                keywords,
-                version,
-                options,
-                rules,
-                optimized_data,
-            })
+            // Fetch children options
+            let options = fetch_catalog_options(&conn, tool_name)?;
+            map_row_to_catalog(row, &col_names_refs, options)
         } else {
             Err(AppError::CatalogNotFound(
                 crate::core::errors::CatalogNotFoundException::new(format!(
@@ -473,56 +461,8 @@ impl StoragePort for PersistenceAdapter {
         let mut catalogs = Vec::new();
         while let Some(row) = parent_rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
             let tool_name: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
-            let description: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
-            let user_friendly_description: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
-            let version: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
-            let rules_json: String = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
-            let keywords: String = row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
-
-            let rules: crate::core::models::CommandRules = serde_json::from_str(&rules_json)
-                .map_err(|e| AppError::Storage(e.to_string()))?;
-
-            let optimized_data = extract_optimized_data(row, &col_names_refs, STANDARD_TOOL_COLS);
-
-            // Fetch children options for this catalog
-            let mut options_stmt = conn.prepare(
-                "SELECT * FROM command_options WHERE tool_name = ?"
-            ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-            let opt_col_names: Vec<String> = options_stmt.column_names().iter().map(|s| s.to_string()).collect();
-            let opt_col_names_refs: Vec<&str> = opt_col_names.iter().map(|s| s.as_str()).collect();
-
-            let mut rows = options_stmt.query(rusqlite::params![tool_name])
-                .map_err(|e| AppError::Storage(e.to_string()))?;
-
-            let mut options = Vec::new();
-            while let Some(option_row) = rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
-                let option_name: String = option_row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
-                let description: String = option_row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
-                let user_friendly_description: String = option_row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
-                let keywords: String = option_row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
-
-                let opt_optimized_data = extract_optimized_data(option_row, &opt_col_names_refs, STANDARD_OPTION_COLS);
-
-                options.push(OptimizedCommandOption {
-                    option_name,
-                    description,
-                    user_friendly_description,
-                    keywords,
-                    optimized_data: opt_optimized_data,
-                });
-            }
-
-            catalogs.push(OptimizedToolCatalog {
-                tool_name,
-                description,
-                user_friendly_description,
-                keywords,
-                version,
-                options,
-                rules,
-                optimized_data,
-            });
+            let options = fetch_catalog_options(&conn, &tool_name)?;
+            catalogs.push(map_row_to_catalog(row, &col_names_refs, options)?);
         }
 
         Ok(catalogs)
@@ -684,5 +624,252 @@ mod tests {
             assert_eq!(opt_opt_data.key, "opt_custom_emb");
             assert_eq!(opt_opt_data.data, vec![4, 5, 6]);
         }
+    }
+
+    #[test]
+    fn test_duplicate_catalog_error() {
+        let adapter = PersistenceAdapter::new();
+        let tool_name = "test_dup_tool";
+        let _ = adapter.delete_catalog(tool_name);
+
+        let catalog = OptimizedToolCatalog {
+            tool_name: tool_name.to_string(),
+            description: "desc".to_string(),
+            user_friendly_description: "user desc".to_string(),
+            keywords: "keys".to_string(),
+            version: "1.0".to_string(),
+            options: vec![],
+            rules: CommandRules(serde_json::json!({})),
+            optimized_data: None,
+        };
+
+        // First save should succeed
+        assert!(adapter.save_catalog(&catalog).is_ok());
+
+        // Second save of same tool name should return DuplicateCatalog
+        let res = adapter.save_catalog(&catalog);
+        assert!(res.is_err());
+        assert!(matches!(res.err().unwrap(), AppError::DuplicateCatalog(_)));
+
+        // Clean up
+        let _ = adapter.delete_catalog(tool_name);
+    }
+
+    #[test]
+    fn test_catalog_not_found_errors() {
+        let adapter = PersistenceAdapter::new();
+        let tool_name = "non_existent_tool_12345";
+        let _ = adapter.delete_catalog(tool_name); // ensure it's not there
+
+        // Fetching should return CatalogNotFound
+        let res_fetch = adapter.fetch_catalog(tool_name);
+        assert!(res_fetch.is_err());
+        assert!(matches!(res_fetch.err().unwrap(), AppError::CatalogNotFound(_)));
+
+        // Updating should return CatalogNotFound
+        let catalog = OptimizedToolCatalog {
+            tool_name: tool_name.to_string(),
+            description: "desc".to_string(),
+            user_friendly_description: "".to_string(),
+            keywords: "".to_string(),
+            version: "1.0".to_string(),
+            options: vec![],
+            rules: CommandRules(serde_json::json!({})),
+            optimized_data: None,
+        };
+        let res_update = adapter.update_catalog(&catalog);
+        assert!(res_update.is_err());
+        assert!(matches!(res_update.err().unwrap(), AppError::CatalogNotFound(_)));
+
+        // Deleting should return CatalogNotFound
+        let res_delete = adapter.delete_catalog(tool_name);
+        assert!(res_delete.is_err());
+        assert!(matches!(res_delete.err().unwrap(), AppError::CatalogNotFound(_)));
+    }
+
+    #[test]
+    fn test_update_catalog() {
+        let adapter = PersistenceAdapter::new();
+        let tool_name = "test_update_tool";
+        let _ = adapter.delete_catalog(tool_name);
+
+        let catalog = OptimizedToolCatalog {
+            tool_name: tool_name.to_string(),
+            description: "original desc".to_string(),
+            user_friendly_description: "orig user desc".to_string(),
+            keywords: "orig key".to_string(),
+            version: "1.0".to_string(),
+            options: vec![OptimizedCommandOption {
+                option_name: "-v".to_string(),
+                description: "verbose".to_string(),
+                user_friendly_description: "verbose user".to_string(),
+                keywords: "verbose".to_string(),
+                optimized_data: None,
+            }],
+            rules: CommandRules(serde_json::json!({})),
+            optimized_data: None,
+        };
+
+        // Save first
+        adapter.save_catalog(&catalog).unwrap();
+
+        // Prepare updated catalog
+        let updated_catalog = OptimizedToolCatalog {
+            tool_name: tool_name.to_string(),
+            description: "updated desc".to_string(),
+            user_friendly_description: "updated user desc".to_string(),
+            keywords: "updated key".to_string(),
+            version: "2.0".to_string(),
+            options: vec![
+                OptimizedCommandOption {
+                    option_name: "-v".to_string(),
+                    description: "verbose updated".to_string(),
+                    user_friendly_description: "verbose user updated".to_string(),
+                    keywords: "verbose".to_string(),
+                    optimized_data: None,
+                },
+                OptimizedCommandOption {
+                    option_name: "-h".to_string(),
+                    description: "help".to_string(),
+                    user_friendly_description: "help user".to_string(),
+                    keywords: "help".to_string(),
+                    optimized_data: None,
+                },
+            ],
+            rules: CommandRules(serde_json::json!({"test": true})),
+            optimized_data: None,
+        };
+
+        // Update
+        let updated = adapter.update_catalog(&updated_catalog).unwrap();
+        assert!(updated);
+
+        // Fetch and assert
+        let fetched = adapter.fetch_catalog(tool_name).unwrap();
+        assert_eq!(fetched.description, "updated desc");
+        assert_eq!(fetched.user_friendly_description, "updated user desc");
+        assert_eq!(fetched.version, "2.0");
+        assert_eq!(fetched.options.len(), 2);
+        assert_eq!(fetched.options[0].option_name, "-v");
+        assert_eq!(fetched.options[0].description, "verbose updated");
+        assert_eq!(fetched.options[1].option_name, "-h");
+        assert_eq!(fetched.options[1].description, "help");
+
+        // Clean up
+        let _ = adapter.delete_catalog(tool_name);
+    }
+
+    #[test]
+    fn test_fetch_all_catalogs() {
+        let adapter = PersistenceAdapter::new();
+        let tool1 = "all_tool_1";
+        let tool2 = "all_tool_2";
+        let _ = adapter.delete_catalog(tool1);
+        let _ = adapter.delete_catalog(tool2);
+
+        let cat1 = OptimizedToolCatalog {
+            tool_name: tool1.to_string(),
+            description: "desc1".to_string(),
+            user_friendly_description: "".to_string(),
+            keywords: "".to_string(),
+            version: "1.0".to_string(),
+            options: vec![],
+            rules: CommandRules(serde_json::json!({})),
+            optimized_data: None,
+        };
+        let cat2 = OptimizedToolCatalog {
+            tool_name: tool2.to_string(),
+            description: "desc2".to_string(),
+            user_friendly_description: "".to_string(),
+            keywords: "".to_string(),
+            version: "1.0".to_string(),
+            options: vec![],
+            rules: CommandRules(serde_json::json!({})),
+            optimized_data: None,
+        };
+
+        adapter.save_catalog(&cat1).unwrap();
+        adapter.save_catalog(&cat2).unwrap();
+
+        let all = adapter.fetch_all_catalogs().unwrap();
+        let names: Vec<String> = all.iter().map(|c| c.tool_name.clone()).collect();
+        assert!(names.contains(&tool1.to_string()));
+        assert!(names.contains(&tool2.to_string()));
+
+        // Clean up
+        let _ = adapter.delete_catalog(tool1);
+        let _ = adapter.delete_catalog(tool2);
+    }
+
+    #[test]
+    fn test_maintainer_lifecycle() {
+        let adapter = PersistenceAdapter::new();
+        let m_id = "test_maintainer_id";
+        let _ = adapter.delete_maintainer(m_id);
+
+        let maintainer = CatalogMaintainer {
+            id: m_id.to_string(),
+            name: "John Doe".to_string(),
+            auth_key: "secure_key".to_string(),
+        };
+
+        // 1. Save
+        assert!(adapter.save_maintainer(&maintainer).unwrap());
+
+        // 2. Fetch
+        let fetched = adapter.fetch_maintainer(m_id).unwrap();
+        assert_eq!(fetched.name, "John Doe");
+        assert_eq!(fetched.auth_key, "secure_key");
+
+        // 3. Update
+        let updated_m = CatalogMaintainer {
+            id: m_id.to_string(),
+            name: "Jane Doe".to_string(),
+            auth_key: "new_secure_key".to_string(),
+        };
+        assert!(adapter.update_maintainer(&updated_m).unwrap());
+
+        let fetched_updated = adapter.fetch_maintainer(m_id).unwrap();
+        assert_eq!(fetched_updated.name, "Jane Doe");
+        assert_eq!(fetched_updated.auth_key, "new_secure_key");
+
+        // 4. Delete
+        assert!(adapter.delete_maintainer(m_id).unwrap());
+
+        // 5. Fetch non-existent should fail
+        let res_fetch = adapter.fetch_maintainer(m_id);
+        assert!(res_fetch.is_err());
+        assert!(matches!(res_fetch.err().unwrap(), AppError::MaintainerNotFound(_)));
+
+        // 6. Delete non-existent should fail
+        let res_delete = adapter.delete_maintainer(m_id);
+        assert!(res_delete.is_err());
+        assert!(matches!(res_delete.err().unwrap(), AppError::MaintainerNotFound(_)));
+
+        // 7. Update non-existent should fail
+        let res_update = adapter.update_maintainer(&updated_m);
+        assert!(res_update.is_err());
+        assert!(matches!(res_update.err().unwrap(), AppError::MaintainerNotFound(_)));
+    }
+
+    #[test]
+    fn test_configuration_lifecycle() {
+        let adapter = PersistenceAdapter::new();
+
+        // Load original configuration
+        let original_config = adapter.load_configuration().unwrap();
+
+        // Save new configuration with opposite logging_opt_in status
+        let new_config = EndUserConfig {
+            logging_opt_in: !original_config.logging_opt_in,
+        };
+        assert!(adapter.save_configuration(&new_config).unwrap());
+
+        // Load and assert
+        let fetched_config = adapter.load_configuration().unwrap();
+        assert_eq!(fetched_config.logging_opt_in, !original_config.logging_opt_in);
+
+        // Restore original config
+        assert!(adapter.save_configuration(&original_config).unwrap());
     }
 }
