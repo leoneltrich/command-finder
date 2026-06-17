@@ -23,11 +23,33 @@ impl PersistenceAdapter {
         let _ = conn.execute("PRAGMA foreign_keys = ON;", []);
         let _ = conn.execute("PRAGMA journal_mode = WAL;", []);
 
+        // Detect if migration is needed (e.g. if 'intent' column exists in 'command_options')
+        let table_info_has_intent = if let Ok(mut stmt) = conn.prepare("PRAGMA table_info(command_options);") {
+            let mut rows = stmt.query([]).unwrap();
+            let mut has_intent = false;
+            while let Some(row) = rows.next().unwrap() {
+                let name: String = row.get(1).unwrap();
+                if name == "intent" {
+                    has_intent = true;
+                }
+            }
+            has_intent
+        } else {
+            false
+        };
+
+        if table_info_has_intent {
+            // Drop old tables to recreate with new schema
+            let _ = conn.execute("DROP TABLE IF EXISTS command_options;", []);
+            let _ = conn.execute("DROP TABLE IF EXISTS tool_catalogs;", []);
+        }
+
         // Initialize schema with embedding BLOB support
         conn.execute(
             "CREATE TABLE IF NOT EXISTS tool_catalogs (
                 tool_name TEXT PRIMARY KEY,
                 description TEXT NOT NULL,
+                user_friendly_description TEXT NOT NULL,
                 version TEXT NOT NULL,
                 rules TEXT NOT NULL,
                 keywords TEXT NOT NULL,
@@ -40,8 +62,9 @@ impl PersistenceAdapter {
             "CREATE TABLE IF NOT EXISTS command_options (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 tool_name TEXT NOT NULL,
-                intent TEXT NOT NULL,
-                option TEXT NOT NULL,
+                option_name TEXT NOT NULL,
+                description TEXT NOT NULL,
+                user_friendly_description TEXT NOT NULL,
                 keywords TEXT NOT NULL,
                 embedding BLOB,
                 FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
@@ -106,35 +129,33 @@ impl StoragePort for PersistenceAdapter {
             }
         }
 
-        let keywords_json = serde_json::to_string(&catalog.keywords)
-            .map_err(|e| AppError::Storage(e.to_string()))?;
         let rules_json = serde_json::to_string(&catalog.rules)
             .map_err(|e| AppError::Storage(e.to_string()))?;
 
         // 1. Insert parent
         tx.execute(
-            "INSERT INTO tool_catalogs (tool_name, description, version, rules, keywords, embedding) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO tool_catalogs (tool_name, description, user_friendly_description, version, rules, keywords, embedding) VALUES (?, ?, ?, ?, ?, ?, ?)",
             rusqlite::params![
                 catalog.tool_name,
                 catalog.description,
+                catalog.user_friendly_description,
                 catalog.version,
                 rules_json,
-                keywords_json,
+                catalog.keywords,
                 Option::<Vec<u8>>::None
             ],
         ).map_err(|e| AppError::Storage(e.to_string()))?;
 
         // 2. Insert children options
         for option in &catalog.options {
-            let option_keywords_json = serde_json::to_string(&option.keywords)
-                .map_err(|e| AppError::Storage(e.to_string()))?;
             tx.execute(
-                "INSERT INTO command_options (tool_name, intent, option, keywords, embedding) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO command_options (tool_name, option_name, description, user_friendly_description, keywords, embedding) VALUES (?, ?, ?, ?, ?, ?)",
                 rusqlite::params![
                     catalog.tool_name,
-                    option.intent,
-                    option.option,
-                    option_keywords_json,
+                    option.option_name,
+                    option.description,
+                    option.user_friendly_description,
+                    option.keywords,
                     Option::<Vec<u8>>::None
                 ],
             ).map_err(|e| AppError::Storage(e.to_string()))?;
@@ -148,19 +169,18 @@ impl StoragePort for PersistenceAdapter {
         let mut conn = self.connect()?;
         let tx = conn.transaction().map_err(|e| AppError::Storage(e.to_string()))?;
 
-        let keywords_json = serde_json::to_string(&catalog.keywords)
-            .map_err(|e| AppError::Storage(e.to_string()))?;
         let rules_json = serde_json::to_string(&catalog.rules)
             .map_err(|e| AppError::Storage(e.to_string()))?;
 
         // 1. Update parent tool catalog info
         let rows_affected = tx.execute(
-            "UPDATE tool_catalogs SET description = ?, version = ?, rules = ?, keywords = ? WHERE tool_name = ?",
+            "UPDATE tool_catalogs SET description = ?, user_friendly_description = ?, version = ?, rules = ?, keywords = ? WHERE tool_name = ?",
             rusqlite::params![
                 catalog.description,
+                catalog.user_friendly_description,
                 catalog.version,
                 rules_json,
-                keywords_json,
+                catalog.keywords,
                 catalog.tool_name
             ],
         ).map_err(|e| AppError::Storage(e.to_string()))?;
@@ -182,15 +202,14 @@ impl StoragePort for PersistenceAdapter {
 
         // 3. Re-insert updated child options
         for option in &catalog.options {
-            let option_keywords_json = serde_json::to_string(&option.keywords)
-                .map_err(|e| AppError::Storage(e.to_string()))?;
             tx.execute(
-                "INSERT INTO command_options (tool_name, intent, option, keywords, embedding) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO command_options (tool_name, option_name, description, user_friendly_description, keywords, embedding) VALUES (?, ?, ?, ?, ?, ?)",
                 rusqlite::params![
                     catalog.tool_name,
-                    option.intent,
-                    option.option,
-                    option_keywords_json,
+                    option.option_name,
+                    option.description,
+                    option.user_friendly_description,
+                    option.keywords,
                     Option::<Vec<u8>>::None
                 ],
             ).map_err(|e| AppError::Storage(e.to_string()))?;
@@ -224,7 +243,7 @@ impl StoragePort for PersistenceAdapter {
         
         // 1. Fetch parent tool catalog info
         let mut parent_stmt = conn.prepare(
-            "SELECT tool_name, description, version, rules, keywords FROM tool_catalogs WHERE tool_name = ?"
+            "SELECT tool_name, description, user_friendly_description, version, rules, keywords FROM tool_catalogs WHERE tool_name = ?"
         ).map_err(|e| AppError::Storage(e.to_string()))?;
 
         let mut parent_rows = parent_stmt.query(rusqlite::params![tool_name])
@@ -233,18 +252,17 @@ impl StoragePort for PersistenceAdapter {
         if let Some(row) = parent_rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
             let tool_name: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
             let description: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
-            let version: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
-            let rules_json: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
-            let keywords_json: String = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
+            let user_friendly_description: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
+            let version: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
+            let rules_json: String = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
+            let keywords: String = row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
 
-            let keywords: Vec<String> = serde_json::from_str(&keywords_json)
-                .map_err(|e| AppError::Storage(e.to_string()))?;
             let rules: crate::core::models::CommandRules = serde_json::from_str(&rules_json)
                 .map_err(|e| AppError::Storage(e.to_string()))?;
 
             // 2. Fetch children options
             let mut options_stmt = conn.prepare(
-                "SELECT intent, option, keywords FROM command_options WHERE tool_name = ?"
+                "SELECT option_name, description, user_friendly_description, keywords FROM command_options WHERE tool_name = ?"
             ).map_err(|e| AppError::Storage(e.to_string()))?;
 
             let mapped_options = options_stmt.query_map(rusqlite::params![tool_name], |row| {
@@ -252,26 +270,27 @@ impl StoragePort for PersistenceAdapter {
                     row.get::<_, String>(0)?,
                     row.get::<_, String>(1)?,
                     row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
                 ))
             }).map_err(|e| AppError::Storage(e.to_string()))?;
 
             let mut options = Vec::new();
             for option_row in mapped_options {
-                let (intent, option_val, opt_keywords_json) = option_row
-                    .map_err(|e| AppError::Storage(e.to_string()))?;
-                let opt_keywords: Vec<String> = serde_json::from_str(&opt_keywords_json)
+                let (option_name, description, user_friendly_description, keywords) = option_row
                     .map_err(|e| AppError::Storage(e.to_string()))?;
 
                 options.push(crate::core::models::CommandOption {
-                    intent,
-                    option: option_val,
-                    keywords: opt_keywords,
+                    option_name,
+                    description,
+                    user_friendly_description,
+                    keywords,
                 });
             }
 
             Ok(ToolCatalog {
                 tool_name,
                 description,
+                user_friendly_description,
                 keywords,
                 version,
                 options,
@@ -290,7 +309,7 @@ impl StoragePort for PersistenceAdapter {
     fn fetch_all_catalogs(&self) -> Result<Vec<ToolCatalog>, AppError> {
         let conn = self.connect()?;
         let mut parent_stmt = conn.prepare(
-            "SELECT tool_name, description, version, rules, keywords FROM tool_catalogs"
+            "SELECT tool_name, description, user_friendly_description, version, rules, keywords FROM tool_catalogs"
         ).map_err(|e| AppError::Storage(e.to_string()))?;
 
         let mapped_parents = parent_stmt.query_map([], |row| {
@@ -300,22 +319,21 @@ impl StoragePort for PersistenceAdapter {
                 row.get::<_, String>(2)?,
                 row.get::<_, String>(3)?,
                 row.get::<_, String>(4)?,
+                row.get::<_, String>(5)?,
             ))
         }).map_err(|e| AppError::Storage(e.to_string()))?;
 
         let mut catalogs = Vec::new();
         for parent_result in mapped_parents {
-            let (tool_name, description, version, rules_json, keywords_json) = parent_result
+            let (tool_name, description, user_friendly_description, version, rules_json, keywords) = parent_result
                 .map_err(|e| AppError::Storage(e.to_string()))?;
 
-            let keywords: Vec<String> = serde_json::from_str(&keywords_json)
-                .map_err(|e| AppError::Storage(e.to_string()))?;
             let rules: crate::core::models::CommandRules = serde_json::from_str(&rules_json)
                 .map_err(|e| AppError::Storage(e.to_string()))?;
 
             // Fetch children options for this catalog
             let mut options_stmt = conn.prepare(
-                "SELECT intent, option, keywords FROM command_options WHERE tool_name = ?"
+                "SELECT option_name, description, user_friendly_description, keywords FROM command_options WHERE tool_name = ?"
             ).map_err(|e| AppError::Storage(e.to_string()))?;
 
             let mapped_options = options_stmt.query_map(rusqlite::params![tool_name], |row| {
@@ -323,26 +341,27 @@ impl StoragePort for PersistenceAdapter {
                     row.get::<_, String>(0)?,
                     row.get::<_, String>(1)?,
                     row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
                 ))
             }).map_err(|e| AppError::Storage(e.to_string()))?;
 
             let mut options = Vec::new();
             for option_row in mapped_options {
-                let (intent, option_val, opt_keywords_json) = option_row
-                    .map_err(|e| AppError::Storage(e.to_string()))?;
-                let opt_keywords: Vec<String> = serde_json::from_str(&opt_keywords_json)
+                let (option_name, description, user_friendly_description, keywords) = option_row
                     .map_err(|e| AppError::Storage(e.to_string()))?;
 
                 options.push(crate::core::models::CommandOption {
-                    intent,
-                    option: option_val,
-                    keywords: opt_keywords,
+                    option_name,
+                    description,
+                    user_friendly_description,
+                    keywords,
                 });
             }
 
             catalogs.push(ToolCatalog {
                 tool_name,
                 description,
+                user_friendly_description,
                 keywords,
                 version,
                 options,
@@ -446,5 +465,35 @@ impl StoragePort for PersistenceAdapter {
             rusqlite::params![val],
         ).map_err(|e| AppError::Storage(e.to_string()))?;
         Ok(true)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::models::ToolCatalog;
+
+    #[test]
+    fn test_ingest_mv_catalog() {
+        let json_str = std::fs::read_to_string("mv-catalog.json").unwrap();
+        let catalog: ToolCatalog = serde_json::from_str(&json_str).unwrap();
+
+        let adapter = PersistenceAdapter::new();
+        let _ = adapter.delete_catalog(&catalog.tool_name);
+        
+        let saved = adapter.save_catalog(&catalog).unwrap();
+        assert!(saved);
+
+        let fetched = adapter.fetch_catalog(&catalog.tool_name).unwrap();
+        assert_eq!(fetched.tool_name, catalog.tool_name);
+        assert_eq!(fetched.description, catalog.description);
+        assert_eq!(fetched.keywords, catalog.keywords);
+        assert_eq!(fetched.options.len(), catalog.options.len());
+        
+        for (i, opt) in fetched.options.iter().enumerate() {
+            assert_eq!(opt.option_name, catalog.options[i].option_name);
+            assert_eq!(opt.description, catalog.options[i].description);
+            assert_eq!(opt.keywords, catalog.options[i].keywords);
+        }
     }
 }

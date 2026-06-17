@@ -27,9 +27,10 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
         // Return a dummy matched option from the keyword engine
         Ok(vec![vec![ScoredCandidate {
             option: CommandOption {
-                intent: format!("Keyword match result for: {}", query.query),
-                keywords: vec!["keyword".to_string()],
-                option: "-la".to_string(),
+                option_name: "-la".to_string(),
+                description: format!("Keyword match result for: {}", query.query),
+                user_friendly_description: "".to_string(),
+                keywords: "keyword".to_string(),
             },
             score: 0.85,
         }]])

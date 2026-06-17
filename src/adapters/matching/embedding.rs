@@ -27,9 +27,10 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         // Return a dummy matched option from the embedding engine
         Ok(vec![vec![ScoredCandidate {
             option: CommandOption {
-                intent: format!("Embedding match result for: {}", query.query),
-                keywords: vec!["embedding".to_string()],
-                option: "-la".to_string(),
+                option_name: "-la".to_string(),
+                description: format!("Embedding match result for: {}", query.query),
+                user_friendly_description: "".to_string(),
+                keywords: "embedding".to_string(),
             },
             score: 0.95,
         }]])

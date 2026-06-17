@@ -1,21 +1,23 @@
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ToolCatalog {
     pub tool_name: String,
     pub description: String,
-    pub keywords: Vec<String>,
+    pub user_friendly_description: String,
+    pub keywords: String,
     pub version: String,
     pub options: Vec<CommandOption>,
     pub rules: CommandRules,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CommandOption {
-    pub intent: String,
-    pub keywords: Vec<String>,
-    pub option: String,
+    pub option_name: String,
+    pub description: String,
+    pub user_friendly_description: String,
+    pub keywords: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct CommandRules {
-    pub rules: String,
-}
+pub struct CommandRules(pub serde_json::Value);
