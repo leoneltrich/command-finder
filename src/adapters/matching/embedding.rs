@@ -1,6 +1,10 @@
 use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
 use crate::core::models::{UserQuery, ScoredCandidate, CommandOption, ToolCatalog, OptimizedToolCatalog, OptimizedCommandOption};
+use llama_cpp_2::context::params::LlamaContextParams;
+use llama_cpp_2::llama_backend::LlamaBackend;
+use llama_cpp_2::model::params::LlamaModelParams;
+use llama_cpp_2::model::LlamaModel;
 
 /// Outbound adapter representing the embedding-based matching engine.
 #[derive(Clone, Copy)]
@@ -44,6 +48,49 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         &self,
         catalog: &ToolCatalog,
     ) -> Result<OptimizedToolCatalog, AppError> {
+        let num_cpus = num_cpus::get_physical();
+        let model_path = "/home/sandbox-noadmin/RustroverProjects/embedding_models_testing/models/embeddinggemma-300M-BF16.gguf"; //TODO Make dynamic
+
+        if !std::path::Path::new(model_path).exists() {
+            return Err(AppError::Initialization(
+                crate::core::errors::InitializationException::new(format!(
+                    "Model file does not exist at {}",
+                    model_path
+                )),
+            ));
+        }
+
+        let backend = LlamaBackend::init()
+            .map_err(|e| AppError::Initialization(
+                crate::core::errors::InitializationException::new(format!(
+                    "Failed to initialize llama-cpp backend: {:?}",
+                    e
+                )),
+            ))?;
+
+        let model_params = LlamaModelParams::default();
+        let model = LlamaModel::load_from_file(&backend, model_path, &model_params)
+            .map_err(|e| AppError::Initialization(
+                crate::core::errors::InitializationException::new(format!(
+                    "Failed to load model: {:?}",
+                    e
+                )),
+            ))?;
+
+        let ctx_params = LlamaContextParams::default()
+            .with_embeddings(true)
+            .with_n_ctx(std::num::NonZeroU32::new(512))
+            .with_n_threads(num_cpus as i32)
+            .with_n_threads_batch(num_cpus as i32);
+
+        let _ctx = model.new_context(&backend, ctx_params)
+            .map_err(|e| AppError::Initialization(
+                crate::core::errors::InitializationException::new(format!(
+                    "Failed to create context: {:?}",
+                    e
+                )),
+            ))?;
+
         let options = catalog.options.iter().map(|opt| {
             OptimizedCommandOption {
                 option_name: opt.option_name.clone(),
