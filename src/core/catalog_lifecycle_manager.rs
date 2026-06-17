@@ -1,59 +1,31 @@
 use crate::ports::inbound::catalog_ingestion::CatalogIngestionPort;
 use crate::ports::outbound::storage::StoragePort;
+use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
-use crate::core::models::{ToolCatalog, OptimizedToolCatalog, OptimizedCommandOption};
+use crate::core::models::ToolCatalog;
 
 /// Core interactor responsible for catalog lifecycle management.
 /// Physically implements the CatalogIngestionPort inbound port.
-pub struct CatalogLifecycleManager<S: StoragePort> {
+pub struct CatalogLifecycleManager<S: StoragePort, M: MatchingStrategyPort> {
     storage_port: S,
+    matching_port: M,
 }
 
-impl<S: StoragePort> CatalogLifecycleManager<S> {
+impl<S: StoragePort, M: MatchingStrategyPort> CatalogLifecycleManager<S, M> {
     /// Creates a new CatalogLifecycleManager instance.
-    pub fn new(storage_port: S) -> Self {
-        Self { storage_port }
+    pub fn new(storage_port: S, matching_port: M) -> Self {
+        Self { storage_port, matching_port }
     }
 }
 
-impl<S: StoragePort> CatalogIngestionPort for CatalogLifecycleManager<S> {
+impl<S: StoragePort, M: MatchingStrategyPort> CatalogIngestionPort for CatalogLifecycleManager<S, M> {
     fn ingest_catalog(&self, catalog: &ToolCatalog, _auth_key: &str) -> Result<bool, AppError> {
-        let optimized = OptimizedToolCatalog {
-            tool_name: catalog.tool_name.clone(),
-            description: catalog.description.clone(),
-            user_friendly_description: catalog.user_friendly_description.clone(),
-            keywords: catalog.keywords.clone(),
-            version: catalog.version.clone(),
-            options: catalog.options.iter().map(|opt| OptimizedCommandOption {
-                option_name: opt.option_name.clone(),
-                description: opt.description.clone(),
-                user_friendly_description: opt.user_friendly_description.clone(),
-                keywords: opt.keywords.clone(),
-                optimized_data: None,
-            }).collect(),
-            rules: catalog.rules.clone(),
-            optimized_data: None,
-        };
+        let optimized = self.matching_port.optimize_catalog(catalog)?;
         self.storage_port.save_catalog(&optimized)
     }
 
     fn update_catalog(&self, catalog: &ToolCatalog, _auth_key: &str) -> Result<bool, AppError> {
-        let optimized = OptimizedToolCatalog {
-            tool_name: catalog.tool_name.clone(),
-            description: catalog.description.clone(),
-            user_friendly_description: catalog.user_friendly_description.clone(),
-            keywords: catalog.keywords.clone(),
-            version: catalog.version.clone(),
-            options: catalog.options.iter().map(|opt| OptimizedCommandOption {
-                option_name: opt.option_name.clone(),
-                description: opt.description.clone(),
-                user_friendly_description: opt.user_friendly_description.clone(),
-                keywords: opt.keywords.clone(),
-                optimized_data: None,
-            }).collect(),
-            rules: catalog.rules.clone(),
-            optimized_data: None,
-        };
+        let optimized = self.matching_port.optimize_catalog(catalog)?;
         self.storage_port.update_catalog(&optimized)
     }
 

@@ -71,7 +71,7 @@ fn main() {
             let auth_key = env::var("AUTH_KEY").unwrap_or_else(|_| "dummy_auth_key".to_string());
 
             // Instantiate CatalogLifecycleManager with the storage port injected
-            let catalog_manager = crate::core::catalog_lifecycle_manager::CatalogLifecycleManager::new(storage);
+            let catalog_manager = crate::core::catalog_lifecycle_manager::CatalogLifecycleManager::new(storage, embedding_engine);
             let ingestion_api = crate::adapters::ingestion_api::IngestionApi::new(catalog_manager);
 
             match action.as_str() {
