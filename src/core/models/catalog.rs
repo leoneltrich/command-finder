@@ -52,3 +52,15 @@ pub struct OptimizedCommandOption {
     pub keywords: String,
     pub optimized_data: Option<OptimizedData>,
 }
+
+impl From<&CommandOption> for OptimizedCommandOption {
+    fn from(opt: &CommandOption) -> Self {
+        Self {
+            option_name: opt.option_name.clone(),
+            description: opt.description.clone(),
+            user_friendly_description: opt.user_friendly_description.clone(),
+            keywords: opt.keywords.clone(),
+            optimized_data: None,
+        }
+    }
+}

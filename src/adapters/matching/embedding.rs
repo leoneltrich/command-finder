@@ -104,15 +104,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             data_type: "BLOB".to_string(),
         });
 
-        let options = catalog.options.iter().map(|opt| {
-            OptimizedCommandOption {
-                option_name: opt.option_name.clone(),
-                description: opt.description.clone(),
-                user_friendly_description: opt.user_friendly_description.clone(),
-                keywords: opt.keywords.clone(),
-                optimized_data: None,
-            }
-        }).collect();
+        let options = catalog.options.iter().map(OptimizedCommandOption::from).collect();
 
         Ok(OptimizedToolCatalog {
             tool_name: catalog.tool_name.clone(),
