@@ -94,66 +94,9 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         // Format the tool description using the standard gemma pattern
         let processed_text = format!("title: {} | text: {}", catalog.tool_name, catalog.description);
 
-        let tokens = model.str_to_token(&processed_text, llama_cpp_2::model::AddBos::Always)
-            .map_err(|e| AppError::EngineExecution(
-                crate::core::errors::EngineExecutionException::new(format!(
-                    "Tokenization failed: {:?}",
-                    e
-                )),
-            ))?;
-
-        if tokens.is_empty() {
-            return Err(AppError::EngineExecution(
-                crate::core::errors::EngineExecutionException::new("Tokenization returned empty tokens"),
-            ));
-        }
-
-        let token_count = tokens.len();
-        let mut batch = llama_cpp_2::llama_batch::LlamaBatch::new(token_count, 1);
-        for (i, &token) in tokens.iter().enumerate() {
-            batch.add(token, i as i32, &[0], true)
-                .map_err(|e| AppError::EngineExecution(
-                    crate::core::errors::EngineExecutionException::new(format!(
-                        "Failed to add token to batch: {:?}",
-                        e
-                    )),
-                ))?;
-        }
-
-        ctx.decode(&mut batch)
-            .map_err(|e| AppError::EngineExecution(
-                crate::core::errors::EngineExecutionException::new(format!(
-                    "Decoding failed: {:?}",
-                    e
-                )),
-            ))?;
-
-        let mut emb = ctx.embeddings_seq_ith(0)
-            .map_err(|e| AppError::EngineExecution(
-                crate::core::errors::EngineExecutionException::new(format!(
-                    "Failed to retrieve embeddings: {:?}",
-                    e
-                )),
-            ))?
-            .to_vec();
-
-        // L2 Normalization to ensure dot product is identical to cosine similarity
-        let mut sum_sq = 0.0;
-        for &val in &emb {
-            sum_sq += val * val;
-        }
-        let norm = sum_sq.sqrt();
-        if norm > 0.0 {
-            for val in &mut emb {
-                *val /= norm;
-            }
-        }
-
-        // Convert f32 vector to raw little-endian bytes
-        let mut data_bytes = Vec::with_capacity(emb.len() * 4);
-        for val in &emb {
-            data_bytes.extend_from_slice(&val.to_le_bytes());
-        }
+        let raw_emb = compute_embedding(&model, &mut ctx, &processed_text)?;
+        let normalized_emb = l2_normalize(raw_emb);
+        let data_bytes = serialize_embedding(&normalized_emb);
 
         let optimized_data = Some(OptimizedData {
             key: "gemma_embedding".to_string(),
@@ -182,6 +125,81 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             optimized_data,
         })
     }
+}
+
+// --- Private Helper Functions for Embedding Ingestion ---
+
+fn compute_embedding(
+    model: &LlamaModel,
+    ctx: &mut llama_cpp_2::context::LlamaContext,
+    text: &str,
+) -> Result<Vec<f32>, AppError> {
+    let tokens = model.str_to_token(text, llama_cpp_2::model::AddBos::Always)
+        .map_err(|e| AppError::EngineExecution(
+            crate::core::errors::EngineExecutionException::new(format!(
+                "Tokenization failed: {:?}",
+                e
+            )),
+        ))?;
+
+    if tokens.is_empty() {
+        return Err(AppError::EngineExecution(
+            crate::core::errors::EngineExecutionException::new("Tokenization returned empty tokens"),
+        ));
+    }
+
+    let token_count = tokens.len();
+    let mut batch = llama_cpp_2::llama_batch::LlamaBatch::new(token_count, 1);
+    for (i, &token) in tokens.iter().enumerate() {
+        batch.add(token, i as i32, &[0], true)
+            .map_err(|e| AppError::EngineExecution(
+                crate::core::errors::EngineExecutionException::new(format!(
+                    "Failed to add token to batch: {:?}",
+                    e
+                )),
+            ))?;
+    }
+
+    ctx.decode(&mut batch)
+        .map_err(|e| AppError::EngineExecution(
+            crate::core::errors::EngineExecutionException::new(format!(
+                "Decoding failed: {:?}",
+                e
+            )),
+        ))?;
+
+    let emb = ctx.embeddings_seq_ith(0)
+        .map_err(|e| AppError::EngineExecution(
+            crate::core::errors::EngineExecutionException::new(format!(
+                "Failed to retrieve embeddings: {:?}",
+                e
+            )),
+        ))?
+        .to_vec();
+
+    Ok(emb)
+}
+
+fn l2_normalize(mut emb: Vec<f32>) -> Vec<f32> {
+    let mut sum_sq = 0.0;
+    for &val in &emb {
+        sum_sq += val * val;
+    }
+    let norm = sum_sq.sqrt();
+    if norm > 0.0 {
+        for val in &mut emb {
+            *val /= norm;
+        }
+    }
+    emb
+}
+
+fn serialize_embedding(emb: &[f32]) -> Vec<u8> {
+    let mut data_bytes = Vec::with_capacity(emb.len() * 4);
+    for val in emb {
+        data_bytes.extend_from_slice(&val.to_le_bytes());
+    }
+    data_bytes
 }
 
 #[cfg(test)]
@@ -230,5 +248,29 @@ mod tests {
         } else {
             assert!(result.is_err());
         }
+    }
+
+    #[test]
+    fn test_engine_lifecycle_methods() {
+        let engine = EmbeddingMatchingEngine::new();
+        assert!(engine.load_engines().is_ok());
+
+        let default_engine = EmbeddingMatchingEngine::default();
+        assert!(default_engine.load_engines().is_ok());
+    }
+
+    #[test]
+    fn test_calculate_similarities() {
+        let engine = EmbeddingMatchingEngine::new();
+        let query = UserQuery {
+            query: "list files".to_string(),
+            n_grams: None,
+        };
+        let result = engine.calculate_similarities(&query);
+        assert!(result.is_ok());
+        let candidates = result.unwrap();
+        assert!(!candidates.is_empty());
+        assert!(!candidates[0].is_empty());
+        assert_eq!(candidates[0][0].option.option_name, "-la");
     }
 }
