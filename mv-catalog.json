@@ -1,0 +1,88 @@
+{
+  "toolName": "mv",
+  "description": "The move tool is a filesystem utility used to rename files and directories, modify paths, or relocate assets to new positions.",
+  "userFriendlyDescription": "",
+  "keywords": "mv move rename relocate path atomic shift transfer directory folder destination replace rename modification target overwrite data sync migrate source",
+  "version": "0.1",
+  "options": [
+    {
+      "optionName": "--backup",
+      "description": "passage: Parent: mv (file system operations). Option: --backup ([=CONTROL]). Function: Destination file backup generation via control mechanism.",
+      "userFriendlyDescription": "",
+      "keywords": "backup control method versioning suffix overwrite backups numbered-backup backup-method control-parameter replace duplicate exist collision conflict safety-copy save-old keep-old auto-backup versioned-backups"
+    },
+    {
+      "optionName": "--debug",
+      "description": "passage: Parent: mv (file system operations). Option: --debug (). Function: Execution mechanics explanation; automatic verbose logging activation.",
+      "userFriendlyDescription": "",
+      "keywords": "debug explain verbose diagnostics logging tracing internal execution troubleshooting diagnose-move diagnostics-telemetry"
+    },
+    {
+      "optionName": "-f",
+      "description": "passage: Parent: mv (file system operations). Option: -f (--force). Function: Unconditional destination overwriting; total suppression of confirmation prompts.",
+      "userFriendlyDescription": "",
+      "keywords": "force overwrite suppression confirmation bypass prompt silence force-overwrite silent-overwrite bypass-prompts ignore-protection replace duplicate exist collision conflict silent dont-ask no-warnings override-warnings override-confirmation suppress-prompts"
+    },
+    {
+      "optionName": "-i",
+      "description": "passage: Parent: mv (file system operations). Option: -i (--interactive). Function: Pre-overwrite user confirmation prompt generation.",
+      "userFriendlyDescription": "",
+      "keywords": "interactive prompt overwrite confirmation user-input ask-before confirm-overwrite clobber prompt-overwrite verify-overwrite replace duplicate exist collision conflict ask-first prompt-me interactive-prompt user-confirmation validation-prompt confirm-replacement safety-warning"
+    },
+    {
+      "optionName": "-n",
+      "description": "passage: Parent: mv (file system operations). Option: -n (--no-clobber). Function: Pre-existing file preservation; execution termination upon conflict detection.",
+      "userFriendlyDescription": "",
+      "keywords": "no-clobber skip-existing safe shield prevent-overwrite do-not-overwrite ignore-collision prevent-clobbering replace duplicate exist collision conflict dont-delete skip-duplicates prevent-overwrite keep-old-files"
+    },
+    {
+      "optionName": "--no-copy",
+      "description": "passage: Parent: mv (file system operations). Option: --no-copy. Function: Rename operation termination upon primary identifier modification failure.",
+      "userFriendlyDescription": "",
+      "keywords": "no-copy rename-failure abort-copy restrict-move fallback-prevention fail-cross-device rename-abort prevent-cross-device-move"
+    },
+    {
+      "optionName": "-strip-trailing-slashes",
+      "description": "passage: Parent: mv (file system operations). Option: --strip-trailing-slashes. Function: Source argument trailing slash removal.",
+      "userFriendlyDescription": "",
+      "keywords": "strip-trailing-slashes remove-trailing-slashes path-normalization path-trimming strip-slashes remove-slash"
+    },
+    {
+      "optionName": "-S",
+      "description": "passage: Parent: mv (file system operations). Option: -S (--suffix=SUFFIX). Function: Custom backup suffix override.",
+      "userFriendlyDescription": "",
+      "keywords": "backup-suffix custom-suffix override-suffix backup-extension filename-suffix suffix-string backup custom-extension suffix-override"
+    },
+    {
+      "optionName": "-t",
+      "description": "passage: Parent: mv (file system operations). Option: -t (--target-directory=DIRECTORY). Function: Bulk source argument relocation into destination directory.",
+      "userFriendlyDescription": "",
+      "keywords": "target-directory destination-folder bulk-move move-to-directory target-folder target-destination move-into-folder bulk-transfer"
+    },
+    {
+      "optionName": "-T",
+      "description": "passage: Parent: mv (file system operations). Option: -T (--no-target-directory). Function: Destination argument enforcement as standard file.",
+      "userFriendlyDescription": "",
+      "keywords": "no-target-directory treat-destination-as-file literal-destination regular-file-target enforce-file-target target-directory destination-folder treat-as-normal-file do-not-create-directory"
+    },
+    {
+      "optionName": "--update",
+      "description": "passage: Parent: mv (file system operations). Option: --update[=UPDATE]. Function: Existing destination file replacement criteria control.",
+      "userFriendlyDescription": "",
+      "keywords": "update-only conditional-update replace-older timestamp-update move-newer incremental update-newer replace duplicate exist collision conflict overwrite newer-only fresh-files modification-time"
+    },
+    {
+      "optionName": "-v",
+      "description": "passage: Parent: mv (file system operations). Option: -v (--verbose). Function: Operation execution logging and status output.",
+      "userFriendlyDescription": "",
+      "keywords": "verbose explain progress done print log output display track process-telemetry show-moved-files show-progress print-details explain-move"
+    },
+    {
+      "optionName": "-Z",
+      "description": "passage: Parent: mv (file system operations). Option: -Z (--context). Function: Default SELinux security context assignment on destination.",
+      "userFriendlyDescription": "",
+      "keywords": "selinux-context security-context selinux security-label access-control default-context restore-context security-attributes"
+    }
+  ],
+  "rules": {}
+}
