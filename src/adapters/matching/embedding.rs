@@ -7,13 +7,68 @@ use llama_cpp_2::model::params::LlamaModelParams;
 use llama_cpp_2::model::LlamaModel;
 
 /// Outbound adapter representing the embedding-based matching engine.
-#[derive(Clone, Copy)]
-pub struct EmbeddingMatchingEngine;
+#[derive(Clone)]
+pub struct EmbeddingMatchingEngine {
+    inner: std::sync::Arc<std::sync::Mutex<Option<LlamaModel>>>,
+}
 
 impl EmbeddingMatchingEngine {
     /// Creates a new EmbeddingMatchingEngine instance.
     pub fn new() -> Self {
-        Self
+        Self {
+            inner: std::sync::Arc::new(std::sync::Mutex::new(None)),
+        }
+    }
+
+    /// Retrieve or initialize the static LLAMA backend safely once per process.
+    fn get_global_backend() -> Result<&'static LlamaBackend, AppError> {
+        static GLOBAL_BACKEND: std::sync::OnceLock<Result<LlamaBackend, String>> = std::sync::OnceLock::new();
+        let res = GLOBAL_BACKEND.get_or_init(|| {
+            LlamaBackend::init().map_err(|e| format!("{:?}", e))
+        });
+        res.as_ref().map_err(|err| AppError::Initialization(
+            crate::core::errors::InitializationException::new(format!(
+                "Failed to initialize llama-cpp backend: {}",
+                err
+            )),
+        ))
+    }
+
+    /// Centralized fallible lazy model loader
+    fn get_or_init_model(&self) -> Result<std::sync::MutexGuard<'_, Option<LlamaModel>>, AppError> {
+        let mut guard = self.inner.lock().map_err(|e| AppError::Initialization(
+            crate::core::errors::InitializationException::new(format!(
+                "Mutex poisoned: {:?}",
+                e
+            )),
+        ))?;
+
+        if guard.is_none() {
+            let model_path = "/home/sandbox-noadmin/RustroverProjects/embedding_models_testing/models/embeddinggemma-300M-BF16.gguf";
+
+            if !std::path::Path::new(model_path).exists() {
+                return Err(AppError::Initialization(
+                    crate::core::errors::InitializationException::new(format!(
+                        "Model file does not exist at {}",
+                        model_path
+                    )),
+                ));
+            }
+
+            let backend = Self::get_global_backend()?;
+            let model_params = LlamaModelParams::default();
+            let model = LlamaModel::load_from_file(backend, model_path, &model_params)
+                .map_err(|e| AppError::Initialization(
+                    crate::core::errors::InitializationException::new(format!(
+                        "Failed to load model: {:?}",
+                        e
+                    )),
+                ))?;
+
+            *guard = Some(model);
+        }
+
+        Ok(guard)
     }
 }
 
@@ -41,6 +96,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
     }
 
     fn load_engines(&self) -> Result<bool, AppError> {
+        let _guard = self.get_or_init_model()?;
         Ok(true)
     }
 
@@ -49,33 +105,10 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         catalog: &ToolCatalog,
     ) -> Result<OptimizedToolCatalog, AppError> {
         let num_cpus = num_cpus::get_physical();
-        let model_path = "/home/sandbox-noadmin/RustroverProjects/embedding_models_testing/models/embeddinggemma-300M-BF16.gguf";
-
-        if !std::path::Path::new(model_path).exists() {
-            return Err(AppError::Initialization(
-                crate::core::errors::InitializationException::new(format!(
-                    "Model file does not exist at {}",
-                    model_path
-                )),
-            ));
-        }
-
-        let backend = LlamaBackend::init()
-            .map_err(|e| AppError::Initialization(
-                crate::core::errors::InitializationException::new(format!(
-                    "Failed to initialize llama-cpp backend: {:?}",
-                    e
-                )),
-            ))?;
-
-        let model_params = LlamaModelParams::default();
-        let model = LlamaModel::load_from_file(&backend, model_path, &model_params)
-            .map_err(|e| AppError::Initialization(
-                crate::core::errors::InitializationException::new(format!(
-                    "Failed to load model: {:?}",
-                    e
-                )),
-            ))?;
+        
+        let backend = Self::get_global_backend()?;
+        let guard = self.get_or_init_model()?;
+        let model = guard.as_ref().unwrap();
 
         let ctx_params = LlamaContextParams::default()
             .with_embeddings(true)
@@ -83,7 +116,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             .with_n_threads(num_cpus as i32)
             .with_n_threads_batch(num_cpus as i32);
 
-        let mut ctx = model.new_context(&backend, ctx_params)
+        let mut ctx = model.new_context(backend, ctx_params)
             .map_err(|e| AppError::Initialization(
                 crate::core::errors::InitializationException::new(format!(
                     "Failed to create context: {:?}",
@@ -94,7 +127,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         // Format the tool description using the standard gemma pattern
         let processed_text = format!("title: {} | text: {}", catalog.tool_name, catalog.description);
 
-        let raw_emb = compute_embedding(&model, &mut ctx, &processed_text)?;
+        let raw_emb = compute_embedding(model, &mut ctx, &processed_text)?;
         let normalized_emb = l2_normalize(raw_emb);
         let data_bytes = serialize_embedding(&normalized_emb);
 
@@ -110,7 +143,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
                 "title: {} {} | text: {} Keywords: {}",
                 catalog.tool_name, opt.option_name, opt.description, opt.keywords
             );
-            let opt_raw_emb = compute_embedding(&model, &mut ctx, &processed_opt_text)?;
+            let opt_raw_emb = compute_embedding(model, &mut ctx, &processed_opt_text)?;
             let opt_normalized_emb = l2_normalize(opt_raw_emb);
             let opt_data_bytes = serialize_embedding(&opt_normalized_emb);
 

@@ -7,6 +7,7 @@ use crate::adapters::cli_controller::CliController;
 use crate::adapters::persistence::PersistenceAdapter;
 use crate::core::query_orchestrator::QueryOrchestrator;
 use crate::core::models::EndUserConfig;
+use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
 
 fn main() {
@@ -21,7 +22,7 @@ fn main() {
 
     let matching_engines: Vec<Box<dyn crate::ports::outbound::matching_strategy::MatchingStrategyPort>> = vec![
         Box::new(keyword_engine),
-        Box::new(embedding_engine),
+        Box::new(embedding_engine.clone()),
     ];
 
     // 3. Instantiate the Core Orchestrator with the storage and matching engines injected
@@ -71,17 +72,25 @@ fn main() {
             let auth_key = env::var("AUTH_KEY").unwrap_or_else(|_| "dummy_auth_key".to_string());
 
             // Instantiate CatalogLifecycleManager with the storage port injected
-            let catalog_manager = crate::core::catalog_lifecycle_manager::CatalogLifecycleManager::new(storage, embedding_engine);
+            let catalog_manager = crate::core::catalog_lifecycle_manager::CatalogLifecycleManager::new(storage);
             let ingestion_api = crate::adapters::ingestion_api::IngestionApi::new(catalog_manager);
 
             match action.as_str() {
                 "add" => {
                     match serde_json::from_str::<crate::core::models::ToolCatalog>(payload) {
                         Ok(catalog) => {
-                            match ingestion_api.ingest(&catalog, &auth_key) {
-                                Ok(_) => println!("Catalog successfully added."),
+                            match embedding_engine.optimize_catalog(&catalog) {
+                                Ok(optimized) => {
+                                    match ingestion_api.ingest(&optimized, &auth_key) {
+                                        Ok(_) => println!("Catalog successfully added."),
+                                        Err(err) => {
+                                            eprintln!("Error adding catalog: {}", err);
+                                            std::process::exit(1);
+                                        }
+                                    }
+                                }
                                 Err(err) => {
-                                    eprintln!("Error adding catalog: {}", err);
+                                    eprintln!("Error optimizing catalog: {}", err);
                                     std::process::exit(1);
                                 }
                             }
@@ -95,10 +104,18 @@ fn main() {
                 "update" => {
                     match serde_json::from_str::<crate::core::models::ToolCatalog>(payload) {
                         Ok(catalog) => {
-                            match ingestion_api.update(&catalog, &auth_key) {
-                                Ok(_) => println!("Catalog successfully updated."),
+                            match embedding_engine.optimize_catalog(&catalog) {
+                                Ok(optimized) => {
+                                    match ingestion_api.update(&optimized, &auth_key) {
+                                        Ok(_) => println!("Catalog successfully updated."),
+                                        Err(err) => {
+                                            eprintln!("Error updating catalog: {}", err);
+                                            std::process::exit(1);
+                                        }
+                                    }
+                                }
                                 Err(err) => {
-                                    eprintln!("Error updating catalog: {}", err);
+                                    eprintln!("Error optimizing catalog: {}", err);
                                     std::process::exit(1);
                                 }
                             }
