@@ -21,76 +21,72 @@ impl Default for KeywordMatchingEngine {
     }
 }
 
-fn build_bm25_optimized_data(description: &str, keywords: &str) -> Vec<OptimizedData> {
-    let keyword_set: HashSet<String> = keywords
-        .to_lowercase()
+fn clean_and_tokenize(text: &str) -> Vec<String> {
+    text.to_lowercase()
+        .replace('\'', "")
+        .replace('’', "")
+        .replace('/', " ")
+        .replace(':', " ")
         .split_whitespace()
-        .map(|w| w.chars().filter(|c| c.is_alphanumeric() || *c == '-').collect())
-        .collect();
+        .map(|word| {
+            word.chars()
+                .filter(|c| c.is_alphanumeric() || *c == '-')
+                .collect::<String>()
+        })
+        .filter(|w| !w.is_empty())
+        .collect()
+}
+
+fn filter_stop_words(
+    tokens: Vec<String>,
+    stop_words: &HashSet<String>,
+    bypass_words: &HashSet<String>,
+) -> Vec<String> {
+    tokens
+        .into_iter()
+        .filter(|w| !stop_words.contains(w) || bypass_words.contains(w))
+        .collect()
+}
+
+fn stem_tokens(tokens: Vec<String>, stemmer: &Stemmer) -> Vec<String> {
+    tokens
+        .into_iter()
+        .map(|w| stemmer.stem(&w).into_owned())
+        .collect()
+}
+
+fn generate_shingles(tokens: &[String]) -> Vec<String> {
+    let mut shingles = Vec::new();
+    for window in tokens.windows(2) {
+        shingles.push(format!("{}{}", window[0], window[1]));
+    }
+    for window in tokens.windows(3) {
+        shingles.push(format!("{}{}{}", window[0], window[1], window[2]));
+    }
+    shingles
+}
+
+fn build_bm25_optimized_data(description: &str, keywords: &str) -> Vec<OptimizedData> {
+    let stemmer = Stemmer::create(Algorithm::English);
+
+    let raw_keywords = clean_and_tokenize(keywords);
+    let keyword_set: HashSet<String> = raw_keywords.iter().cloned().collect();
+    let stemmed_keywords = stem_tokens(raw_keywords, &stemmer);
 
     let english_stops: HashSet<String> = stop_words::get(stop_words::LANGUAGE::English)
         .iter()
         .map(|s| s.to_string())
         .collect();
 
-    let stemmer = Stemmer::create(Algorithm::English);
+    let raw_desc_tokens = clean_and_tokenize(description);
+    let filtered_desc_tokens = filter_stop_words(raw_desc_tokens.clone(), &english_stops, &keyword_set);
+    let stemmed_desc_tokens = stem_tokens(filtered_desc_tokens, &stemmer);
+    let preprocessed_desc = stemmed_desc_tokens.join(" ");
 
-    let desc_tokens: Vec<String> = description
-        .to_lowercase()
-        .replace('\'', "")
-        .replace('’', "")
-        .replace('/', " ")
-        .replace(':', " ")
-        .split_whitespace()
-        .map(|word| {
-            word.chars()
-                .filter(|c| c.is_alphanumeric() || *c == '-')
-                .collect::<String>()
-        })
-        .filter(|w| !w.is_empty())
-        .filter(|w| !english_stops.contains(w) || keyword_set.contains(w))
-        .map(|w| stemmer.stem(&w).into_owned())
-        .collect();
+    let stemmed_raw_desc_tokens = stem_tokens(raw_desc_tokens, &stemmer);
+    let shingles = generate_shingles(&stemmed_raw_desc_tokens);
 
-    let preprocessed_desc = desc_tokens.join(" ");
-
-    let raw_desc_tokens: Vec<String> = description
-        .to_lowercase()
-        .replace('\'', "")
-        .replace('’', "")
-        .replace('/', " ")
-        .replace(':', " ")
-        .split_whitespace()
-        .map(|word| {
-            word.chars()
-                .filter(|c| c.is_alphanumeric() || *c == '-')
-                .collect::<String>()
-        })
-        .filter(|w| !w.is_empty())
-        .map(|w| stemmer.stem(&w).into_owned())
-        .collect();
-
-    let mut shingles = Vec::new();
-    for window in raw_desc_tokens.windows(2) {
-        shingles.push(format!("{}{}", window[0], window[1]));
-    }
-    for window in raw_desc_tokens.windows(3) {
-        shingles.push(format!("{}{}{}", window[0], window[1], window[2]));
-    }
-
-    let keyword_tokens: Vec<String> = keywords
-        .to_lowercase()
-        .split_whitespace()
-        .map(|word| {
-            word.chars()
-                .filter(|c| c.is_alphanumeric() || *c == '-')
-                .collect::<String>()
-        })
-        .filter(|w| !w.is_empty())
-        .map(|w| stemmer.stem(&w).into_owned())
-        .collect();
-
-    let mut final_keywords = keyword_tokens;
+    let mut final_keywords = stemmed_keywords;
     final_keywords.extend(shingles);
     let preprocessed_keywords = final_keywords.join(" ");
 
