@@ -78,7 +78,7 @@ impl Default for EmbeddingMatchingEngine {
     }
 }
 
-fn ensure_embedding_tables_exist(conn: &rusqlite::Connection) -> Result<(), AppError> {
+fn ensure_embedding_tables_exist(conn: &rusqlite::Connection, n_embd: u32) -> Result<(), AppError> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS embedding_optimized_catalogs (
             tool_name TEXT PRIMARY KEY,
@@ -99,10 +99,26 @@ fn ensure_embedding_tables_exist(conn: &rusqlite::Connection) -> Result<(), AppE
         [],
     ).map_err(|e| AppError::Storage(e.to_string()))?;
 
+    let create_vec_table = format!(
+        "CREATE VIRTUAL TABLE IF NOT EXISTS vec_embedding_optimized_options USING vec0(
+            option_id INTEGER PRIMARY KEY,
+            gemma_embedding float[{}] distance_metric=cosine
+        );",
+        n_embd
+    );
+    conn.execute(&create_vec_table, []).map_err(|e| AppError::Storage(e.to_string()))?;
+
     Ok(())
 }
 
 fn clear_existing_embedding_records(conn: &rusqlite::Connection, tool_name: &str) -> Result<(), AppError> {
+    conn.execute(
+        "DELETE FROM vec_embedding_optimized_options WHERE option_id IN (
+            SELECT id FROM embedding_optimized_options WHERE tool_name = ?
+        )",
+        rusqlite::params![tool_name],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
     conn.execute(
         "DELETE FROM embedding_optimized_catalogs WHERE tool_name = ?",
         rusqlite::params![tool_name],
@@ -159,6 +175,13 @@ fn compute_and_save_options_embeddings(
             opt.option_name,
             opt_data_bytes,
         ]).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        let option_id = conn.last_insert_rowid();
+
+        conn.execute(
+            "INSERT INTO vec_embedding_optimized_options (option_id, gemma_embedding) VALUES (?, ?)",
+            rusqlite::params![option_id, opt_data_bytes],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
     }
 
     Ok(())
@@ -169,16 +192,77 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         &self,
         query: &UserQuery,
     ) -> Result<Vec<Vec<ScoredCandidate>>, AppError> {
-        // Return a dummy matched option from the embedding engine
-        Ok(vec![vec![ScoredCandidate {
-            option: CommandOption {
-                option_name: "-la".to_string(),
-                description: format!("Embedding match result for: {}", query.query),
-                user_friendly_description: "".to_string(),
-                keywords: "embedding".to_string(),
-            },
-            score: 0.95,
-        }]])
+        crate::adapters::persistence::register_sqlite_vec();
+
+        let num_cpus = num_cpus::get_physical();
+        let backend = Self::get_global_backend()?;
+        let guard = self.get_or_init_model()?;
+        let model = guard.as_ref().unwrap();
+
+        let ctx_params = LlamaContextParams::default()
+            .with_embeddings(true)
+            .with_n_ctx(std::num::NonZeroU32::new(512))
+            .with_n_threads(num_cpus as i32)
+            .with_n_threads_batch(num_cpus as i32);
+
+        let mut ctx = model.new_context(backend, ctx_params)
+            .map_err(|e| AppError::Initialization(
+                crate::core::errors::InitializationException::new(format!(
+                    "Failed to create context: {:?}",
+                    e
+                )),
+            ))?;
+
+        let query_raw_emb = compute_embedding(model, &mut ctx, &query.query)?;
+        let query_normalized_emb = l2_normalize(query_raw_emb);
+        let query_data_bytes = serialize_embedding(&query_normalized_emb);
+
+        let conn = rusqlite::Connection::open("local_assistant.db")
+            .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
+        let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
+
+        let mut stmt = conn.prepare(
+            "SELECT 
+                o.option_name, 
+                o.description, 
+                o.user_friendly_description, 
+                o.keywords, 
+                v.distance
+             FROM vec_embedding_optimized_options v
+             JOIN embedding_optimized_options eo ON v.option_id = eo.id
+             JOIN command_options o ON eo.tool_name = o.tool_name AND eo.option_name = o.option_name
+             WHERE v.gemma_embedding MATCH ?1 AND k = 15
+             ORDER BY v.distance ASC"
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        let mut rows = stmt.query(rusqlite::params![query_data_bytes])
+            .map_err(|e| AppError::Storage(e.to_string()))?;
+
+        let mut candidates = Vec::new();
+        while let Some(row) = rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
+            let option_name: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
+            let description: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
+            let user_friendly_description: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
+            let keywords: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
+            let distance: f64 = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
+
+            let score = 1.0 - distance;
+
+            candidates.push(ScoredCandidate {
+                option: CommandOption {
+                    option_name,
+                    description,
+                    user_friendly_description,
+                    keywords,
+                },
+                score,
+            });
+        }
+
+        let cutoff_config = crate::adapters::matching::otsu::OtsuCutoffConfig::new(0.60, 0.0, 1.0);
+        let filtered_candidates = crate::adapters::matching::otsu::apply_otsu_cutoff(candidates, &cutoff_config);
+
+        Ok(vec![filtered_candidates])
     }
 
     fn load_engines(&self) -> Result<bool, AppError> {
@@ -190,17 +274,20 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         &self,
         catalog: &ToolCatalog,
     ) -> Result<(), AppError> {
+        crate::adapters::persistence::register_sqlite_vec();
         let conn = rusqlite::Connection::open("local_assistant.db")
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
+        let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
-        ensure_embedding_tables_exist(&conn)?;
-        clear_existing_embedding_records(&conn, &catalog.tool_name)?;
-
-        // Initialize llama context and model
+        // Initialize llama context and model to retrieve n_embd
         let num_cpus = num_cpus::get_physical();
         let backend = Self::get_global_backend()?;
         let guard = self.get_or_init_model()?;
         let model = guard.as_ref().unwrap();
+        let n_embd = model.n_embd() as u32;
+
+        ensure_embedding_tables_exist(&conn, n_embd)?;
+        clear_existing_embedding_records(&conn, &catalog.tool_name)?;
 
         let ctx_params = LlamaContextParams::default()
             .with_embeddings(true)
@@ -233,8 +320,17 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         &self,
         tool_name: &str,
     ) -> Result<(), AppError> {
+        crate::adapters::persistence::register_sqlite_vec();
         let conn = rusqlite::Connection::open("local_assistant.db")
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
+        let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
+
+        conn.execute(
+            "DELETE FROM vec_embedding_optimized_options WHERE option_id IN (
+                SELECT id FROM embedding_optimized_options WHERE tool_name = ?
+            )",
+            rusqlite::params![tool_name],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
 
         conn.execute(
             "DELETE FROM embedding_optimized_catalogs WHERE tool_name = ?",
@@ -431,16 +527,58 @@ mod tests {
 
     #[test]
     fn test_calculate_similarities() {
+        use crate::ports::outbound::storage::StoragePort;
+        use crate::adapters::persistence::PersistenceAdapter;
+
+        let storage = PersistenceAdapter::new();
         let engine = EmbeddingMatchingEngine::new();
-        let query = UserQuery {
-            query: "list files".to_string(),
-            n_grams: None,
+        
+        let tool_name = "test_similarity_tool";
+        let _ = storage.delete_catalog(tool_name);
+        let _ = engine.delete_optimized_catalog(tool_name);
+
+        let catalog = ToolCatalog {
+            tool_name: tool_name.to_string(),
+            description: "A filesystem utility to search files".to_string(),
+            user_friendly_description: "search".to_string(),
+            keywords: "find search grep".to_string(),
+            version: "1.0".to_string(),
+            options: vec![
+                CommandOption {
+                    option_name: "--recursive".to_string(),
+                    description: "Search subdirectories recursively".to_string(),
+                    user_friendly_description: "recursive search".to_string(),
+                    keywords: "recursive subdirectories all depth".to_string(),
+                }
+            ],
+            rules: CommandRules(serde_json::json!({})),
         };
-        let result = engine.calculate_similarities(&query);
-        assert!(result.is_ok());
-        let candidates = result.unwrap();
-        assert!(!candidates.is_empty());
-        assert!(!candidates[0].is_empty());
-        assert_eq!(candidates[0][0].option.option_name, "-la");
+
+        if std::path::Path::new("/home/sandbox-noadmin/RustroverProjects/embedding_models_testing/models/embeddinggemma-300M-BF16.gguf").exists() {
+            storage.save_catalog(&catalog).unwrap();
+            engine.create_optimized_catalog(&catalog).unwrap();
+
+            let query = UserQuery {
+                query: "Search subdirectories recursively".to_string(),
+                n_grams: None,
+            };
+            let result = engine.calculate_similarities(&query);
+            assert!(result.is_ok(), "Expected Ok, got error: {:?}", result.err());
+            let candidates = result.unwrap();
+            assert!(!candidates.is_empty());
+            assert!(!candidates[0].is_empty());
+            assert_eq!(candidates[0][0].option.option_name, "--recursive");
+
+            // Clean up
+            let _ = storage.delete_catalog(tool_name);
+            let _ = engine.delete_optimized_catalog(tool_name);
+        } else {
+            let query = UserQuery {
+                query: "Search subdirectories recursively".to_string(),
+                n_grams: None,
+            };
+            let result = engine.calculate_similarities(&query);
+            assert!(result.is_err());
+        }
     }
 }

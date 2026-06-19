@@ -396,6 +396,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
     fn load_engines(&self) -> Result<bool, AppError> {
         let conn = rusqlite::Connection::open("local_assistant.db")
             .map_err(|e| AppError::Storage(format!("Failed to open DB for BM25: {}", e)))?;
+        let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
         // 1. Fetch keywords to build bypass set
         let keyword_set = fetch_catalog_keywords(&conn)?;

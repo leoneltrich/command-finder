@@ -1,6 +1,17 @@
 use crate::ports::outbound::storage::StoragePort;
 use crate::core::errors::AppError;
 use crate::core::models::{ToolCatalog, CommandOption, CatalogMaintainer, EndUserConfig, CommandRules};
+use sqlite_vec::sqlite3_vec_init;
+use rusqlite::ffi::sqlite3_auto_extension;
+
+pub fn register_sqlite_vec() {
+    static REGISTERED: std::sync::Once = std::sync::Once::new();
+    REGISTERED.call_once(|| {
+        unsafe {
+            let _ = sqlite3_auto_extension(Some(std::mem::transmute(sqlite3_vec_init as *const ())));
+        }
+    });
+}
 
 /// Persistence adapter implementing the outbound StoragePort using a normalized SQLite schema with embedding columns.
 #[derive(Clone, Copy)]
@@ -14,6 +25,7 @@ impl PersistenceAdapter {
 
     /// Establishes connection to the SQLite database and initializes tables if not present.
     fn connect(&self) -> Result<rusqlite::Connection, AppError> {
+        register_sqlite_vec();
         let conn = rusqlite::Connection::open("local_assistant.db")
             .map_err(|e| AppError::StorageConnection(
                 crate::core::errors::StorageConnectionException::new(format!("Failed to open DB: {}", e))
@@ -22,6 +34,7 @@ impl PersistenceAdapter {
         // Enable foreign key constraints and WAL journal mode for concurrency resilience (NFR-12)
         let _ = conn.execute("PRAGMA foreign_keys = ON;", []);
         let _ = conn.execute("PRAGMA journal_mode = WAL;", []);
+        let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
         // Detect if legacy database schema migration is needed (e.g. if any non-standard column exists in command_options)
         let table_info_migration_needed = if let Ok(mut stmt) = conn.prepare("PRAGMA table_info(command_options);") {
