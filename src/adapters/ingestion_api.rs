@@ -1,6 +1,6 @@
 use crate::ports::inbound::catalog_ingestion::CatalogIngestionPort;
 use crate::core::errors::AppError;
-use crate::core::models::OptimizedToolCatalog;
+use crate::core::models::ToolCatalog;
 
 /// Driving adapter for the catalog ingestion interface.
 /// It wraps an implementation of CatalogIngestionPort.
@@ -15,12 +15,12 @@ impl<P: CatalogIngestionPort> IngestionApi<P> {
     }
 
     /// Handles ingestion of a new tool catalog.
-    pub fn ingest(&self, catalog: &OptimizedToolCatalog, auth_key: &str) -> Result<bool, AppError> {
+    pub fn ingest(&self, catalog: &ToolCatalog, auth_key: &str) -> Result<bool, AppError> {
         self.catalog_ingestion_port.ingest_catalog(catalog, auth_key)
     }
 
     /// Handles updating an existing tool catalog.
-    pub fn update(&self, catalog: &OptimizedToolCatalog, auth_key: &str) -> Result<bool, AppError> {
+    pub fn update(&self, catalog: &ToolCatalog, auth_key: &str) -> Result<bool, AppError> {
         self.catalog_ingestion_port.update_catalog(catalog, auth_key)
     }
 

@@ -1,6 +1,6 @@
 use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
-use crate::core::models::{UserQuery, ScoredCandidate, CommandOption, ToolCatalog, OptimizedToolCatalog, OptimizedCommandOption, OptimizedData};
+use crate::core::models::{UserQuery, ScoredCandidate, CommandOption, ToolCatalog};
 use std::collections::HashSet;
 use rust_stemmers::{Algorithm, Stemmer};
 use tantivy::schema::{Schema, Field, STORED, TEXT, STRING, Value};
@@ -88,7 +88,7 @@ fn generate_shingles(tokens: &[String]) -> Vec<String> {
     shingles
 }
 
-fn build_bm25_optimized_data(description: &str, keywords: &str) -> Vec<OptimizedData> {
+fn build_bm25_optimized_data(description: &str, keywords: &str) -> (String, String) {
     let stemmer = Stemmer::create(Algorithm::English);
 
     let raw_keywords = clean_and_tokenize(keywords);
@@ -112,18 +112,7 @@ fn build_bm25_optimized_data(description: &str, keywords: &str) -> Vec<Optimized
     final_keywords.extend(shingles);
     let preprocessed_keywords = final_keywords.join(" ");
 
-    vec![
-        OptimizedData {
-            key: "bm25_preprocessed_description".to_string(),
-            data: preprocessed_desc.into_bytes(),
-            data_type: "TEXT".to_string(),
-        },
-        OptimizedData {
-            key: "bm25_preprocessed_keywords".to_string(),
-            data: preprocessed_keywords.into_bytes(),
-            data_type: "TEXT".to_string(),
-        },
-    ]
+    (preprocessed_desc, preprocessed_keywords)
 }
 
 fn preprocess_query_string(query_text: &str, catalog_keywords: &HashSet<String>) -> String {
@@ -228,16 +217,14 @@ fn fetch_catalog_keywords(conn: &rusqlite::Connection) -> Result<HashSet<String>
     Ok(keyword_set)
 }
 
-fn check_dynamic_columns_exist(conn: &rusqlite::Connection) -> bool {
-    if let Ok(mut stmt) = conn.prepare("PRAGMA table_info(command_options)") {
+fn check_optimized_tables_exist(conn: &rusqlite::Connection) -> bool {
+    if let Ok(mut stmt) = conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND (name='bm25_optimized_catalogs' OR name='bm25_optimized_options')") {
         if let Ok(mut rows) = stmt.query([]) {
-            while let Some(row) = rows.next().unwrap_or(None) {
-                if let Ok(name) = row.get::<_, String>(1) {
-                    if name == "bm25_preprocessed_description" {
-                        return true;
-                    }
-                }
+            let mut count = 0;
+            while let Some(_) = rows.next().unwrap_or(None) {
+                count += 1;
             }
+            return count == 2;
         }
     }
     false
@@ -248,12 +235,22 @@ fn ingest_documents(
     index_writer: &mut tantivy::IndexWriter,
     state_fields: &TantivyFields,
 ) -> Result<(), AppError> {
-    if !check_dynamic_columns_exist(conn) {
+    if !check_optimized_tables_exist(conn) {
         return Ok(());
     }
 
     let mut stmt = conn.prepare(
-        "SELECT tool_name, option_name, description, user_friendly_description, keywords, bm25_preprocessed_description, bm25_preprocessed_keywords FROM command_options"
+        "SELECT 
+            c.tool_name, 
+            c.option_name, 
+            c.description, 
+            c.user_friendly_description, 
+            c.keywords, 
+            o.preprocessed_description, 
+            o.preprocessed_keywords 
+         FROM command_options c
+         INNER JOIN bm25_optimized_options o 
+             ON c.tool_name = o.tool_name AND c.option_name = o.option_name"
     ).map_err(|e| AppError::Storage(e.to_string()))?;
     let mut rows = stmt.query([]).map_err(|e| AppError::Storage(e.to_string()))?;
     while let Some(row) = rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
@@ -262,23 +259,19 @@ fn ingest_documents(
         let raw_desc: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
         let raw_user_desc: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
         let raw_kws: String = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
-        let preprocessed_desc_bytes: Option<Vec<u8>> = row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
-        let preprocessed_kws_bytes: Option<Vec<u8>> = row.get(6).map_err(|e| AppError::Storage(e.to_string()))?;
-        let preprocessed_desc = preprocessed_desc_bytes.and_then(|b| String::from_utf8(b).ok());
-        let preprocessed_kws = preprocessed_kws_bytes.and_then(|b| String::from_utf8(b).ok());
+        let preprocessed_desc: String = row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
+        let preprocessed_kws: String = row.get(6).map_err(|e| AppError::Storage(e.to_string()))?;
 
-        if let (Some(desc), Some(kw)) = (preprocessed_desc, preprocessed_kws) {
-            let doc = doc!(
-                state_fields.tool_name_field => tool_name,
-                state_fields.option_name_field => option_name,
-                state_fields.raw_description_field => raw_desc,
-                state_fields.user_friendly_description_field => raw_user_desc,
-                state_fields.raw_keywords_field => raw_kws,
-                state_fields.description_field => desc,
-                state_fields.keywords_field => kw
-            );
-            index_writer.add_document(doc).map_err(|e| AppError::Matching(e.to_string()))?;
-        }
+        let doc = doc!(
+            state_fields.tool_name_field => tool_name,
+            state_fields.option_name_field => option_name,
+            state_fields.raw_description_field => raw_desc,
+            state_fields.user_friendly_description_field => raw_user_desc,
+            state_fields.raw_keywords_field => raw_kws,
+            state_fields.description_field => preprocessed_desc,
+            state_fields.keywords_field => preprocessed_kws
+        );
+        index_writer.add_document(doc).map_err(|e| AppError::Matching(e.to_string()))?;
     }
     Ok(())
 }
@@ -391,32 +384,101 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
         Ok(true)
     }
 
-    fn optimize_catalog(
+    fn create_optimized_catalog(
         &self,
         catalog: &ToolCatalog,
-    ) -> Result<OptimizedToolCatalog, AppError> {
-        let tool_optimized_data = build_bm25_optimized_data(&catalog.description, &catalog.keywords);
+    ) -> Result<(), AppError> {
+        let conn = rusqlite::Connection::open("local_assistant.db")
+            .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
 
-        let options = catalog.options.iter().map(|opt| {
-            OptimizedCommandOption {
-                option_name: opt.option_name.clone(),
-                description: opt.description.clone(),
-                user_friendly_description: opt.user_friendly_description.clone(),
-                keywords: opt.keywords.clone(),
-                optimized_data: build_bm25_optimized_data(&opt.description, &opt.keywords),
-            }
-        }).collect();
+        // 1. Create tables if they do not exist
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS bm25_optimized_catalogs (
+                tool_name TEXT PRIMARY KEY,
+                preprocessed_description TEXT NOT NULL,
+                preprocessed_keywords TEXT NOT NULL,
+                FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
+            );",
+            [],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
 
-        Ok(OptimizedToolCatalog {
-            tool_name: catalog.tool_name.clone(),
-            description: catalog.description.clone(),
-            user_friendly_description: catalog.user_friendly_description.clone(),
-            keywords: catalog.keywords.clone(),
-            version: catalog.version.clone(),
-            options,
-            rules: catalog.rules.clone(),
-            optimized_data: tool_optimized_data,
-        })
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS bm25_optimized_options (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tool_name TEXT NOT NULL,
+                option_name TEXT NOT NULL,
+                preprocessed_description TEXT NOT NULL,
+                preprocessed_keywords TEXT NOT NULL,
+                FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
+            );",
+            [],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        // 2. Clear any existing records for this tool to prevent duplicates (idempotency)
+        conn.execute(
+            "DELETE FROM bm25_optimized_catalogs WHERE tool_name = ?",
+            rusqlite::params![catalog.tool_name],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        conn.execute(
+            "DELETE FROM bm25_optimized_options WHERE tool_name = ?",
+            rusqlite::params![catalog.tool_name],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        // 3. Preprocess and save tool catalog description & keywords
+        let (tool_desc, tool_kws) = build_bm25_optimized_data(&catalog.description, &catalog.keywords);
+
+        conn.execute(
+            "INSERT INTO bm25_optimized_catalogs (tool_name, preprocessed_description, preprocessed_keywords) VALUES (?, ?, ?)",
+            rusqlite::params![catalog.tool_name, tool_desc, tool_kws],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        // 4. Preprocess and save option description & keywords
+        let mut opt_stmt = conn.prepare(
+            "INSERT INTO bm25_optimized_options (tool_name, option_name, preprocessed_description, preprocessed_keywords) VALUES (?, ?, ?, ?)"
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        for opt in &catalog.options {
+            let (opt_desc, opt_kws) = build_bm25_optimized_data(&opt.description, &opt.keywords);
+
+            opt_stmt.execute(rusqlite::params![
+                catalog.tool_name,
+                opt.option_name,
+                opt_desc,
+                opt_kws,
+            ]).map_err(|e| AppError::Storage(e.to_string()))?;
+        }
+
+        Ok(())
+    }
+
+    fn update_optimized_catalog(
+        &self,
+        catalog: &ToolCatalog,
+    ) -> Result<(), AppError> {
+        // Since we clear existing and re-insert, update is identical to create
+        self.create_optimized_catalog(catalog)
+    }
+
+    fn delete_optimized_catalog(
+        &self,
+        tool_name: &str,
+    ) -> Result<(), AppError> {
+        let conn = rusqlite::Connection::open("local_assistant.db")
+            .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
+
+        // Drop the records directly
+        conn.execute(
+            "DELETE FROM bm25_optimized_catalogs WHERE tool_name = ?",
+            rusqlite::params![tool_name],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        conn.execute(
+            "DELETE FROM bm25_optimized_options WHERE tool_name = ?",
+            rusqlite::params![tool_name],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        Ok(())
     }
 }
 
@@ -429,16 +491,12 @@ mod tests {
     fn test_build_bm25_optimized_data() {
         let description = "Copy -R directories dynamically";
         let keywords = "find search";
-        let opt_data = build_bm25_optimized_data(description, keywords);
+        let (desc_str, key_str) = build_bm25_optimized_data(description, keywords);
 
-        let desc_data = opt_data.iter().find(|d| d.key == "bm25_preprocessed_description").unwrap();
-        let desc_str = String::from_utf8(desc_data.data.clone()).unwrap();
         // "copy" is in stop-words so it is removed, Porter stemming applies to "directories" -> "directori", "dynamically" -> "dynam"
         // "-R" becomes "-r"
         assert_eq!(desc_str, "-r directori dynam");
 
-        let key_data = opt_data.iter().find(|d| d.key == "bm25_preprocessed_keywords").unwrap();
-        let key_str = String::from_utf8(key_data.data.clone()).unwrap();
         assert!(key_str.contains("find"));
         assert!(key_str.contains("search"));
         // Shingles (stemmed): "copi-r", "-rdirectori", "copi-rdirectori"
@@ -447,10 +505,18 @@ mod tests {
     }
 
     #[test]
-    fn test_optimize_catalog_keyword() {
+    fn test_create_optimized_catalog_keyword() {
+        use crate::ports::outbound::storage::StoragePort;
+        use crate::adapters::persistence::PersistenceAdapter;
+
+        let storage = PersistenceAdapter::new();
         let engine = KeywordMatchingEngine::new();
+        let tool_name = "test_keyword_db_tool";
+        let _ = storage.delete_catalog(tool_name);
+        let _ = engine.delete_optimized_catalog(tool_name);
+
         let catalog = ToolCatalog {
-            tool_name: "test_tool".to_string(),
+            tool_name: tool_name.to_string(),
             description: "Copy -R directories".to_string(),
             user_friendly_description: "search".to_string(),
             keywords: "find search".to_string(),
@@ -466,21 +532,33 @@ mod tests {
             rules: CommandRules(serde_json::json!({})),
         };
 
-        let result = engine.optimize_catalog(&catalog).unwrap();
-        
-        // Verify parent optimized data
-        let opt_desc = result.optimized_data.iter().find(|d| d.key == "bm25_preprocessed_description").unwrap();
-        let opt_desc_str = String::from_utf8(opt_desc.data.clone()).unwrap();
-        // "copy" is stop word, so removed
-        assert_eq!(opt_desc_str, "-r directori");
+        // 1. Ingest base catalog
+        storage.save_catalog(&catalog).unwrap();
 
-        // Verify child options optimized data
-        assert_eq!(result.options.len(), 1);
-        let opt_option = &result.options[0];
-        let opt_opt_desc = opt_option.optimized_data.iter().find(|d| d.key == "bm25_preprocessed_description").unwrap();
-        let opt_opt_desc_str = String::from_utf8(opt_opt_desc.data.clone()).unwrap();
-        // "copy" is stop word, so "recursive copy directories" -> "recurs directori"
-        assert_eq!(opt_opt_desc_str, "recurs directori");
+        // 2. Run engine create
+        engine.create_optimized_catalog(&catalog).unwrap();
+
+        // 3. Query custom database tables directly to verify content
+        let conn = rusqlite::Connection::open("local_assistant.db").unwrap();
+        let mut stmt1 = conn.prepare("SELECT preprocessed_description, preprocessed_keywords FROM bm25_optimized_catalogs WHERE tool_name = ?").unwrap();
+        let mut row1 = stmt1.query(rusqlite::params![tool_name]).unwrap();
+        let r1 = row1.next().unwrap().unwrap();
+        let parent_desc: String = r1.get(0).unwrap();
+        let parent_kws: String = r1.get(1).unwrap();
+        assert_eq!(parent_desc, "-r directori");
+        assert!(parent_kws.contains("find"));
+
+        let mut stmt2 = conn.prepare("SELECT option_name, preprocessed_description, preprocessed_keywords FROM bm25_optimized_options WHERE tool_name = ?").unwrap();
+        let mut row2 = stmt2.query(rusqlite::params![tool_name]).unwrap();
+        let r2 = row2.next().unwrap().unwrap();
+        let opt_name: String = r2.get(0).unwrap();
+        let opt_desc: String = r2.get(1).unwrap();
+        assert_eq!(opt_name, "-R");
+        assert_eq!(opt_desc, "recurs directori");
+
+        // Clean up
+        let _ = storage.delete_catalog(tool_name);
+        let _ = engine.delete_optimized_catalog(tool_name);
     }
 
     #[test]
@@ -513,11 +591,11 @@ mod tests {
 
         // 2. Delete if already exists (just in case)
         let _ = storage.delete_catalog(tool_name);
+        let _ = engine.delete_optimized_catalog(tool_name);
 
-        // 3. Optimize and save
-        let optimized = engine.optimize_catalog(&catalog).unwrap();
-        let save_res = storage.save_catalog(&optimized).unwrap();
-        assert!(save_res);
+        // 3. Save base catalog and then optimize it using keyword engine
+        storage.save_catalog(&catalog).unwrap();
+        engine.create_optimized_catalog(&catalog).unwrap();
 
         // 4. Load engines to reload the Tantivy index from the DB
         let load_res = engine.load_engines().unwrap();
@@ -532,6 +610,7 @@ mod tests {
         
         // Cleanup first before assertions so we don't leave garbage on failure
         let _ = storage.delete_catalog(tool_name);
+        let _ = engine.delete_optimized_catalog(tool_name);
 
         // 6. Assertions
         assert_eq!(results.len(), 1);

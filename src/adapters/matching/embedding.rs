@@ -1,6 +1,6 @@
 use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
-use crate::core::models::{UserQuery, ScoredCandidate, CommandOption, ToolCatalog, OptimizedToolCatalog, OptimizedCommandOption, OptimizedData};
+use crate::core::models::{UserQuery, ScoredCandidate, CommandOption, ToolCatalog};
 use llama_cpp_2::context::params::LlamaContextParams;
 use llama_cpp_2::llama_backend::LlamaBackend;
 use llama_cpp_2::model::params::LlamaModelParams;
@@ -100,12 +100,47 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         Ok(true)
     }
 
-    fn optimize_catalog(
+    fn create_optimized_catalog(
         &self,
         catalog: &ToolCatalog,
-    ) -> Result<OptimizedToolCatalog, AppError> {
+    ) -> Result<(), AppError> {
+        let conn = rusqlite::Connection::open("local_assistant.db")
+            .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
+
+        // 1. Create tables if they do not exist
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS embedding_optimized_catalogs (
+                tool_name TEXT PRIMARY KEY,
+                embedding BLOB NOT NULL,
+                FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
+            );",
+            [],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS embedding_optimized_options (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tool_name TEXT NOT NULL,
+                option_name TEXT NOT NULL,
+                embedding BLOB NOT NULL,
+                FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
+            );",
+            [],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        // 2. Clear any existing records for this tool to prevent duplicates (idempotency)
+        conn.execute(
+            "DELETE FROM embedding_optimized_catalogs WHERE tool_name = ?",
+            rusqlite::params![catalog.tool_name],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        conn.execute(
+            "DELETE FROM embedding_optimized_options WHERE tool_name = ?",
+            rusqlite::params![catalog.tool_name],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        // 3. Compute parent tool embedding
         let num_cpus = num_cpus::get_physical();
-        
         let backend = Self::get_global_backend()?;
         let guard = self.get_or_init_model()?;
         let model = guard.as_ref().unwrap();
@@ -124,20 +159,21 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
                 )),
             ))?;
 
-        // Format the tool description using the standard gemma pattern
         let processed_text = format!("title: {} | text: {}", catalog.tool_name, catalog.description);
-
         let raw_emb = compute_embedding(model, &mut ctx, &processed_text)?;
         let normalized_emb = l2_normalize(raw_emb);
         let data_bytes = serialize_embedding(&normalized_emb);
 
-        let optimized_data = vec![OptimizedData {
-            key: "gemma_embedding".to_string(),
-            data: data_bytes,
-            data_type: "BLOB".to_string(),
-        }];
+        conn.execute(
+            "INSERT INTO embedding_optimized_catalogs (tool_name, embedding) VALUES (?, ?)",
+            rusqlite::params![catalog.tool_name, data_bytes],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
 
-        let mut options = Vec::new();
+        // 4. Compute and save options embeddings
+        let mut opt_stmt = conn.prepare(
+            "INSERT INTO embedding_optimized_options (tool_name, option_name, embedding) VALUES (?, ?, ?)"
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
         for opt in &catalog.options {
             let processed_opt_text = format!(
                 "title: {} {} | text: {} Keywords: {}",
@@ -147,29 +183,41 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             let opt_normalized_emb = l2_normalize(opt_raw_emb);
             let opt_data_bytes = serialize_embedding(&opt_normalized_emb);
 
-            options.push(OptimizedCommandOption {
-                option_name: opt.option_name.clone(),
-                description: opt.description.clone(),
-                user_friendly_description: opt.user_friendly_description.clone(),
-                keywords: opt.keywords.clone(),
-                optimized_data: vec![OptimizedData {
-                    key: "gemma_embedding".to_string(),
-                    data: opt_data_bytes,
-                    data_type: "BLOB".to_string(),
-                }],
-            });
+            opt_stmt.execute(rusqlite::params![
+                catalog.tool_name,
+                opt.option_name,
+                opt_data_bytes,
+            ]).map_err(|e| AppError::Storage(e.to_string()))?;
         }
 
-        Ok(OptimizedToolCatalog {
-            tool_name: catalog.tool_name.clone(),
-            description: catalog.description.clone(),
-            user_friendly_description: catalog.user_friendly_description.clone(),
-            keywords: catalog.keywords.clone(),
-            version: catalog.version.clone(),
-            options,
-            rules: catalog.rules.clone(),
-            optimized_data,
-        })
+        Ok(())
+    }
+
+    fn update_optimized_catalog(
+        &self,
+        catalog: &ToolCatalog,
+    ) -> Result<(), AppError> {
+        self.create_optimized_catalog(catalog)
+    }
+
+    fn delete_optimized_catalog(
+        &self,
+        tool_name: &str,
+    ) -> Result<(), AppError> {
+        let conn = rusqlite::Connection::open("local_assistant.db")
+            .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
+
+        conn.execute(
+            "DELETE FROM embedding_optimized_catalogs WHERE tool_name = ?",
+            rusqlite::params![tool_name],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        conn.execute(
+            "DELETE FROM embedding_optimized_options WHERE tool_name = ?",
+            rusqlite::params![tool_name],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        Ok(())
     }
 }
 
@@ -255,9 +303,17 @@ mod tests {
 
     #[test]
     fn test_optimize_catalog_embedding() {
+        use crate::ports::outbound::storage::StoragePort;
+        use crate::adapters::persistence::PersistenceAdapter;
+
+        let storage = PersistenceAdapter::new();
         let engine = EmbeddingMatchingEngine::new();
+        let tool_name = "test_tool";
+        let _ = storage.delete_catalog(tool_name);
+        let _ = engine.delete_optimized_catalog(tool_name);
+
         let catalog = ToolCatalog {
-            tool_name: "test_tool".to_string(),
+            tool_name: tool_name.to_string(),
             description: "A filesystem utility to search files".to_string(),
             user_friendly_description: "search".to_string(),
             keywords: "find search grep".to_string(),
@@ -273,21 +329,27 @@ mod tests {
             rules: CommandRules(serde_json::json!({})),
         };
 
-        let result = engine.optimize_catalog(&catalog);
+        // 1. Ingest base catalog first (required due to foreign keys)
+        storage.save_catalog(&catalog).unwrap();
+
+        let result = engine.create_optimized_catalog(&catalog);
         
         if std::path::Path::new("/home/sandbox-noadmin/RustroverProjects/embedding_models_testing/models/embeddinggemma-300M-BF16.gguf").exists() {
-            let optimized = result.unwrap();
-            assert_eq!(optimized.tool_name, "test_tool");
-            let opt_data = &optimized.optimized_data[0];
-            assert_eq!(opt_data.key, "gemma_embedding");
-            assert_eq!(opt_data.data_type, "BLOB");
+            assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
+
+            // Query database directly to check parent and options embeddings
+            let conn = rusqlite::Connection::open("local_assistant.db").unwrap();
+            let mut stmt1 = conn.prepare("SELECT embedding FROM embedding_optimized_catalogs WHERE tool_name = ?").unwrap();
+            let mut row1 = stmt1.query(rusqlite::params![tool_name]).unwrap();
+            let r1 = row1.next().unwrap().unwrap();
+            let data: Vec<u8> = r1.get(0).unwrap();
             
-            assert!(!opt_data.data.is_empty());
-            assert_eq!(opt_data.data.len() % 4, 0);
+            assert!(!data.is_empty());
+            assert_eq!(data.len() % 4, 0);
 
             // Reconstruct float vector and check L2 normalization
             let mut floats = Vec::new();
-            for chunk in opt_data.data.chunks_exact(4) {
+            for chunk in data.chunks_exact(4) {
                 let arr: [u8; 4] = chunk.try_into().unwrap();
                 floats.push(f32::from_le_bytes(arr));
             }
@@ -300,16 +362,17 @@ mod tests {
             assert!((norm - 1.0).abs() < 1e-4);
 
             // Assert option embedding was generated & L2 normalized
-            assert_eq!(optimized.options.len(), 1);
-            let opt_opt = &optimized.options[0];
-            let opt_opt_data = &opt_opt.optimized_data[0];
-            assert_eq!(opt_opt_data.key, "gemma_embedding");
-            assert_eq!(opt_opt_data.data_type, "BLOB");
-            assert!(!opt_opt_data.data.is_empty());
-            assert_eq!(opt_opt_data.data.len() % 4, 0);
+            let mut stmt2 = conn.prepare("SELECT option_name, embedding FROM embedding_optimized_options WHERE tool_name = ?").unwrap();
+            let mut row2 = stmt2.query(rusqlite::params![tool_name]).unwrap();
+            let r2 = row2.next().unwrap().unwrap();
+            let opt_name: String = r2.get(0).unwrap();
+            let opt_data: Vec<u8> = r2.get(1).unwrap();
+            assert_eq!(opt_name, "--recursive");
+            assert!(!opt_data.is_empty());
+            assert_eq!(opt_data.len() % 4, 0);
 
             let mut opt_floats = Vec::new();
-            for chunk in opt_opt_data.data.chunks_exact(4) {
+            for chunk in opt_data.chunks_exact(4) {
                 let arr: [u8; 4] = chunk.try_into().unwrap();
                 opt_floats.push(f32::from_le_bytes(arr));
             }
@@ -322,6 +385,10 @@ mod tests {
         } else {
             assert!(result.is_err());
         }
+
+        // Clean up
+        let _ = storage.delete_catalog(tool_name);
+        let _ = engine.delete_optimized_catalog(tool_name);
     }
 
     #[test]
