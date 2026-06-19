@@ -21,7 +21,7 @@ fn main() {
     let embedding_engine = crate::adapters::matching::embedding::EmbeddingMatchingEngine::new();
 
     let matching_engines: Vec<Box<dyn crate::ports::outbound::matching_strategy::MatchingStrategyPort>> = vec![
-        Box::new(keyword_engine),
+        Box::new(keyword_engine.clone()),
         Box::new(embedding_engine.clone()),
     ];
 
