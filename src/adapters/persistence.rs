@@ -59,6 +59,10 @@ impl PersistenceAdapter {
             let _ = conn.execute("DROP TABLE IF EXISTS bm25_optimized_options;", []);
             let _ = conn.execute("DROP TABLE IF EXISTS embedding_optimized_catalogs;", []);
             let _ = conn.execute("DROP TABLE IF EXISTS embedding_optimized_options;", []);
+            let _ = conn.execute("DROP TABLE IF EXISTS gemma_embedding_optimized_catalogs;", []);
+            let _ = conn.execute("DROP TABLE IF EXISTS gemma_embedding_optimized_options;", []);
+            let _ = conn.execute("DROP TABLE IF EXISTS vec_gemma_embedding_optimized_catalogs;", []);
+            let _ = conn.execute("DROP TABLE IF EXISTS vec_gemma_embedding_optimized_options;", []);
         }
 
         // Initialize schema without the redundant embedding BLOB column

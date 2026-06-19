@@ -78,10 +78,31 @@ impl Default for EmbeddingMatchingEngine {
     }
 }
 
+fn create_llama_context<'a>(
+    backend: &'a LlamaBackend,
+    model: &'a LlamaModel,
+) -> Result<llama_cpp_2::context::LlamaContext<'a>, AppError> {
+    let num_cpus = num_cpus::get_physical();
+    let ctx_params = LlamaContextParams::default()
+        .with_embeddings(true)
+        .with_n_ctx(std::num::NonZeroU32::new(512))
+        .with_n_threads(num_cpus as i32)
+        .with_n_threads_batch(num_cpus as i32);
+
+    model.new_context(backend, ctx_params)
+        .map_err(|e| AppError::Initialization(
+            crate::core::errors::InitializationException::new(format!(
+                "Failed to create context: {:?}",
+                e
+            )),
+        ))
+}
+
 fn ensure_embedding_tables_exist(conn: &rusqlite::Connection, n_embd: u32) -> Result<(), AppError> {
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS embedding_optimized_catalogs (
-            tool_name TEXT PRIMARY KEY,
+        "CREATE TABLE IF NOT EXISTS gemma_embedding_optimized_catalogs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tool_name TEXT NOT NULL UNIQUE,
             embedding BLOB NOT NULL,
             FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
         );",
@@ -89,7 +110,7 @@ fn ensure_embedding_tables_exist(conn: &rusqlite::Connection, n_embd: u32) -> Re
     ).map_err(|e| AppError::Storage(e.to_string()))?;
 
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS embedding_optimized_options (
+        "CREATE TABLE IF NOT EXISTS gemma_embedding_optimized_options (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             tool_name TEXT NOT NULL,
             option_name TEXT NOT NULL,
@@ -99,8 +120,17 @@ fn ensure_embedding_tables_exist(conn: &rusqlite::Connection, n_embd: u32) -> Re
         [],
     ).map_err(|e| AppError::Storage(e.to_string()))?;
 
+    let create_catalog_vec_table = format!(
+        "CREATE VIRTUAL TABLE IF NOT EXISTS vec_gemma_embedding_optimized_catalogs USING vec0(
+            catalog_id INTEGER PRIMARY KEY,
+            gemma_embedding float[{}] distance_metric=cosine
+        );",
+        n_embd
+    );
+    conn.execute(&create_catalog_vec_table, []).map_err(|e| AppError::Storage(e.to_string()))?;
+
     let create_vec_table = format!(
-        "CREATE VIRTUAL TABLE IF NOT EXISTS vec_embedding_optimized_options USING vec0(
+        "CREATE VIRTUAL TABLE IF NOT EXISTS vec_gemma_embedding_optimized_options USING vec0(
             option_id INTEGER PRIMARY KEY,
             gemma_embedding float[{}] distance_metric=cosine
         );",
@@ -113,19 +143,26 @@ fn ensure_embedding_tables_exist(conn: &rusqlite::Connection, n_embd: u32) -> Re
 
 fn clear_existing_embedding_records(conn: &rusqlite::Connection, tool_name: &str) -> Result<(), AppError> {
     conn.execute(
-        "DELETE FROM vec_embedding_optimized_options WHERE option_id IN (
-            SELECT id FROM embedding_optimized_options WHERE tool_name = ?
+        "DELETE FROM vec_gemma_embedding_optimized_catalogs WHERE catalog_id IN (
+            SELECT id FROM gemma_embedding_optimized_catalogs WHERE tool_name = ?
         )",
         rusqlite::params![tool_name],
     ).map_err(|e| AppError::Storage(e.to_string()))?;
 
     conn.execute(
-        "DELETE FROM embedding_optimized_catalogs WHERE tool_name = ?",
+        "DELETE FROM vec_gemma_embedding_optimized_options WHERE option_id IN (
+            SELECT id FROM gemma_embedding_optimized_options WHERE tool_name = ?
+        )",
         rusqlite::params![tool_name],
     ).map_err(|e| AppError::Storage(e.to_string()))?;
 
     conn.execute(
-        "DELETE FROM embedding_optimized_options WHERE tool_name = ?",
+        "DELETE FROM gemma_embedding_optimized_catalogs WHERE tool_name = ?",
+        rusqlite::params![tool_name],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    conn.execute(
+        "DELETE FROM gemma_embedding_optimized_options WHERE tool_name = ?",
         rusqlite::params![tool_name],
     ).map_err(|e| AppError::Storage(e.to_string()))?;
 
@@ -144,8 +181,15 @@ fn compute_and_save_tool_embedding(
     let data_bytes = serialize_embedding(&normalized_emb);
 
     conn.execute(
-        "INSERT INTO embedding_optimized_catalogs (tool_name, embedding) VALUES (?, ?)",
+        "INSERT INTO gemma_embedding_optimized_catalogs (tool_name, embedding) VALUES (?, ?)",
         rusqlite::params![catalog.tool_name, data_bytes],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    let catalog_id = conn.last_insert_rowid();
+
+    conn.execute(
+        "INSERT INTO vec_gemma_embedding_optimized_catalogs (catalog_id, gemma_embedding) VALUES (?, ?)",
+        rusqlite::params![catalog_id, data_bytes],
     ).map_err(|e| AppError::Storage(e.to_string()))?;
 
     Ok(())
@@ -158,7 +202,7 @@ fn compute_and_save_options_embeddings(
     catalog: &ToolCatalog,
 ) -> Result<(), AppError> {
     let mut opt_stmt = conn.prepare(
-        "INSERT INTO embedding_optimized_options (tool_name, option_name, embedding) VALUES (?, ?, ?)"
+        "INSERT INTO gemma_embedding_optimized_options (tool_name, option_name, embedding) VALUES (?, ?, ?)"
     ).map_err(|e| AppError::Storage(e.to_string()))?;
 
     for opt in &catalog.options {
@@ -179,12 +223,56 @@ fn compute_and_save_options_embeddings(
         let option_id = conn.last_insert_rowid();
 
         conn.execute(
-            "INSERT INTO vec_embedding_optimized_options (option_id, gemma_embedding) VALUES (?, ?)",
+            "INSERT INTO vec_gemma_embedding_optimized_options (option_id, gemma_embedding) VALUES (?, ?)",
             rusqlite::params![option_id, opt_data_bytes],
         ).map_err(|e| AppError::Storage(e.to_string()))?;
     }
 
     Ok(())
+}
+
+fn fetch_matching_candidates(
+    conn: &rusqlite::Connection,
+    query_emb: &[u8],
+) -> Result<Vec<ScoredCandidate>, AppError> {
+    let mut stmt = conn.prepare(
+        "SELECT 
+            o.option_name, 
+            o.description, 
+            o.user_friendly_description, 
+            o.keywords, 
+            v.distance
+         FROM vec_gemma_embedding_optimized_options v
+         JOIN gemma_embedding_optimized_options eo ON v.option_id = eo.id
+         JOIN command_options o ON eo.tool_name = o.tool_name AND eo.option_name = o.option_name
+         WHERE v.gemma_embedding MATCH ?1 AND k = 15
+         ORDER BY v.distance ASC"
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    let mut rows = stmt.query(rusqlite::params![query_emb])
+        .map_err(|e| AppError::Storage(e.to_string()))?;
+
+    let mut candidates = Vec::new();
+    while let Some(row) = rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
+        let option_name: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
+        let description: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
+        let user_friendly_description: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
+        let keywords: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
+        let distance: f64 = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        let score = 1.0 - distance;
+
+        candidates.push(ScoredCandidate {
+            option: CommandOption {
+                option_name,
+                description,
+                user_friendly_description,
+                keywords,
+            },
+            score,
+        });
+    }
+    Ok(candidates)
 }
 
 impl MatchingStrategyPort for EmbeddingMatchingEngine {
@@ -194,24 +282,11 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
     ) -> Result<Vec<Vec<ScoredCandidate>>, AppError> {
         crate::adapters::persistence::register_sqlite_vec();
 
-        let num_cpus = num_cpus::get_physical();
         let backend = Self::get_global_backend()?;
         let guard = self.get_or_init_model()?;
         let model = guard.as_ref().unwrap();
 
-        let ctx_params = LlamaContextParams::default()
-            .with_embeddings(true)
-            .with_n_ctx(std::num::NonZeroU32::new(512))
-            .with_n_threads(num_cpus as i32)
-            .with_n_threads_batch(num_cpus as i32);
-
-        let mut ctx = model.new_context(backend, ctx_params)
-            .map_err(|e| AppError::Initialization(
-                crate::core::errors::InitializationException::new(format!(
-                    "Failed to create context: {:?}",
-                    e
-                )),
-            ))?;
+        let mut ctx = create_llama_context(backend, model)?;
 
         let query_raw_emb = compute_embedding(model, &mut ctx, &query.query)?;
         let query_normalized_emb = l2_normalize(query_raw_emb);
@@ -221,43 +296,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
-        let mut stmt = conn.prepare(
-            "SELECT 
-                o.option_name, 
-                o.description, 
-                o.user_friendly_description, 
-                o.keywords, 
-                v.distance
-             FROM vec_embedding_optimized_options v
-             JOIN embedding_optimized_options eo ON v.option_id = eo.id
-             JOIN command_options o ON eo.tool_name = o.tool_name AND eo.option_name = o.option_name
-             WHERE v.gemma_embedding MATCH ?1 AND k = 15
-             ORDER BY v.distance ASC"
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        let mut rows = stmt.query(rusqlite::params![query_data_bytes])
-            .map_err(|e| AppError::Storage(e.to_string()))?;
-
-        let mut candidates = Vec::new();
-        while let Some(row) = rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
-            let option_name: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
-            let description: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
-            let user_friendly_description: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
-            let keywords: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
-            let distance: f64 = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
-
-            let score = 1.0 - distance;
-
-            candidates.push(ScoredCandidate {
-                option: CommandOption {
-                    option_name,
-                    description,
-                    user_friendly_description,
-                    keywords,
-                },
-                score,
-            });
-        }
+        let candidates = fetch_matching_candidates(&conn, &query_data_bytes)?;
 
         let cutoff_config = crate::adapters::matching::otsu::OtsuCutoffConfig::new(0.60, 0.0, 1.0);
         let filtered_candidates = crate::adapters::matching::otsu::apply_otsu_cutoff(candidates, &cutoff_config);
@@ -279,8 +318,6 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
-        // Initialize llama context and model to retrieve n_embd
-        let num_cpus = num_cpus::get_physical();
         let backend = Self::get_global_backend()?;
         let guard = self.get_or_init_model()?;
         let model = guard.as_ref().unwrap();
@@ -289,19 +326,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         ensure_embedding_tables_exist(&conn, n_embd)?;
         clear_existing_embedding_records(&conn, &catalog.tool_name)?;
 
-        let ctx_params = LlamaContextParams::default()
-            .with_embeddings(true)
-            .with_n_ctx(std::num::NonZeroU32::new(512))
-            .with_n_threads(num_cpus as i32)
-            .with_n_threads_batch(num_cpus as i32);
-
-        let mut ctx = model.new_context(backend, ctx_params)
-            .map_err(|e| AppError::Initialization(
-                crate::core::errors::InitializationException::new(format!(
-                    "Failed to create context: {:?}",
-                    e
-                )),
-            ))?;
+        let mut ctx = create_llama_context(backend, model)?;
 
         compute_and_save_tool_embedding(&conn, model, &mut ctx, catalog)?;
         compute_and_save_options_embeddings(&conn, model, &mut ctx, catalog)?;
@@ -326,19 +351,26 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
         conn.execute(
-            "DELETE FROM vec_embedding_optimized_options WHERE option_id IN (
-                SELECT id FROM embedding_optimized_options WHERE tool_name = ?
+            "DELETE FROM vec_gemma_embedding_optimized_catalogs WHERE catalog_id IN (
+                SELECT id FROM gemma_embedding_optimized_catalogs WHERE tool_name = ?
             )",
             rusqlite::params![tool_name],
         ).map_err(|e| AppError::Storage(e.to_string()))?;
 
         conn.execute(
-            "DELETE FROM embedding_optimized_catalogs WHERE tool_name = ?",
+            "DELETE FROM vec_gemma_embedding_optimized_options WHERE option_id IN (
+                SELECT id FROM gemma_embedding_optimized_options WHERE tool_name = ?
+            )",
             rusqlite::params![tool_name],
         ).map_err(|e| AppError::Storage(e.to_string()))?;
 
         conn.execute(
-            "DELETE FROM embedding_optimized_options WHERE tool_name = ?",
+            "DELETE FROM gemma_embedding_optimized_catalogs WHERE tool_name = ?",
+            rusqlite::params![tool_name],
+        ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        conn.execute(
+            "DELETE FROM gemma_embedding_optimized_options WHERE tool_name = ?",
             rusqlite::params![tool_name],
         ).map_err(|e| AppError::Storage(e.to_string()))?;
 
@@ -464,7 +496,7 @@ mod tests {
 
             // Query database directly to check parent and options embeddings
             let conn = rusqlite::Connection::open("local_assistant.db").unwrap();
-            let mut stmt1 = conn.prepare("SELECT embedding FROM embedding_optimized_catalogs WHERE tool_name = ?").unwrap();
+            let mut stmt1 = conn.prepare("SELECT embedding FROM gemma_embedding_optimized_catalogs WHERE tool_name = ?").unwrap();
             let mut row1 = stmt1.query(rusqlite::params![tool_name]).unwrap();
             let r1 = row1.next().unwrap().unwrap();
             let data: Vec<u8> = r1.get(0).unwrap();
@@ -487,7 +519,7 @@ mod tests {
             assert!((norm - 1.0).abs() < 1e-4);
 
             // Assert option embedding was generated & L2 normalized
-            let mut stmt2 = conn.prepare("SELECT option_name, embedding FROM embedding_optimized_options WHERE tool_name = ?").unwrap();
+            let mut stmt2 = conn.prepare("SELECT option_name, embedding FROM gemma_embedding_optimized_options WHERE tool_name = ?").unwrap();
             let mut row2 = stmt2.query(rusqlite::params![tool_name]).unwrap();
             let r2 = row2.next().unwrap().unwrap();
             let opt_name: String = r2.get(0).unwrap();
