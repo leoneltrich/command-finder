@@ -317,7 +317,11 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
         // 4. Map top docs to candidates
         let candidates = map_search_results_to_candidates(top_docs, &searcher, state)?;
 
-        Ok(vec![candidates])
+        // 5. Apply Otsu Cutoff dynamic filtering
+        let cutoff_config = crate::adapters::matching::otsu::OtsuCutoffConfig::new(0.60, 0.0, 1.0);
+        let filtered_candidates = crate::adapters::matching::otsu::apply_otsu_cutoff(candidates, &cutoff_config);
+
+        Ok(vec![filtered_candidates])
     }
 
     fn load_engines(&self) -> Result<bool, AppError> {
