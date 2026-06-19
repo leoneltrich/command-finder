@@ -131,11 +131,11 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         let normalized_emb = l2_normalize(raw_emb);
         let data_bytes = serialize_embedding(&normalized_emb);
 
-        let optimized_data = Some(OptimizedData {
+        let optimized_data = vec![OptimizedData {
             key: "gemma_embedding".to_string(),
             data: data_bytes,
             data_type: "BLOB".to_string(),
-        });
+        }];
 
         let mut options = Vec::new();
         for opt in &catalog.options {
@@ -152,11 +152,11 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
                 description: opt.description.clone(),
                 user_friendly_description: opt.user_friendly_description.clone(),
                 keywords: opt.keywords.clone(),
-                optimized_data: Some(OptimizedData {
+                optimized_data: vec![OptimizedData {
                     key: "gemma_embedding".to_string(),
                     data: opt_data_bytes,
                     data_type: "BLOB".to_string(),
-                }),
+                }],
             });
         }
 
@@ -278,7 +278,7 @@ mod tests {
         if std::path::Path::new("/home/sandbox-noadmin/RustroverProjects/embedding_models_testing/models/embeddinggemma-300M-BF16.gguf").exists() {
             let optimized = result.unwrap();
             assert_eq!(optimized.tool_name, "test_tool");
-            let opt_data = optimized.optimized_data.unwrap();
+            let opt_data = &optimized.optimized_data[0];
             assert_eq!(opt_data.key, "gemma_embedding");
             assert_eq!(opt_data.data_type, "BLOB");
             
@@ -302,7 +302,7 @@ mod tests {
             // Assert option embedding was generated & L2 normalized
             assert_eq!(optimized.options.len(), 1);
             let opt_opt = &optimized.options[0];
-            let opt_opt_data = opt_opt.optimized_data.as_ref().unwrap();
+            let opt_opt_data = &opt_opt.optimized_data[0];
             assert_eq!(opt_opt_data.key, "gemma_embedding");
             assert_eq!(opt_opt_data.data_type, "BLOB");
             assert!(!opt_opt_data.data.is_empty());

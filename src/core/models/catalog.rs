@@ -40,7 +40,7 @@ pub struct OptimizedToolCatalog {
     pub version: String,
     pub options: Vec<OptimizedCommandOption>,
     pub rules: CommandRules,
-    pub optimized_data: Option<OptimizedData>,
+    pub optimized_data: Vec<OptimizedData>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -50,7 +50,7 @@ pub struct OptimizedCommandOption {
     pub description: String,
     pub user_friendly_description: String,
     pub keywords: String,
-    pub optimized_data: Option<OptimizedData>,
+    pub optimized_data: Vec<OptimizedData>,
 }
 
 impl From<&CommandOption> for OptimizedCommandOption {
@@ -60,7 +60,7 @@ impl From<&CommandOption> for OptimizedCommandOption {
             description: opt.description.clone(),
             user_friendly_description: opt.user_friendly_description.clone(),
             keywords: opt.keywords.clone(),
-            optimized_data: None,
+            optimized_data: Vec::new(),
         }
     }
 }

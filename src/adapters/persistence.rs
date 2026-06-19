@@ -151,11 +151,12 @@ const STANDARD_OPTION_COLS: &[&str] = &[
     "keywords",
 ];
 
-fn extract_optimized_data(row: &rusqlite::Row, col_names: &[&str], standard_cols: &[&str]) -> Option<OptimizedData> {
+fn extract_optimized_data(row: &rusqlite::Row, col_names: &[&str], standard_cols: &[&str]) -> Vec<OptimizedData> {
+    let mut vec = Vec::new();
     for (i, name) in col_names.iter().enumerate() {
         if !standard_cols.contains(name) {
             if let Ok(Some(data)) = row.get::<_, Option<Vec<u8>>>(i) {
-                return Some(OptimizedData {
+                vec.push(OptimizedData {
                     key: name.to_string(),
                     data,
                     data_type: "BLOB".to_string(),
@@ -163,16 +164,16 @@ fn extract_optimized_data(row: &rusqlite::Row, col_names: &[&str], standard_cols
             }
         }
     }
-    None
+    vec
 }
 
 // Ensures custom dynamic columns exist for both parent catalog and child options
 fn ensure_custom_columns_exist(conn: &rusqlite::Connection, catalog: &OptimizedToolCatalog) -> Result<(), AppError> {
-    if let Some(ref opt_data) = catalog.optimized_data {
+    for opt_data in &catalog.optimized_data {
         add_column_if_not_exists(conn, "tool_catalogs", &opt_data.key, &opt_data.data_type)?;
     }
     for option in &catalog.options {
-        if let Some(ref opt_data) = option.optimized_data {
+        for opt_data in &option.optimized_data {
             add_column_if_not_exists(conn, "command_options", &opt_data.key, &opt_data.data_type)?;
         }
     }
@@ -184,31 +185,35 @@ fn ensure_custom_columns_exist(conn: &rusqlite::Connection, catalog: &OptimizedT
 // Helper to insert command options of an optimized catalog
 fn insert_catalog_options(conn: &rusqlite::Connection, catalog: &OptimizedToolCatalog) -> Result<(), AppError> {
     for option in &catalog.options {
-        let (option_sql, option_params) = if let Some(ref opt_data) = option.optimized_data {
-            let sql = format!(
-                "INSERT INTO command_options (tool_name, option_name, description, user_friendly_description, keywords, {}) VALUES (?, ?, ?, ?, ?, ?)",
-                opt_data.key
-            );
-            (sql, rusqlite::params![
-                catalog.tool_name,
-                option.option_name,
-                option.description,
-                option.user_friendly_description,
-                option.keywords,
-                opt_data.data
-            ])
-        } else {
-            let sql = "INSERT INTO command_options (tool_name, option_name, description, user_friendly_description, keywords) VALUES (?, ?, ?, ?, ?)".to_string();
-            (sql, rusqlite::params![
-                catalog.tool_name,
-                option.option_name,
-                option.description,
-                option.user_friendly_description,
-                option.keywords
-            ])
-        };
+        let mut col_names = vec![
+            "tool_name".to_string(),
+            "option_name".to_string(),
+            "description".to_string(),
+            "user_friendly_description".to_string(),
+            "keywords".to_string(),
+        ];
+        let mut placeholders = vec!["?".to_string(), "?".to_string(), "?".to_string(), "?".to_string(), "?".to_string()];
+        let mut params: Vec<&dyn rusqlite::ToSql> = vec![
+            &catalog.tool_name,
+            &option.option_name,
+            &option.description,
+            &option.user_friendly_description,
+            &option.keywords,
+        ];
 
-        conn.execute(&option_sql, option_params).map_err(|e| AppError::Storage(e.to_string()))?;
+        for opt_data in &option.optimized_data {
+            col_names.push(opt_data.key.clone());
+            placeholders.push("?".to_string());
+            params.push(&opt_data.data);
+        }
+
+        let sql = format!(
+            "INSERT INTO command_options ({}) VALUES ({})",
+            col_names.join(", "),
+            placeholders.join(", ")
+        );
+
+        conn.execute(&sql, params.as_slice()).map_err(|e| AppError::Storage(e.to_string()))?;
     }
     Ok(())
 }
@@ -304,33 +309,37 @@ impl StoragePort for PersistenceAdapter {
             .map_err(|e| AppError::Storage(e.to_string()))?;
 
         // 1. Insert parent tool catalog
-        let (insert_sql, params) = if let Some(ref opt_data) = catalog.optimized_data {
-            let sql = format!(
-                "INSERT INTO tool_catalogs (tool_name, description, user_friendly_description, version, rules, keywords, {}) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                opt_data.key
-            );
-            (sql, rusqlite::params![
-                catalog.tool_name,
-                catalog.description,
-                catalog.user_friendly_description,
-                catalog.version,
-                rules_json,
-                catalog.keywords,
-                opt_data.data
-            ])
-        } else {
-            let sql = "INSERT INTO tool_catalogs (tool_name, description, user_friendly_description, version, rules, keywords) VALUES (?, ?, ?, ?, ?, ?)".to_string();
-            (sql, rusqlite::params![
-                catalog.tool_name,
-                catalog.description,
-                catalog.user_friendly_description,
-                catalog.version,
-                rules_json,
-                catalog.keywords
-            ])
-        };
+        let mut col_names = vec![
+            "tool_name".to_string(),
+            "description".to_string(),
+            "user_friendly_description".to_string(),
+            "version".to_string(),
+            "rules".to_string(),
+            "keywords".to_string(),
+        ];
+        let mut placeholders = vec!["?".to_string(), "?".to_string(), "?".to_string(), "?".to_string(), "?".to_string(), "?".to_string()];
+        let mut params: Vec<&dyn rusqlite::ToSql> = vec![
+            &catalog.tool_name,
+            &catalog.description,
+            &catalog.user_friendly_description,
+            &catalog.version,
+            &rules_json,
+            &catalog.keywords,
+        ];
 
-        tx.execute(&insert_sql, params).map_err(|e| AppError::Storage(e.to_string()))?;
+        for opt_data in &catalog.optimized_data {
+            col_names.push(opt_data.key.clone());
+            placeholders.push("?".to_string());
+            params.push(&opt_data.data);
+        }
+
+        let insert_sql = format!(
+            "INSERT INTO tool_catalogs ({}) VALUES ({})",
+            col_names.join(", "),
+            placeholders.join(", ")
+        );
+
+        tx.execute(&insert_sql, params.as_slice()).map_err(|e| AppError::Storage(e.to_string()))?;
 
         // 2. Insert children options
         insert_catalog_options(&tx, catalog)?;
@@ -350,33 +359,34 @@ impl StoragePort for PersistenceAdapter {
             .map_err(|e| AppError::Storage(e.to_string()))?;
 
         // 1. Update parent tool catalog info
-        let (update_sql, params) = if let Some(ref opt_data) = catalog.optimized_data {
-            let sql = format!(
-                "UPDATE tool_catalogs SET description = ?, user_friendly_description = ?, version = ?, rules = ?, keywords = ?, {} = ? WHERE tool_name = ?",
-                opt_data.key
-            );
-            (sql, rusqlite::params![
-                catalog.description,
-                catalog.user_friendly_description,
-                catalog.version,
-                rules_json,
-                catalog.keywords,
-                opt_data.data,
-                catalog.tool_name
-            ])
-        } else {
-            let sql = "UPDATE tool_catalogs SET description = ?, user_friendly_description = ?, version = ?, rules = ?, keywords = ? WHERE tool_name = ?".to_string();
-            (sql, rusqlite::params![
-                catalog.description,
-                catalog.user_friendly_description,
-                catalog.version,
-                rules_json,
-                catalog.keywords,
-                catalog.tool_name
-            ])
-        };
+        let mut set_clauses = vec![
+            "description = ?".to_string(),
+            "user_friendly_description = ?".to_string(),
+            "version = ?".to_string(),
+            "rules = ?".to_string(),
+            "keywords = ?".to_string(),
+        ];
+        let mut params: Vec<&dyn rusqlite::ToSql> = vec![
+            &catalog.description,
+            &catalog.user_friendly_description,
+            &catalog.version,
+            &rules_json,
+            &catalog.keywords,
+        ];
 
-        let rows_affected = tx.execute(&update_sql, params).map_err(|e| AppError::Storage(e.to_string()))?;
+        for opt_data in &catalog.optimized_data {
+            set_clauses.push(format!("{} = ?", opt_data.key));
+            params.push(&opt_data.data);
+        }
+
+        params.push(&catalog.tool_name);
+
+        let update_sql = format!(
+            "UPDATE tool_catalogs SET {} WHERE tool_name = ?",
+            set_clauses.join(", ")
+        );
+
+        let rows_affected = tx.execute(&update_sql, params.as_slice()).map_err(|e| AppError::Storage(e.to_string()))?;
 
         if rows_affected == 0 {
             return Err(AppError::CatalogNotFound(
@@ -584,18 +594,18 @@ mod tests {
                 description: opt.description.clone(),
                 user_friendly_description: opt.user_friendly_description.clone(),
                 keywords: opt.keywords.clone(),
-                optimized_data: Some(OptimizedData {
+                optimized_data: vec![OptimizedData {
                     key: "opt_custom_emb".to_string(),
                     data: vec![4, 5, 6],
                     data_type: "BLOB".to_string(),
-                }),
+                }],
             }).collect(),
             rules: catalog.rules.clone(),
-            optimized_data: Some(OptimizedData {
+            optimized_data: vec![OptimizedData {
                 key: "tool_custom_emb".to_string(),
                 data: vec![1, 2, 3],
                 data_type: "BLOB".to_string(),
-            }),
+            }],
         };
 
         let adapter = PersistenceAdapter::new();
@@ -611,7 +621,7 @@ mod tests {
         assert_eq!(fetched.options.len(), optimized.options.len());
 
         // Validate custom Dynamic Optimized Data is retrieved correctly
-        let tool_opt_data = fetched.optimized_data.unwrap();
+        let tool_opt_data = &fetched.optimized_data[0];
         assert_eq!(tool_opt_data.key, "tool_custom_emb");
         assert_eq!(tool_opt_data.data, vec![1, 2, 3]);
 
@@ -620,7 +630,7 @@ mod tests {
             assert_eq!(opt.description, optimized.options[i].description);
             assert_eq!(opt.keywords, optimized.options[i].keywords);
 
-            let opt_opt_data = opt.optimized_data.as_ref().unwrap();
+            let opt_opt_data = &opt.optimized_data[0];
             assert_eq!(opt_opt_data.key, "opt_custom_emb");
             assert_eq!(opt_opt_data.data, vec![4, 5, 6]);
         }
@@ -640,7 +650,7 @@ mod tests {
             version: "1.0".to_string(),
             options: vec![],
             rules: CommandRules(serde_json::json!({})),
-            optimized_data: None,
+            optimized_data: Vec::new(),
         };
 
         // First save should succeed
@@ -675,7 +685,7 @@ mod tests {
             version: "1.0".to_string(),
             options: vec![],
             rules: CommandRules(serde_json::json!({})),
-            optimized_data: None,
+            optimized_data: Vec::new(),
         };
         let res_update = adapter.update_catalog(&catalog);
         assert!(res_update.is_err());
@@ -704,10 +714,10 @@ mod tests {
                 description: "verbose".to_string(),
                 user_friendly_description: "verbose user".to_string(),
                 keywords: "verbose".to_string(),
-                optimized_data: None,
+                optimized_data: Vec::new(),
             }],
             rules: CommandRules(serde_json::json!({})),
-            optimized_data: None,
+            optimized_data: Vec::new(),
         };
 
         // Save first
@@ -726,18 +736,18 @@ mod tests {
                     description: "verbose updated".to_string(),
                     user_friendly_description: "verbose user updated".to_string(),
                     keywords: "verbose".to_string(),
-                    optimized_data: None,
+                    optimized_data: Vec::new(),
                 },
                 OptimizedCommandOption {
                     option_name: "-h".to_string(),
                     description: "help".to_string(),
                     user_friendly_description: "help user".to_string(),
                     keywords: "help".to_string(),
-                    optimized_data: None,
+                    optimized_data: Vec::new(),
                 },
             ],
             rules: CommandRules(serde_json::json!({"test": true})),
-            optimized_data: None,
+            optimized_data: Vec::new(),
         };
 
         // Update
@@ -775,7 +785,7 @@ mod tests {
             version: "1.0".to_string(),
             options: vec![],
             rules: CommandRules(serde_json::json!({})),
-            optimized_data: None,
+            optimized_data: Vec::new(),
         };
         let cat2 = OptimizedToolCatalog {
             tool_name: tool2.to_string(),
@@ -785,7 +795,7 @@ mod tests {
             version: "1.0".to_string(),
             options: vec![],
             rules: CommandRules(serde_json::json!({})),
-            optimized_data: None,
+            optimized_data: Vec::new(),
         };
 
         adapter.save_catalog(&cat1).unwrap();

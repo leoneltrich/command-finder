@@ -79,18 +79,30 @@ fn main() {
                 "add" => {
                     match serde_json::from_str::<crate::core::models::ToolCatalog>(payload) {
                         Ok(catalog) => {
-                            match embedding_engine.optimize_catalog(&catalog) {
-                                Ok(optimized) => {
-                                    match ingestion_api.ingest(&optimized, &auth_key) {
-                                        Ok(_) => println!("Catalog successfully added."),
+                            match keyword_engine.optimize_catalog(&catalog) {
+                                Ok(mut optimized) => {
+                                    match embedding_engine.optimize_catalog(&catalog) {
+                                        Ok(optimized_emb) => {
+                                            optimized.optimized_data.extend(optimized_emb.optimized_data);
+                                            for (opt, opt_emb) in optimized.options.iter_mut().zip(optimized_emb.options.iter()) {
+                                                opt.optimized_data.extend(opt_emb.optimized_data.clone());
+                                            }
+                                            match ingestion_api.ingest(&optimized, &auth_key) {
+                                                Ok(_) => println!("Catalog successfully added."),
+                                                Err(err) => {
+                                                    eprintln!("Error adding catalog: {}", err);
+                                                    std::process::exit(1);
+                                                }
+                                            }
+                                        }
                                         Err(err) => {
-                                            eprintln!("Error adding catalog: {}", err);
+                                            eprintln!("Error optimizing embedding catalog: {}", err);
                                             std::process::exit(1);
                                         }
                                     }
                                 }
                                 Err(err) => {
-                                    eprintln!("Error optimizing catalog: {}", err);
+                                    eprintln!("Error optimizing keyword catalog: {}", err);
                                     std::process::exit(1);
                                 }
                             }
@@ -104,18 +116,30 @@ fn main() {
                 "update" => {
                     match serde_json::from_str::<crate::core::models::ToolCatalog>(payload) {
                         Ok(catalog) => {
-                            match embedding_engine.optimize_catalog(&catalog) {
-                                Ok(optimized) => {
-                                    match ingestion_api.update(&optimized, &auth_key) {
-                                        Ok(_) => println!("Catalog successfully updated."),
+                            match keyword_engine.optimize_catalog(&catalog) {
+                                Ok(mut optimized) => {
+                                    match embedding_engine.optimize_catalog(&catalog) {
+                                        Ok(optimized_emb) => {
+                                            optimized.optimized_data.extend(optimized_emb.optimized_data);
+                                            for (opt, opt_emb) in optimized.options.iter_mut().zip(optimized_emb.options.iter()) {
+                                                opt.optimized_data.extend(opt_emb.optimized_data.clone());
+                                            }
+                                            match ingestion_api.update(&optimized, &auth_key) {
+                                                Ok(_) => println!("Catalog successfully updated."),
+                                                Err(err) => {
+                                                    eprintln!("Error updating catalog: {}", err);
+                                                    std::process::exit(1);
+                                                }
+                                            }
+                                        }
                                         Err(err) => {
-                                            eprintln!("Error updating catalog: {}", err);
+                                            eprintln!("Error optimizing embedding catalog: {}", err);
                                             std::process::exit(1);
                                         }
                                     }
                                 }
                                 Err(err) => {
-                                    eprintln!("Error optimizing catalog: {}", err);
+                                    eprintln!("Error optimizing keyword catalog: {}", err);
                                     std::process::exit(1);
                                 }
                             }
