@@ -175,7 +175,10 @@ fn compute_and_save_tool_embedding(
     ctx: &mut llama_cpp_2::context::LlamaContext,
     catalog: &ToolCatalog,
 ) -> Result<(), AppError> {
-    let processed_text = format!("title: {} | text: {}", catalog.tool_name, catalog.description);
+    let processed_text = format!(
+        "title: {} | text: {} Keywords: {}",
+        catalog.tool_name, catalog.description, catalog.keywords
+    );
     let raw_emb = compute_embedding(model, ctx, &processed_text)?;
     let normalized_emb = l2_normalize(raw_emb);
     let data_bytes = serialize_embedding(&normalized_emb);
