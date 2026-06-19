@@ -276,6 +276,82 @@ fn ingest_documents(
     Ok(())
 }
 
+fn ensure_bm25_tables_exist(conn: &rusqlite::Connection) -> Result<(), AppError> {
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS bm25_optimized_catalogs (
+            tool_name TEXT PRIMARY KEY,
+            preprocessed_description TEXT NOT NULL,
+            preprocessed_keywords TEXT NOT NULL,
+            FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
+        );",
+        [],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS bm25_optimized_options (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tool_name TEXT NOT NULL,
+            option_name TEXT NOT NULL,
+            preprocessed_description TEXT NOT NULL,
+            preprocessed_keywords TEXT NOT NULL,
+            FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
+        );",
+        [],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    Ok(())
+}
+
+fn clear_existing_bm25_records(conn: &rusqlite::Connection, tool_name: &str) -> Result<(), AppError> {
+    conn.execute(
+        "DELETE FROM bm25_optimized_catalogs WHERE tool_name = ?",
+        rusqlite::params![tool_name],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    conn.execute(
+        "DELETE FROM bm25_optimized_options WHERE tool_name = ?",
+        rusqlite::params![tool_name],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    Ok(())
+}
+
+fn save_tool_bm25_data(
+    conn: &rusqlite::Connection,
+    catalog: &ToolCatalog,
+) -> Result<(), AppError> {
+    let (tool_desc, tool_kws) = build_bm25_optimized_data(&catalog.description, &catalog.keywords);
+
+    conn.execute(
+        "INSERT INTO bm25_optimized_catalogs (tool_name, preprocessed_description, preprocessed_keywords) VALUES (?, ?, ?)",
+        rusqlite::params![catalog.tool_name, tool_desc, tool_kws],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    Ok(())
+}
+
+fn save_options_bm25_data(
+    conn: &rusqlite::Connection,
+    catalog: &ToolCatalog,
+) -> Result<(), AppError> {
+    let mut opt_stmt = conn.prepare(
+        "INSERT INTO bm25_optimized_options (tool_name, option_name, preprocessed_description, preprocessed_keywords) VALUES (?, ?, ?, ?)"
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    for opt in &catalog.options {
+        let (opt_desc, opt_kws) = build_bm25_optimized_data(&opt.description, &opt.keywords);
+
+        opt_stmt.execute(rusqlite::params![
+            catalog.tool_name,
+            opt.option_name,
+            opt_desc,
+            opt_kws,
+        ]).map_err(|e| AppError::Storage(e.to_string()))?;
+    }
+
+    Ok(())
+}
+
 impl MatchingStrategyPort for KeywordMatchingEngine {
     fn calculate_similarities(
         &self,
@@ -391,63 +467,10 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
         let conn = rusqlite::Connection::open("local_assistant.db")
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
 
-        // 1. Create tables if they do not exist
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS bm25_optimized_catalogs (
-                tool_name TEXT PRIMARY KEY,
-                preprocessed_description TEXT NOT NULL,
-                preprocessed_keywords TEXT NOT NULL,
-                FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
-            );",
-            [],
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS bm25_optimized_options (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tool_name TEXT NOT NULL,
-                option_name TEXT NOT NULL,
-                preprocessed_description TEXT NOT NULL,
-                preprocessed_keywords TEXT NOT NULL,
-                FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
-            );",
-            [],
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        // 2. Clear any existing records for this tool to prevent duplicates (idempotency)
-        conn.execute(
-            "DELETE FROM bm25_optimized_catalogs WHERE tool_name = ?",
-            rusqlite::params![catalog.tool_name],
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        conn.execute(
-            "DELETE FROM bm25_optimized_options WHERE tool_name = ?",
-            rusqlite::params![catalog.tool_name],
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        // 3. Preprocess and save tool catalog description & keywords
-        let (tool_desc, tool_kws) = build_bm25_optimized_data(&catalog.description, &catalog.keywords);
-
-        conn.execute(
-            "INSERT INTO bm25_optimized_catalogs (tool_name, preprocessed_description, preprocessed_keywords) VALUES (?, ?, ?)",
-            rusqlite::params![catalog.tool_name, tool_desc, tool_kws],
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        // 4. Preprocess and save option description & keywords
-        let mut opt_stmt = conn.prepare(
-            "INSERT INTO bm25_optimized_options (tool_name, option_name, preprocessed_description, preprocessed_keywords) VALUES (?, ?, ?, ?)"
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        for opt in &catalog.options {
-            let (opt_desc, opt_kws) = build_bm25_optimized_data(&opt.description, &opt.keywords);
-
-            opt_stmt.execute(rusqlite::params![
-                catalog.tool_name,
-                opt.option_name,
-                opt_desc,
-                opt_kws,
-            ]).map_err(|e| AppError::Storage(e.to_string()))?;
-        }
+        ensure_bm25_tables_exist(&conn)?;
+        clear_existing_bm25_records(&conn, &catalog.tool_name)?;
+        save_tool_bm25_data(&conn, catalog)?;
+        save_options_bm25_data(&conn, catalog)?;
 
         Ok(())
     }

@@ -78,6 +78,92 @@ impl Default for EmbeddingMatchingEngine {
     }
 }
 
+fn ensure_embedding_tables_exist(conn: &rusqlite::Connection) -> Result<(), AppError> {
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS embedding_optimized_catalogs (
+            tool_name TEXT PRIMARY KEY,
+            embedding BLOB NOT NULL,
+            FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
+        );",
+        [],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS embedding_optimized_options (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tool_name TEXT NOT NULL,
+            option_name TEXT NOT NULL,
+            embedding BLOB NOT NULL,
+            FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
+        );",
+        [],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    Ok(())
+}
+
+fn clear_existing_embedding_records(conn: &rusqlite::Connection, tool_name: &str) -> Result<(), AppError> {
+    conn.execute(
+        "DELETE FROM embedding_optimized_catalogs WHERE tool_name = ?",
+        rusqlite::params![tool_name],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    conn.execute(
+        "DELETE FROM embedding_optimized_options WHERE tool_name = ?",
+        rusqlite::params![tool_name],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    Ok(())
+}
+
+fn compute_and_save_tool_embedding(
+    conn: &rusqlite::Connection,
+    model: &LlamaModel,
+    ctx: &mut llama_cpp_2::context::LlamaContext,
+    catalog: &ToolCatalog,
+) -> Result<(), AppError> {
+    let processed_text = format!("title: {} | text: {}", catalog.tool_name, catalog.description);
+    let raw_emb = compute_embedding(model, ctx, &processed_text)?;
+    let normalized_emb = l2_normalize(raw_emb);
+    let data_bytes = serialize_embedding(&normalized_emb);
+
+    conn.execute(
+        "INSERT INTO embedding_optimized_catalogs (tool_name, embedding) VALUES (?, ?)",
+        rusqlite::params![catalog.tool_name, data_bytes],
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    Ok(())
+}
+
+fn compute_and_save_options_embeddings(
+    conn: &rusqlite::Connection,
+    model: &LlamaModel,
+    ctx: &mut llama_cpp_2::context::LlamaContext,
+    catalog: &ToolCatalog,
+) -> Result<(), AppError> {
+    let mut opt_stmt = conn.prepare(
+        "INSERT INTO embedding_optimized_options (tool_name, option_name, embedding) VALUES (?, ?, ?)"
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    for opt in &catalog.options {
+        let processed_opt_text = format!(
+            "title: {} {} | text: {} Keywords: {}",
+            catalog.tool_name, opt.option_name, opt.description, opt.keywords
+        );
+        let opt_raw_emb = compute_embedding(model, ctx, &processed_opt_text)?;
+        let opt_normalized_emb = l2_normalize(opt_raw_emb);
+        let opt_data_bytes = serialize_embedding(&opt_normalized_emb);
+
+        opt_stmt.execute(rusqlite::params![
+            catalog.tool_name,
+            opt.option_name,
+            opt_data_bytes,
+        ]).map_err(|e| AppError::Storage(e.to_string()))?;
+    }
+
+    Ok(())
+}
+
 impl MatchingStrategyPort for EmbeddingMatchingEngine {
     fn calculate_similarities(
         &self,
@@ -107,39 +193,10 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         let conn = rusqlite::Connection::open("local_assistant.db")
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
 
-        // 1. Create tables if they do not exist
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS embedding_optimized_catalogs (
-                tool_name TEXT PRIMARY KEY,
-                embedding BLOB NOT NULL,
-                FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
-            );",
-            [],
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
+        ensure_embedding_tables_exist(&conn)?;
+        clear_existing_embedding_records(&conn, &catalog.tool_name)?;
 
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS embedding_optimized_options (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tool_name TEXT NOT NULL,
-                option_name TEXT NOT NULL,
-                embedding BLOB NOT NULL,
-                FOREIGN KEY (tool_name) REFERENCES tool_catalogs(tool_name) ON DELETE CASCADE
-            );",
-            [],
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        // 2. Clear any existing records for this tool to prevent duplicates (idempotency)
-        conn.execute(
-            "DELETE FROM embedding_optimized_catalogs WHERE tool_name = ?",
-            rusqlite::params![catalog.tool_name],
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        conn.execute(
-            "DELETE FROM embedding_optimized_options WHERE tool_name = ?",
-            rusqlite::params![catalog.tool_name],
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        // 3. Compute parent tool embedding
+        // Initialize llama context and model
         let num_cpus = num_cpus::get_physical();
         let backend = Self::get_global_backend()?;
         let guard = self.get_or_init_model()?;
@@ -159,36 +216,8 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
                 )),
             ))?;
 
-        let processed_text = format!("title: {} | text: {}", catalog.tool_name, catalog.description);
-        let raw_emb = compute_embedding(model, &mut ctx, &processed_text)?;
-        let normalized_emb = l2_normalize(raw_emb);
-        let data_bytes = serialize_embedding(&normalized_emb);
-
-        conn.execute(
-            "INSERT INTO embedding_optimized_catalogs (tool_name, embedding) VALUES (?, ?)",
-            rusqlite::params![catalog.tool_name, data_bytes],
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        // 4. Compute and save options embeddings
-        let mut opt_stmt = conn.prepare(
-            "INSERT INTO embedding_optimized_options (tool_name, option_name, embedding) VALUES (?, ?, ?)"
-        ).map_err(|e| AppError::Storage(e.to_string()))?;
-
-        for opt in &catalog.options {
-            let processed_opt_text = format!(
-                "title: {} {} | text: {} Keywords: {}",
-                catalog.tool_name, opt.option_name, opt.description, opt.keywords
-            );
-            let opt_raw_emb = compute_embedding(model, &mut ctx, &processed_opt_text)?;
-            let opt_normalized_emb = l2_normalize(opt_raw_emb);
-            let opt_data_bytes = serialize_embedding(&opt_normalized_emb);
-
-            opt_stmt.execute(rusqlite::params![
-                catalog.tool_name,
-                opt.option_name,
-                opt_data_bytes,
-            ]).map_err(|e| AppError::Storage(e.to_string()))?;
-        }
+        compute_and_save_tool_embedding(&conn, model, &mut ctx, catalog)?;
+        compute_and_save_options_embeddings(&conn, model, &mut ctx, catalog)?;
 
         Ok(())
     }
