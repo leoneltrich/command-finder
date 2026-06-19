@@ -10,3 +10,6 @@ serde_json = "1.0"
 rusqlite = { version = "0.40.1", features = ["bundled"] }
 llama-cpp-2 = "0.1.150"
 num_cpus = "1.16"
+tantivy = "0.26.1"
+stop-words = "0.10.0"
+rust-stemmers = "1.2.0"
