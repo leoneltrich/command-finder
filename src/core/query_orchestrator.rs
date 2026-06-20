@@ -2,7 +2,7 @@ use crate::ports::inbound::user_command::UserCommandPort;
 use crate::ports::outbound::storage::StoragePort;
 use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
-use crate::core::models::EndUserConfig;
+use crate::core::models::{EndUserConfig, ScoredTool};
 use crate::core::syntactical_validator::SyntacticalValidator;
 use crate::core::similarity_rank_aggregator::SimilarityRankAggregator;
 
@@ -34,21 +34,27 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
             n_grams: None,
         };
 
-        // 2. Find matching tools (catalogs)
-        let mut all_tools = Vec::new();
+        // 2. Find matching tools (catalogs) from all engines
+        let mut engine_tool_results = Vec::new();
         for engine in &self.matching_engines {
             engine.load_engines()?;
             let tools = engine.find_tools(&user_query)?;
-            all_tools.extend(tools);
+            engine_tool_results.push((tools, engine.tool_weight()));
         }
 
-        // Sort tools by score descending
-        all_tools.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        // Prepare parameters for the aggregator
+        let aggregator_inputs: Vec<(&[ScoredTool], f64)> = engine_tool_results
+            .iter()
+            .map(|(tools, weight)| (tools.as_slice(), *weight))
+            .collect();
 
-        // Format tool matches with all details
+        // 3. Aggregate tool matches using SimilarityRankAggregator
+        let aggregated_tools = self.rank_aggregator.aggregate_tools(&aggregator_inputs)?;
+
+        // Format final aggregated tool matches
         let mut output = String::new();
-        output.push_str("Tool matching results:\n");
-        for (i, tool) in all_tools.iter().enumerate() {
+        output.push_str("Aggregated Tool matching results:\n");
+        for (i, tool) in aggregated_tools.iter().enumerate() {
             output.push_str(&format!(
                 "  [{}] Name: {} (Score: {:.4})\n      Description: {}\n      Keywords: {}\n      Version: {}\n      Rules: {:?}\n",
                 i + 1,

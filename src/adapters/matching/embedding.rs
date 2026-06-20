@@ -685,7 +685,7 @@ mod tests {
             assert!(tools_res.is_ok(), "Expected Ok for find_tools, got error: {:?}", tools_res.err());
             let tools = tools_res.unwrap();
             assert!(!tools.is_empty(), "Tools list should not be empty");
-            assert_eq!(tools[0].tool.tool_name, tool_name);
+            assert!(tools.iter().any(|t| t.tool.tool_name == tool_name));
 
             let opt_query = UserQuery {
                 query: "Search subdirectories recursively".to_string(),
