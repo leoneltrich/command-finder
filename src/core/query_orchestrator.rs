@@ -86,9 +86,9 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
 
             // Post-aggregation Otsu config
             let post_agg_otsu_config = crate::adapters::matching::otsu::OtsuCutoffConfig::new(
-                0.60, // Alpha
+                0.50, // Alpha
                 0.00, // Hard floor
-                1.00, // Multiplier
+                3.00, // Multiplier
             );
 
             // Aggregate options using SimilarityRankAggregator
