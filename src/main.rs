@@ -16,8 +16,39 @@ fn main() {
     let storage = PersistenceAdapter::new();
 
     // 2. Instantiate concrete matching engines
-    let keyword_engine = crate::adapters::matching::keyword::KeywordMatchingEngine::new();
-    let embedding_engine = crate::adapters::matching::embedding::EmbeddingMatchingEngine::new();
+    let kw_weight = env::var("KEYWORD_OPTION_WEIGHT")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(1.0);
+    let emb_weight = env::var("EMBEDDING_OPTION_WEIGHT")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(1.0);
+
+    let kw_alpha = env::var("KEYWORD_OPTION_ALPHA")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(0.60);
+    let kw_mult = env::var("KEYWORD_OPTION_MULTIPLIER")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(1.00);
+
+    let emb_alpha = env::var("EMBEDDING_OPTION_ALPHA")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(0.95);
+    let emb_mult = env::var("EMBEDDING_OPTION_MULTIPLIER")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(1.00);
+
+    let keyword_engine = crate::adapters::matching::keyword::KeywordMatchingEngine::new()
+        .with_option_weight(kw_weight)
+        .with_option_otsu_config(crate::adapters::matching::otsu::OtsuCutoffConfig::new(kw_alpha, 0.0, kw_mult));
+    let embedding_engine = crate::adapters::matching::embedding::EmbeddingMatchingEngine::new()
+        .with_option_weight(emb_weight)
+        .with_option_otsu_config(crate::adapters::matching::otsu::OtsuCutoffConfig::new(emb_alpha, 0.0, emb_mult));
 
     let matching_engines: Vec<Box<dyn crate::ports::outbound::matching_strategy::MatchingStrategyPort>> = vec![
         Box::new(keyword_engine.clone()),

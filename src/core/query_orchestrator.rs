@@ -85,10 +85,19 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
                 .collect();
 
             // Post-aggregation Otsu config
+            let post_alpha = std::env::var("POST_ALPHA")
+                .ok()
+                .and_then(|s| s.parse::<f64>().ok())
+                .unwrap_or(0.60);
+            let post_mult = std::env::var("POST_MULTIPLIER")
+                .ok()
+                .and_then(|s| s.parse::<f64>().ok())
+                .unwrap_or(1.00);
+
             let post_agg_otsu_config = crate::adapters::matching::otsu::OtsuCutoffConfig::new(
-                0.60, // Alpha
-                0.00, // Hard floor
-                1.00, // Multiplier
+                post_alpha,
+                0.00,
+                post_mult,
             );
 
             // Aggregate options using SimilarityRankAggregator
