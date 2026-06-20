@@ -29,4 +29,7 @@ pub trait MatchingStrategyPort {
         &self,
         tool_name: &str,
     ) -> Result<(), AppError>;
+
+    /// Gets the engine weight for tool retrieval.
+    fn tool_weight(&self) -> f64;
 }

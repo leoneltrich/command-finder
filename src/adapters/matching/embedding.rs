@@ -10,6 +10,7 @@ use llama_cpp_2::model::LlamaModel;
 #[derive(Clone)]
 pub struct EmbeddingMatchingEngine {
     inner: std::sync::Arc<std::sync::Mutex<Option<LlamaModel>>>,
+    tool_weight: f64,
 }
 
 impl EmbeddingMatchingEngine {
@@ -17,7 +18,14 @@ impl EmbeddingMatchingEngine {
     pub fn new() -> Self {
         Self {
             inner: std::sync::Arc::new(std::sync::Mutex::new(None)),
+            tool_weight: 1.0,
         }
+    }
+
+    /// Sets the tool weight for this engine instance.
+    pub fn with_tool_weight(mut self, weight: f64) -> Self {
+        self.tool_weight = weight;
+        self
     }
 
     /// Retrieve or initialize the static LLAMA backend safely once per process.
@@ -450,6 +458,10 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         ).map_err(|e| AppError::Storage(e.to_string()))?;
 
         Ok(())
+    }
+
+    fn tool_weight(&self) -> f64 {
+        self.tool_weight
     }
 }
 

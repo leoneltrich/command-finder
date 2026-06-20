@@ -27,6 +27,7 @@ pub struct TantivyIndexState {
 #[derive(Clone)]
 pub struct KeywordMatchingEngine {
     index_state: std::sync::Arc<std::sync::RwLock<Option<TantivyIndexState>>>,
+    tool_weight: f64,
 }
 
 impl KeywordMatchingEngine {
@@ -34,7 +35,14 @@ impl KeywordMatchingEngine {
     pub fn new() -> Self {
         Self {
             index_state: std::sync::Arc::new(std::sync::RwLock::new(None)),
+            tool_weight: 1.0,
         }
+    }
+
+    /// Sets the tool weight for this engine instance.
+    pub fn with_tool_weight(mut self, weight: f64) -> Self {
+        self.tool_weight = weight;
+        self
     }
 }
 
@@ -650,6 +658,10 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
         ).map_err(|e| AppError::Storage(e.to_string()))?;
 
         Ok(())
+    }
+
+    fn tool_weight(&self) -> f64 {
+        self.tool_weight
     }
 }
 
