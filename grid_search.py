@@ -77,14 +77,21 @@ def print_table(title, headers, rows):
 def main():
     dry_run = "--dry-run" in sys.argv or "-d" in sys.argv
     
-    print("Compiling Rust command-finder in release mode...")
-    build_res = subprocess.run(["cargo", "build", "--release"], capture_output=True)
+    print("Compiling Rust command-finder with zigbuild...")
+    env_build = os.environ.copy()
+    env_build["CFLAGS"] = "-Du_int8_t=uint8_t -Du_int16_t=uint16_t -Du_int64_t=uint64_t"
+    env_build["RUSTFLAGS"] = "-C target-feature=+avx,+avx2,+fma,+f16c,+bmi2"
+    build_res = subprocess.run(
+        ["cargo", "zigbuild", "--release", "--target", "x86_64-unknown-linux-musl"],
+        env=env_build,
+        capture_output=True
+    )
     if build_res.returncode != 0:
         print("Compilation failed!", file=sys.stderr)
         print(build_res.stderr.decode(), file=sys.stderr)
         sys.exit(1)
         
-    binary_path = "./target/release/command-finder"
+    binary_path = "./target/x86_64-unknown-linux-musl/release/command-finder"
     if not os.path.exists(binary_path):
         print(f"Binary not found at {binary_path}!", file=sys.stderr)
         sys.exit(1)

@@ -1,0 +1,20 @@
+Top 3 Configurations Optimized for Recall (Higher is Better)
+POST_ALPHA | POST_MULTIPLIER | Avg Precision | Avg Recall | Avg F1 | Avg Factor | Avg Recall/Factor
+-----------+-----------------+---------------+------------+--------+------------+------------------
+0.50       | 3.00            | 0.3114        | 0.4833     | 0.3378 | 2.2590     | 0.2572
+0.50       | 2.50            | 0.3121        | 0.4787     | 0.3375 | 2.2301     | 0.2580
+0.50       | 2.00            | 0.3156        | 0.4691     | 0.3383 | 2.1481     | 0.2610
+
+Top 3 Configurations Optimized for FLAGS/DEST Factor Metric (Lower is Better)
+POST_ALPHA | POST_MULTIPLIER | Avg Precision | Avg Recall | Avg F1 | Avg Factor | Avg Recall/Factor
+-----------+-----------------+---------------+------------+--------+------------+------------------
+0.90       | 3.00            | 0.3657        | 0.3077     | 0.3143 | 1.6322     | 0.2267
+0.90       | 2.00            | 0.3649        | 0.3068     | 0.3135 | 1.6347     | 0.2259
+0.90       | 1.00            | 0.3655        | 0.3077     | 0.3141 | 1.6363     | 0.2265
+
+Top 3 Configurations Optimized for Recall/Factor Metric (Higher is Better)
+POST_ALPHA | POST_MULTIPLIER | Avg Precision | Avg Recall | Avg F1 | Avg Factor | Avg Recall/Factor
+-----------+-----------------+---------------+------------+--------+------------+------------------
+0.60       | 2.00            | 0.3394        | 0.3954     | 0.3381 | 1.7470     | 0.2708
+0.60       | 1.50            | 0.3391        | 0.3945     | 0.3376 | 1.7454     | 0.2705
+0.60       | 3.00            | 0.3378        | 0.3967     | 0.3374 | 1.7598     | 0.2697
