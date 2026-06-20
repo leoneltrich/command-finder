@@ -14,19 +14,29 @@ pub fn register_sqlite_vec() {
 }
 
 /// Persistence adapter implementing the outbound StoragePort using a normalized SQLite schema with embedding columns.
-#[derive(Clone, Copy)]
-pub struct PersistenceAdapter;
+#[derive(Clone)]
+pub struct PersistenceAdapter {
+    db_path: String,
+}
 
 impl PersistenceAdapter {
     /// Creates a new PersistenceAdapter instance.
     pub fn new() -> Self {
-        Self
+        Self {
+            db_path: "local_assistant.db".to_string(),
+        }
+    }
+
+    /// Overrides the default database path.
+    pub fn with_db_path(mut self, db_path: &str) -> Self {
+        self.db_path = db_path.to_string();
+        self
     }
 
     /// Establishes connection to the SQLite database and initializes tables if not present.
     fn connect(&self) -> Result<rusqlite::Connection, AppError> {
         register_sqlite_vec();
-        let conn = rusqlite::Connection::open("local_assistant.db")
+        let conn = rusqlite::Connection::open(&self.db_path)
             .map_err(|e| AppError::StorageConnection(
                 crate::core::errors::StorageConnectionException::new(format!("Failed to open DB: {}", e))
             ))?;
@@ -446,12 +456,19 @@ impl StoragePort for PersistenceAdapter {
 mod tests {
     use super::*;
 
+    fn cleanup_db(db_path: &str) {
+        let _ = std::fs::remove_file(db_path);
+        let _ = std::fs::remove_file(format!("{}-shm", db_path));
+        let _ = std::fs::remove_file(format!("{}-wal", db_path));
+    }
+
     #[test]
     fn test_ingest_mv_catalog() {
+        let test_db = format!("test_persistence_ingest_mv_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
         let json_str = std::fs::read_to_string("mv-catalog.json").unwrap();
         let catalog: ToolCatalog = serde_json::from_str(&json_str).unwrap();
 
-        let adapter = PersistenceAdapter::new();
+        let adapter = PersistenceAdapter::new().with_db_path(&test_db);
         let _ = adapter.delete_catalog(&catalog.tool_name);
         
         let saved = adapter.save_catalog(&catalog).unwrap();
@@ -468,11 +485,13 @@ mod tests {
             assert_eq!(opt.description, catalog.options[i].description);
             assert_eq!(opt.keywords, catalog.options[i].keywords);
         }
+        cleanup_db(&test_db);
     }
 
     #[test]
     fn test_duplicate_catalog_error() {
-        let adapter = PersistenceAdapter::new();
+        let test_db = format!("test_persistence_dup_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let adapter = PersistenceAdapter::new().with_db_path(&test_db);
         let tool_name = "test_dup_tool";
         let _ = adapter.delete_catalog(tool_name);
 
@@ -496,11 +515,13 @@ mod tests {
 
         // Clean up
         let _ = adapter.delete_catalog(tool_name);
+        cleanup_db(&test_db);
     }
 
     #[test]
     fn test_catalog_not_found_errors() {
-        let adapter = PersistenceAdapter::new();
+        let test_db = format!("test_persistence_not_found_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let adapter = PersistenceAdapter::new().with_db_path(&test_db);
         let tool_name = "non_existent_tool_12345";
         let _ = adapter.delete_catalog(tool_name); // ensure it's not there
 
@@ -527,11 +548,13 @@ mod tests {
         let res_delete = adapter.delete_catalog(tool_name);
         assert!(res_delete.is_err());
         assert!(matches!(res_delete.err().unwrap(), AppError::CatalogNotFound(_)));
+        cleanup_db(&test_db);
     }
 
     #[test]
     fn test_update_catalog() {
-        let adapter = PersistenceAdapter::new();
+        let test_db = format!("test_persistence_update_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let adapter = PersistenceAdapter::new().with_db_path(&test_db);
         let tool_name = "test_update_tool";
         let _ = adapter.delete_catalog(tool_name);
 
@@ -594,11 +617,13 @@ mod tests {
 
         // Clean up
         let _ = adapter.delete_catalog(tool_name);
+        cleanup_db(&test_db);
     }
 
     #[test]
     fn test_fetch_all_catalogs() {
-        let adapter = PersistenceAdapter::new();
+        let test_db = format!("test_persistence_fetch_all_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let adapter = PersistenceAdapter::new().with_db_path(&test_db);
         let tool1 = "all_tool_1";
         let tool2 = "all_tool_2";
         let _ = adapter.delete_catalog(tool1);
@@ -634,11 +659,13 @@ mod tests {
         // Clean up
         let _ = adapter.delete_catalog(tool1);
         let _ = adapter.delete_catalog(tool2);
+        cleanup_db(&test_db);
     }
 
     #[test]
     fn test_maintainer_lifecycle() {
-        let adapter = PersistenceAdapter::new();
+        let test_db = format!("test_persistence_maintainer_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let adapter = PersistenceAdapter::new().with_db_path(&test_db);
         let m_id = "test_maintainer_id";
         let _ = adapter.delete_maintainer(m_id);
 
@@ -685,11 +712,13 @@ mod tests {
         let res_update = adapter.update_maintainer(&updated_m);
         assert!(res_update.is_err());
         assert!(matches!(res_update.err().unwrap(), AppError::MaintainerNotFound(_)));
+        cleanup_db(&test_db);
     }
 
     #[test]
     fn test_configuration_lifecycle() {
-        let adapter = PersistenceAdapter::new();
+        let test_db = format!("test_persistence_config_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let adapter = PersistenceAdapter::new().with_db_path(&test_db);
 
         // Load original configuration
         let original_config = adapter.load_configuration().unwrap();
@@ -706,5 +735,6 @@ mod tests {
 
         // Restore original config
         assert!(adapter.save_configuration(&original_config).unwrap());
+        cleanup_db(&test_db);
     }
 }

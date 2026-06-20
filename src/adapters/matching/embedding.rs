@@ -11,6 +11,7 @@ use llama_cpp_2::model::LlamaModel;
 pub struct EmbeddingMatchingEngine {
     inner: std::sync::Arc<std::sync::Mutex<Option<LlamaModel>>>,
     tool_weight: f64,
+    db_path: String,
 }
 
 impl EmbeddingMatchingEngine {
@@ -19,12 +20,19 @@ impl EmbeddingMatchingEngine {
         Self {
             inner: std::sync::Arc::new(std::sync::Mutex::new(None)),
             tool_weight: 1.0,
+            db_path: "local_assistant.db".to_string(),
         }
     }
 
     /// Sets the tool weight for this engine instance.
     pub fn with_tool_weight(mut self, weight: f64) -> Self {
         self.tool_weight = weight;
+        self
+    }
+
+    /// Sets the database path for this engine instance.
+    pub fn with_db_path(mut self, db_path: &str) -> Self {
+        self.db_path = db_path.to_string();
         self
     }
 
@@ -356,7 +364,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         let query_normalized_emb = l2_normalize(query_raw_emb);
         let query_data_bytes = serialize_embedding(&query_normalized_emb);
 
-        let conn = rusqlite::Connection::open("local_assistant.db")
+        let conn = rusqlite::Connection::open(&self.db_path)
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
@@ -380,7 +388,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         let query_normalized_emb = l2_normalize(query_raw_emb);
         let query_data_bytes = serialize_embedding(&query_normalized_emb);
 
-        let conn = rusqlite::Connection::open("local_assistant.db")
+        let conn = rusqlite::Connection::open(&self.db_path)
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
@@ -397,7 +405,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         catalog: &ToolCatalog,
     ) -> Result<(), AppError> {
         crate::adapters::persistence::register_sqlite_vec();
-        let conn = rusqlite::Connection::open("local_assistant.db")
+        let conn = rusqlite::Connection::open(&self.db_path)
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
@@ -429,7 +437,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         tool_name: &str,
     ) -> Result<(), AppError> {
         crate::adapters::persistence::register_sqlite_vec();
-        let conn = rusqlite::Connection::open("local_assistant.db")
+        let conn = rusqlite::Connection::open(&self.db_path)
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
@@ -545,13 +553,20 @@ mod tests {
     use super::*;
     use crate::core::models::CommandRules;
 
+    fn cleanup_db(db_path: &str) {
+        let _ = std::fs::remove_file(db_path);
+        let _ = std::fs::remove_file(format!("{}-shm", db_path));
+        let _ = std::fs::remove_file(format!("{}-wal", db_path));
+    }
+
     #[test]
     fn test_optimize_catalog_embedding() {
         use crate::ports::outbound::storage::StoragePort;
         use crate::adapters::persistence::PersistenceAdapter;
 
-        let storage = PersistenceAdapter::new();
-        let engine = EmbeddingMatchingEngine::new();
+        let test_db = format!("test_assistant_emb_opt_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let storage = PersistenceAdapter::new().with_db_path(&test_db);
+        let engine = EmbeddingMatchingEngine::new().with_db_path(&test_db);
         let tool_name = "test_tool";
         let _ = storage.delete_catalog(tool_name);
         let _ = engine.delete_optimized_catalog(tool_name);
@@ -582,7 +597,7 @@ mod tests {
             assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
 
             // Query database directly to check parent and options embeddings
-            let conn = rusqlite::Connection::open("local_assistant.db").unwrap();
+            let conn = rusqlite::Connection::open(&test_db).unwrap();
             let mut stmt1 = conn.prepare("SELECT embedding FROM gemma_embedding_optimized_catalogs WHERE tool_name = ?").unwrap();
             let mut row1 = stmt1.query(rusqlite::params![tool_name]).unwrap();
             let r1 = row1.next().unwrap().unwrap();
@@ -633,6 +648,7 @@ mod tests {
         // Clean up
         let _ = storage.delete_catalog(tool_name);
         let _ = engine.delete_optimized_catalog(tool_name);
+        cleanup_db(&test_db);
     }
 
     #[test]
@@ -649,8 +665,9 @@ mod tests {
         use crate::ports::outbound::storage::StoragePort;
         use crate::adapters::persistence::PersistenceAdapter;
 
-        let storage = PersistenceAdapter::new();
-        let engine = EmbeddingMatchingEngine::new();
+        let test_db = format!("test_assistant_emb_find_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let storage = PersistenceAdapter::new().with_db_path(&test_db);
+        let engine = EmbeddingMatchingEngine::new().with_db_path(&test_db);
         
         let tool_name = "test_similarity_tool";
         let _ = storage.delete_catalog(tool_name);
@@ -710,5 +727,6 @@ mod tests {
             let result_opt = engine.find_options(&query, tool_name);
             assert!(result_opt.is_err());
         }
+        cleanup_db(&test_db);
     }
 }

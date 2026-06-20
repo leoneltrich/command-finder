@@ -28,6 +28,7 @@ pub struct TantivyIndexState {
 pub struct KeywordMatchingEngine {
     index_state: std::sync::Arc<std::sync::RwLock<Option<TantivyIndexState>>>,
     tool_weight: f64,
+    db_path: String,
 }
 
 impl KeywordMatchingEngine {
@@ -36,12 +37,19 @@ impl KeywordMatchingEngine {
         Self {
             index_state: std::sync::Arc::new(std::sync::RwLock::new(None)),
             tool_weight: 1.0,
+            db_path: "local_assistant.db".to_string(),
         }
     }
 
     /// Sets the tool weight for this engine instance.
     pub fn with_tool_weight(mut self, weight: f64) -> Self {
         self.tool_weight = weight;
+        self
+    }
+
+    /// Sets the database path for this engine instance.
+    pub fn with_db_path(mut self, db_path: &str) -> Self {
+        self.db_path = db_path.to_string();
         self
     }
 }
@@ -461,7 +469,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
                 .unwrap_or("")
                 .to_string();
 
-            let conn = rusqlite::Connection::open("local_assistant.db")
+            let conn = rusqlite::Connection::open(&self.db_path)
                 .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
             let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
             
@@ -546,7 +554,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
     }
 
     fn load_engines(&self) -> Result<bool, AppError> {
-        let conn = rusqlite::Connection::open("local_assistant.db")
+        let conn = rusqlite::Connection::open(&self.db_path)
             .map_err(|e| AppError::Storage(format!("Failed to open DB for BM25: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
@@ -620,7 +628,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
         &self,
         catalog: &ToolCatalog,
     ) -> Result<(), AppError> {
-        let conn = rusqlite::Connection::open("local_assistant.db")
+        let conn = rusqlite::Connection::open(&self.db_path)
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
 
         ensure_bm25_tables_exist(&conn)?;
@@ -643,7 +651,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
         &self,
         tool_name: &str,
     ) -> Result<(), AppError> {
-        let conn = rusqlite::Connection::open("local_assistant.db")
+        let conn = rusqlite::Connection::open(&self.db_path)
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
 
         // Drop the records directly
@@ -670,6 +678,12 @@ mod tests {
     use super::*;
     use crate::core::models::CommandRules;
 
+    fn cleanup_db(db_path: &str) {
+        let _ = std::fs::remove_file(db_path);
+        let _ = std::fs::remove_file(format!("{}-shm", db_path));
+        let _ = std::fs::remove_file(format!("{}-wal", db_path));
+    }
+
     #[test]
     fn test_build_bm25_optimized_data() {
         let description = "Copy -R directories dynamically";
@@ -691,13 +705,14 @@ mod tests {
     fn test_create_optimized_catalog_keyword() {
         use crate::ports::outbound::storage::StoragePort;
         use crate::adapters::persistence::PersistenceAdapter;
-
-        let storage = PersistenceAdapter::new();
-        let engine = KeywordMatchingEngine::new();
+ 
+        let test_db = format!("test_assistant_kw_create_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let storage = PersistenceAdapter::new().with_db_path(&test_db);
+        let engine = KeywordMatchingEngine::new().with_db_path(&test_db);
         let tool_name = "test_keyword_db_tool";
         let _ = storage.delete_catalog(tool_name);
         let _ = engine.delete_optimized_catalog(tool_name);
-
+ 
         let catalog = ToolCatalog {
             tool_name: tool_name.to_string(),
             description: "Copy -R directories".to_string(),
@@ -714,15 +729,15 @@ mod tests {
             ],
             rules: CommandRules(serde_json::json!({})),
         };
-
+ 
         // 1. Ingest base catalog
         storage.save_catalog(&catalog).unwrap();
-
+ 
         // 2. Run engine create
         engine.create_optimized_catalog(&catalog).unwrap();
-
+ 
         // 3. Query custom database tables directly to verify content
-        let conn = rusqlite::Connection::open("local_assistant.db").unwrap();
+        let conn = rusqlite::Connection::open(&test_db).unwrap();
         let mut stmt1 = conn.prepare("SELECT preprocessed_description, preprocessed_keywords FROM bm25_optimized_catalogs WHERE tool_name = ?").unwrap();
         let mut row1 = stmt1.query(rusqlite::params![tool_name]).unwrap();
         let r1 = row1.next().unwrap().unwrap();
@@ -730,7 +745,7 @@ mod tests {
         let parent_kws: String = r1.get(1).unwrap();
         assert_eq!(parent_desc, "-r directori");
         assert!(parent_kws.contains("find"));
-
+ 
         let mut stmt2 = conn.prepare("SELECT option_name, preprocessed_description, preprocessed_keywords FROM bm25_optimized_options WHERE tool_name = ?").unwrap();
         let mut row2 = stmt2.query(rusqlite::params![tool_name]).unwrap();
         let r2 = row2.next().unwrap().unwrap();
@@ -738,10 +753,11 @@ mod tests {
         let opt_desc: String = r2.get(1).unwrap();
         assert_eq!(opt_name, "-R");
         assert_eq!(opt_desc, "recurs directori");
-
+ 
         // Clean up
         let _ = storage.delete_catalog(tool_name);
         let _ = engine.delete_optimized_catalog(tool_name);
+        cleanup_db(&test_db);
     }
 
     #[test]
@@ -750,8 +766,9 @@ mod tests {
         use crate::adapters::persistence::PersistenceAdapter;
         use crate::core::models::{UserQuery, CommandOption, ToolCatalog};
 
-        let storage = PersistenceAdapter::new();
-        let engine = KeywordMatchingEngine::new();
+        let test_db = format!("test_assistant_kw_find_{}.db", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let storage = PersistenceAdapter::new().with_db_path(&test_db);
+        let engine = KeywordMatchingEngine::new().with_db_path(&test_db);
 
         // 1. Create a dummy tool catalog
         let tool_name = "test_dummy_keyword_tool_unique_12345";
@@ -801,6 +818,7 @@ mod tests {
         // Cleanup first before assertions so we don't leave garbage on failure
         let _ = storage.delete_catalog(tool_name);
         let _ = engine.delete_optimized_catalog(tool_name);
+        cleanup_db(&test_db);
 
         // 7. Assertions
         assert!(!tools.is_empty(), "Tools list should not be empty");

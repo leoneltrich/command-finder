@@ -25,7 +25,7 @@ fn main() {
     ];
 
     // 3. Instantiate the Core Orchestrator with the storage and matching engines injected
-    let query_orchestrator = QueryOrchestrator::new(storage, matching_engines);
+    let query_orchestrator = QueryOrchestrator::new(storage.clone(), matching_engines);
 
     // 4. Instantiate the CLI Controller adapter wrapping the orchestrator
     let controller = CliController::new(query_orchestrator);
