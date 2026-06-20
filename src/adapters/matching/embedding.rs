@@ -1,6 +1,6 @@
 use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
-use crate::core::models::{UserQuery, ScoredCandidate, CommandOption, ToolCatalog};
+use crate::core::models::{UserQuery, ScoredCandidate, ScoredTool, CommandOption, ToolCatalog};
 use llama_cpp_2::context::params::LlamaContextParams;
 use llama_cpp_2::llama_backend::LlamaBackend;
 use llama_cpp_2::model::params::LlamaModelParams;
@@ -234,9 +234,62 @@ fn compute_and_save_options_embeddings(
     Ok(())
 }
 
-fn fetch_matching_candidates(
+fn fetch_matching_tools(
     conn: &rusqlite::Connection,
     query_emb: &[u8],
+) -> Result<Vec<ScoredTool>, AppError> {
+    let mut stmt = conn.prepare(
+        "SELECT 
+            c.tool_name, 
+            c.description, 
+            c.user_friendly_description, 
+            c.keywords, 
+            c.version, 
+            c.rules, 
+            v.distance
+         FROM vec_gemma_embedding_optimized_catalogs v
+         JOIN gemma_embedding_optimized_catalogs ec ON v.catalog_id = ec.id
+         JOIN tool_catalogs c ON ec.tool_name = c.tool_name
+         WHERE v.gemma_embedding MATCH ?1 AND k = 10
+         ORDER BY v.distance ASC"
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+
+    let mut rows = stmt.query(rusqlite::params![query_emb])
+        .map_err(|e| AppError::Storage(e.to_string()))?;
+
+    let mut tools = Vec::new();
+    while let Some(row) = rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
+        let tool_name: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
+        let description: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
+        let user_friendly_description: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
+        let keywords: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
+        let version: String = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
+        let rules_str: String = row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
+        let distance: f64 = row.get(6).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        let rules_val: serde_json::Value = serde_json::from_str(&rules_str).unwrap_or(serde_json::Value::Null);
+        let score = 1.0 - distance;
+
+        tools.push(ScoredTool {
+            tool: ToolCatalog {
+                tool_name,
+                description,
+                user_friendly_description,
+                keywords,
+                version,
+                options: vec![],
+                rules: crate::core::models::CommandRules(rules_val),
+            },
+            score,
+        });
+    }
+    Ok(tools)
+}
+
+fn fetch_matching_options(
+    conn: &rusqlite::Connection,
+    query_emb: &[u8],
+    tool_name: &str,
 ) -> Result<Vec<ScoredCandidate>, AppError> {
     let mut stmt = conn.prepare(
         "SELECT 
@@ -248,11 +301,11 @@ fn fetch_matching_candidates(
          FROM vec_gemma_embedding_optimized_options v
          JOIN gemma_embedding_optimized_options eo ON v.option_id = eo.id
          JOIN command_options o ON eo.tool_name = o.tool_name AND eo.option_name = o.option_name
-         WHERE v.gemma_embedding MATCH ?1 AND k = 15
+         WHERE v.gemma_embedding MATCH ?1 AND eo.tool_name = ?2 AND k = 100
          ORDER BY v.distance ASC"
     ).map_err(|e| AppError::Storage(e.to_string()))?;
 
-    let mut rows = stmt.query(rusqlite::params![query_emb])
+    let mut rows = stmt.query(rusqlite::params![query_emb, tool_name])
         .map_err(|e| AppError::Storage(e.to_string()))?;
 
     let mut candidates = Vec::new();
@@ -279,10 +332,10 @@ fn fetch_matching_candidates(
 }
 
 impl MatchingStrategyPort for EmbeddingMatchingEngine {
-    fn calculate_similarities(
+    fn find_tools(
         &self,
         query: &UserQuery,
-    ) -> Result<Vec<Vec<ScoredCandidate>>, AppError> {
+    ) -> Result<Vec<ScoredTool>, AppError> {
         crate::adapters::persistence::register_sqlite_vec();
 
         let backend = Self::get_global_backend()?;
@@ -299,12 +352,31 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
-        let candidates = fetch_matching_candidates(&conn, &query_data_bytes)?;
+        fetch_matching_tools(&conn, &query_data_bytes)
+    }
 
-        let cutoff_config = crate::adapters::matching::otsu::OtsuCutoffConfig::new(0.60, 0.0, 1.0);
-        let filtered_candidates = crate::adapters::matching::otsu::apply_otsu_cutoff(candidates, &cutoff_config);
+    fn find_options(
+        &self,
+        query: &UserQuery,
+        tool_name: &str,
+    ) -> Result<Vec<ScoredCandidate>, AppError> {
+        crate::adapters::persistence::register_sqlite_vec();
 
-        Ok(vec![filtered_candidates])
+        let backend = Self::get_global_backend()?;
+        let guard = self.get_or_init_model()?;
+        let model = guard.as_ref().unwrap();
+
+        let mut ctx = create_llama_context(backend, model)?;
+
+        let query_raw_emb = compute_embedding(model, &mut ctx, &query.query)?;
+        let query_normalized_emb = l2_normalize(query_raw_emb);
+        let query_data_bytes = serialize_embedding(&query_normalized_emb);
+
+        let conn = rusqlite::Connection::open("local_assistant.db")
+            .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
+        let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
+
+        fetch_matching_options(&conn, &query_data_bytes, tool_name)
     }
 
     fn load_engines(&self) -> Result<bool, AppError> {
@@ -561,7 +633,7 @@ mod tests {
     }
 
     #[test]
-    fn test_calculate_similarities() {
+    fn test_find_tools_and_options() {
         use crate::ports::outbound::storage::StoragePort;
         use crate::adapters::persistence::PersistenceAdapter;
 
@@ -593,16 +665,25 @@ mod tests {
             storage.save_catalog(&catalog).unwrap();
             engine.create_optimized_catalog(&catalog).unwrap();
 
-            let query = UserQuery {
+            let tool_query = UserQuery {
+                query: "A filesystem utility to search files".to_string(),
+                n_grams: None,
+            };
+            let tools_res = engine.find_tools(&tool_query);
+            assert!(tools_res.is_ok(), "Expected Ok for find_tools, got error: {:?}", tools_res.err());
+            let tools = tools_res.unwrap();
+            assert!(!tools.is_empty(), "Tools list should not be empty");
+            assert_eq!(tools[0].tool.tool_name, tool_name);
+
+            let opt_query = UserQuery {
                 query: "Search subdirectories recursively".to_string(),
                 n_grams: None,
             };
-            let result = engine.calculate_similarities(&query);
-            assert!(result.is_ok(), "Expected Ok, got error: {:?}", result.err());
-            let candidates = result.unwrap();
-            assert!(!candidates.is_empty());
-            assert!(!candidates[0].is_empty());
-            assert_eq!(candidates[0][0].option.option_name, "--recursive");
+            let options_res = engine.find_options(&opt_query, tool_name);
+            assert!(options_res.is_ok(), "Expected Ok for find_options, got error: {:?}", options_res.err());
+            let options = options_res.unwrap();
+            assert!(!options.is_empty(), "Options list should not be empty");
+            assert_eq!(options[0].option.option_name, "--recursive");
 
             // Clean up
             let _ = storage.delete_catalog(tool_name);
@@ -612,8 +693,10 @@ mod tests {
                 query: "Search subdirectories recursively".to_string(),
                 n_grams: None,
             };
-            let result = engine.calculate_similarities(&query);
+            let result = engine.find_tools(&query);
             assert!(result.is_err());
+            let result_opt = engine.find_options(&query, tool_name);
+            assert!(result_opt.is_err());
         }
     }
 }

@@ -1,4 +1,4 @@
-use super::catalog::CommandOption;
+use super::catalog::{CommandOption, ToolCatalog};
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct UserQuery {
@@ -9,6 +9,12 @@ pub struct UserQuery {
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ScoredCandidate {
     pub option: CommandOption,
+    pub score: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct ScoredTool {
+    pub tool: ToolCatalog,
     pub score: f64,
 }
 

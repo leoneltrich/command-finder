@@ -1,6 +1,6 @@
 use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
-use crate::core::models::{UserQuery, ScoredCandidate, CommandOption, ToolCatalog};
+use crate::core::models::{UserQuery, ScoredCandidate, ScoredTool, CommandOption, ToolCatalog};
 use std::collections::HashSet;
 use rust_stemmers::{Algorithm, Stemmer};
 use tantivy::schema::{Schema, Field, STORED, TEXT, STRING, Value};
@@ -19,6 +19,7 @@ pub struct TantivyIndexState {
     pub raw_description_field: Field,
     pub user_friendly_description_field: Field,
     pub raw_keywords_field: Field,
+    pub doc_type_field: Field,
     pub catalog_keywords: HashSet<String>,
 }
 
@@ -149,6 +150,7 @@ struct TantivyFields {
     raw_description_field: Field,
     user_friendly_description_field: Field,
     raw_keywords_field: Field,
+    doc_type_field: Field,
 }
 
 fn map_search_results_to_candidates(
@@ -239,7 +241,43 @@ fn ingest_documents(
         return Ok(());
     }
 
-    let mut stmt = conn.prepare(
+    // 1. Ingest tool catalogs
+    let mut tool_stmt = conn.prepare(
+        "SELECT 
+            c.tool_name, 
+            c.description, 
+            c.user_friendly_description, 
+            c.keywords, 
+            o.preprocessed_description, 
+            o.preprocessed_keywords 
+         FROM tool_catalogs c
+         INNER JOIN bm25_optimized_catalogs o 
+             ON c.tool_name = o.tool_name"
+    ).map_err(|e| AppError::Storage(e.to_string()))?;
+    let mut tool_rows = tool_stmt.query([]).map_err(|e| AppError::Storage(e.to_string()))?;
+    while let Some(row) = tool_rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
+        let tool_name: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
+        let raw_desc: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
+        let raw_user_desc: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
+        let raw_kws: String = row.get(3).map_err(|e| AppError::Storage(e.to_string()))?;
+        let preprocessed_desc: String = row.get(4).map_err(|e| AppError::Storage(e.to_string()))?;
+        let preprocessed_kws: String = row.get(5).map_err(|e| AppError::Storage(e.to_string()))?;
+
+        let doc = doc!(
+            state_fields.doc_type_field => "tool".to_string(),
+            state_fields.tool_name_field => tool_name,
+            state_fields.option_name_field => "".to_string(),
+            state_fields.raw_description_field => raw_desc,
+            state_fields.user_friendly_description_field => raw_user_desc,
+            state_fields.raw_keywords_field => raw_kws,
+            state_fields.description_field => preprocessed_desc,
+            state_fields.keywords_field => preprocessed_kws
+        );
+        index_writer.add_document(doc).map_err(|e| AppError::Matching(e.to_string()))?;
+    }
+
+    // 2. Ingest options
+    let mut opt_stmt = conn.prepare(
         "SELECT 
             c.tool_name, 
             c.option_name, 
@@ -252,8 +290,8 @@ fn ingest_documents(
          INNER JOIN bm25_optimized_options o 
              ON c.tool_name = o.tool_name AND c.option_name = o.option_name"
     ).map_err(|e| AppError::Storage(e.to_string()))?;
-    let mut rows = stmt.query([]).map_err(|e| AppError::Storage(e.to_string()))?;
-    while let Some(row) = rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
+    let mut opt_rows = opt_stmt.query([]).map_err(|e| AppError::Storage(e.to_string()))?;
+    while let Some(row) = opt_rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
         let tool_name: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
         let option_name: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
         let raw_desc: String = row.get(2).map_err(|e| AppError::Storage(e.to_string()))?;
@@ -263,6 +301,7 @@ fn ingest_documents(
         let preprocessed_kws: String = row.get(6).map_err(|e| AppError::Storage(e.to_string()))?;
 
         let doc = doc!(
+            state_fields.doc_type_field => "option".to_string(),
             state_fields.tool_name_field => tool_name,
             state_fields.option_name_field => option_name,
             state_fields.raw_description_field => raw_desc,
@@ -353,10 +392,10 @@ fn save_options_bm25_data(
 }
 
 impl MatchingStrategyPort for KeywordMatchingEngine {
-    fn calculate_similarities(
+    fn find_tools(
         &self,
         query: &UserQuery,
-    ) -> Result<Vec<Vec<ScoredCandidate>>, AppError> {
+    ) -> Result<Vec<ScoredTool>, AppError> {
         // 1. Ensure engine is loaded
         {
             let state_read = self.index_state.read().map_err(|e| AppError::Matching(format!("Lock poisoned: {}", e)))?;
@@ -372,25 +411,130 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
         // 2. Preprocess query
         let query_str = preprocess_query_string(&query.query, &state.catalog_keywords);
         if query_str.trim().is_empty() {
-            return Ok(vec![vec![]]);
+            return Ok(vec![]);
         }
 
-        // 3. Search
+        // 3. Search with tool filter
         let searcher = state.reader.searcher();
         let parsed_query = state.query_parser.parse_query(&query_str)
             .map_err(|e| AppError::Matching(format!("Query parsing failed: {}", e)))?;
 
-        let top_docs = searcher.search(&parsed_query, &TopDocs::with_limit(10).order_by_score())
+        let type_term = tantivy::Term::from_field_text(state.doc_type_field, "tool");
+        let type_query = Box::new(tantivy::query::TermQuery::new(type_term, tantivy::schema::IndexRecordOption::WithFreqs));
+
+        let combined_query = tantivy::query::BooleanQuery::new(vec![
+            (tantivy::query::Occur::Must, parsed_query),
+            (tantivy::query::Occur::Must, type_query),
+        ]);
+
+        let top_docs = searcher.search(&combined_query, &TopDocs::with_limit(10).order_by_score())
+            .map_err(|e| AppError::Matching(format!("Search execution failed: {}", e)))?;
+
+        // 4. Map top docs to ScoredTool
+        let mut results = Vec::new();
+        for (score, doc_address) in top_docs {
+            let doc: tantivy::TantivyDocument = searcher.doc(doc_address)
+                .map_err(|e| AppError::Matching(format!("Failed to retrieve doc: {}", e)))?;
+
+            let tool_name = doc.get_first(state.tool_name_field)
+                .and_then(|v| v.as_leaf().and_then(|l| l.as_str()))
+                .unwrap_or("")
+                .to_string();
+            let description = doc.get_first(state.raw_description_field)
+                .and_then(|v| v.as_leaf().and_then(|l| l.as_str()))
+                .unwrap_or("")
+                .to_string();
+            let user_friendly_description = doc.get_first(state.user_friendly_description_field)
+                .and_then(|v| v.as_leaf().and_then(|l| l.as_str()))
+                .unwrap_or("")
+                .to_string();
+            let keywords = doc.get_first(state.raw_keywords_field)
+                .and_then(|v| v.as_leaf().and_then(|l| l.as_str()))
+                .unwrap_or("")
+                .to_string();
+
+            let conn = rusqlite::Connection::open("local_assistant.db")
+                .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
+            let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
+            
+            let mut rules_stmt = conn.prepare("SELECT rules, version FROM tool_catalogs WHERE tool_name = ?")
+                .map_err(|e| AppError::Storage(e.to_string()))?;
+            let mut rules_rows = rules_stmt.query(rusqlite::params![tool_name])
+                .map_err(|e| AppError::Storage(e.to_string()))?;
+            
+            let (rules_val, version) = if let Some(row) = rules_rows.next().map_err(|e| AppError::Storage(e.to_string()))? {
+                let r_str: String = row.get(0).map_err(|e| AppError::Storage(e.to_string()))?;
+                let v_str: String = row.get(1).map_err(|e| AppError::Storage(e.to_string()))?;
+                let val: serde_json::Value = serde_json::from_str(&r_str).unwrap_or(serde_json::Value::Null);
+                (crate::core::models::CommandRules(val), v_str)
+            } else {
+                (crate::core::models::CommandRules(serde_json::Value::Null), "1.0.0".to_string())
+            };
+
+            results.push(ScoredTool {
+                tool: ToolCatalog {
+                    tool_name,
+                    description,
+                    user_friendly_description,
+                    keywords,
+                    version,
+                    options: vec![],
+                    rules: rules_val,
+                },
+                score: score as f64,
+            });
+        }
+
+        Ok(results)
+    }
+
+    fn find_options(
+        &self,
+        query: &UserQuery,
+        tool_name: &str,
+    ) -> Result<Vec<ScoredCandidate>, AppError> {
+        // 1. Ensure engine is loaded
+        {
+            let state_read = self.index_state.read().map_err(|e| AppError::Matching(format!("Lock poisoned: {}", e)))?;
+            if state_read.is_none() {
+                drop(state_read);
+                self.load_engines()?;
+            }
+        }
+
+        let state_guard = self.index_state.read().map_err(|e| AppError::Matching(format!("Lock poisoned: {}", e)))?;
+        let state = state_guard.as_ref().ok_or_else(|| AppError::Matching("Engine state uninitialized".to_string()))?;
+
+        // 2. Preprocess query
+        let query_str = preprocess_query_string(&query.query, &state.catalog_keywords);
+        if query_str.trim().is_empty() {
+            return Ok(vec![]);
+        }
+
+        // 3. Search with tool_name and type=option filter
+        let searcher = state.reader.searcher();
+        let parsed_query = state.query_parser.parse_query(&query_str)
+            .map_err(|e| AppError::Matching(format!("Query parsing failed: {}", e)))?;
+
+        let type_term = tantivy::Term::from_field_text(state.doc_type_field, "option");
+        let type_query = Box::new(tantivy::query::TermQuery::new(type_term, tantivy::schema::IndexRecordOption::WithFreqs));
+
+        let tool_term = tantivy::Term::from_field_text(state.tool_name_field, tool_name);
+        let tool_query = Box::new(tantivy::query::TermQuery::new(tool_term, tantivy::schema::IndexRecordOption::WithFreqs));
+
+        let combined_query = tantivy::query::BooleanQuery::new(vec![
+            (tantivy::query::Occur::Must, parsed_query),
+            (tantivy::query::Occur::Must, type_query),
+            (tantivy::query::Occur::Must, tool_query),
+        ]);
+
+        let top_docs = searcher.search(&combined_query, &TopDocs::with_limit(10).order_by_score())
             .map_err(|e| AppError::Matching(format!("Search execution failed: {}", e)))?;
 
         // 4. Map top docs to candidates
         let candidates = map_search_results_to_candidates(top_docs, &searcher, state)?;
 
-        // 5. Apply Otsu Cutoff dynamic filtering
-        let cutoff_config = crate::adapters::matching::otsu::OtsuCutoffConfig::new(0.60, 0.0, 1.0);
-        let filtered_candidates = crate::adapters::matching::otsu::apply_otsu_cutoff(candidates, &cutoff_config);
-
-        Ok(vec![filtered_candidates])
+        Ok(candidates)
     }
 
     fn load_engines(&self) -> Result<bool, AppError> {
@@ -410,6 +554,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
         let raw_description_field = schema_builder.add_text_field("raw_description", STORED);
         let user_friendly_description_field = schema_builder.add_text_field("user_friendly_description", STORED);
         let raw_keywords_field = schema_builder.add_text_field("raw_keywords", STORED);
+        let doc_type_field = schema_builder.add_text_field("doc_type", STRING | STORED);
         let schema = schema_builder.build();
 
         // 3. Create index in RAM
@@ -427,6 +572,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
             raw_description_field,
             user_friendly_description_field,
             raw_keywords_field,
+            doc_type_field,
         };
 
         ingest_documents(&conn, &mut index_writer, &fields)?;
@@ -453,6 +599,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
             raw_description_field,
             user_friendly_description_field,
             raw_keywords_field,
+            doc_type_field,
             catalog_keywords: keyword_set,
         };
 
@@ -586,7 +733,7 @@ mod tests {
     }
 
     #[test]
-    fn test_calculate_similarities_integration() {
+    fn test_find_tools_and_options_integration() {
         use crate::ports::outbound::storage::StoragePort;
         use crate::adapters::persistence::PersistenceAdapter;
         use crate::core::models::{UserQuery, CommandOption, ToolCatalog};
@@ -625,24 +772,32 @@ mod tests {
         let load_res = engine.load_engines().unwrap();
         assert!(load_res);
 
-        // 5. Query the engine
+        // 5. Query the engine for tools
+        let tool_query = UserQuery {
+            query: "dummy tool".to_string(),
+            n_grams: None,
+        };
+        let tools = engine.find_tools(&tool_query).unwrap();
+
+        // 6. Query the engine for options
         let query = UserQuery {
             query: "secret integration".to_string(),
             n_grams: None,
         };
-        let results = engine.calculate_similarities(&query).unwrap();
+        let options = engine.find_options(&query, tool_name).unwrap();
         
         // Cleanup first before assertions so we don't leave garbage on failure
         let _ = storage.delete_catalog(tool_name);
         let _ = engine.delete_optimized_catalog(tool_name);
 
-        // 6. Assertions
-        assert_eq!(results.len(), 1);
-        let candidates = &results[0];
-        assert!(!candidates.is_empty(), "Candidates should not be empty");
-        
-        // Find our option in the candidates
-        let candidate = candidates.iter().find(|c| c.option.option_name == "--test-flag");
+        // 7. Assertions
+        assert!(!tools.is_empty(), "Tools list should not be empty");
+        let matched_tool = tools.iter().find(|t| t.tool.tool_name == tool_name);
+        assert!(matched_tool.is_some(), "Should find our dummy tool");
+        assert!(matched_tool.unwrap().score > 0.0);
+
+        assert!(!options.is_empty(), "Options should not be empty");
+        let candidate = options.iter().find(|c| c.option.option_name == "--test-flag");
         assert!(candidate.is_some(), "Should find '--test-flag' in search results");
         let candidate = candidate.unwrap();
         assert!(candidate.score > 0.0);

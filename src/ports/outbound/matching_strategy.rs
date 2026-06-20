@@ -1,11 +1,17 @@
 use crate::core::errors::AppError;
-use crate::core::models::{UserQuery, ScoredCandidate, ToolCatalog};
+use crate::core::models::{UserQuery, ScoredCandidate, ScoredTool, ToolCatalog};
 
 pub trait MatchingStrategyPort {
-    fn calculate_similarities(
+    fn find_tools(
         &self,
         query: &UserQuery,
-    ) -> Result<Vec<Vec<ScoredCandidate>>, AppError>;
+    ) -> Result<Vec<ScoredTool>, AppError>;
+
+    fn find_options(
+        &self,
+        query: &UserQuery,
+        tool_name: &str,
+    ) -> Result<Vec<ScoredCandidate>, AppError>;
 
     fn load_engines(&self) -> Result<bool, AppError>;
 

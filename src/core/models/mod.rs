@@ -7,4 +7,4 @@ pub mod search;
 pub use catalog::{ToolCatalog, CommandOption, CommandRules};
 pub use config::EndUserConfig;
 pub use maintainer::CatalogMaintainer;
-pub use search::{UserQuery, ScoredCandidate, CommandObject};
+pub use search::{UserQuery, ScoredCandidate, CommandObject, ScoredTool};
