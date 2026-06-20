@@ -34,7 +34,7 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
             n_grams: None,
         };
 
-        // 2. Step 1: Find matching tools (catalogs)
+        // 2. Find matching tools (catalogs)
         let mut all_tools = Vec::new();
         for engine in &self.matching_engines {
             engine.load_engines()?;
@@ -45,49 +45,23 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
         // Sort tools by score descending
         all_tools.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Get the best tool name
-        let matched_tool_name = if let Some(best_tool) = all_tools.first() {
-            best_tool.tool.tool_name.clone()
-        } else {
-            "ls".to_string()
-        };
-
-        // Step 2: Find matching options for that tool
-        let mut all_options = Vec::new();
-        for engine in &self.matching_engines {
-            let options = engine.find_options(&user_query, &matched_tool_name)?;
-            all_options.extend(options);
+        // Format tool matches with all details
+        let mut output = String::new();
+        output.push_str("Tool matching results:\n");
+        for (i, tool) in all_tools.iter().enumerate() {
+            output.push_str(&format!(
+                "  [{}] Name: {} (Score: {:.4})\n      Description: {}\n      Keywords: {}\n      Version: {}\n      Rules: {:?}\n",
+                i + 1,
+                tool.tool.tool_name,
+                tool.score,
+                tool.tool.description,
+                tool.tool.keywords,
+                tool.tool.version,
+                tool.tool.rules
+            ));
         }
 
-        // Sort options by score descending
-        all_options.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
-
-        // Log the aggregated candidate base commands
-        println!("[QueryOrchestrator] Aggregation finished. Top tools resolved: {:?}", all_tools);
-        println!("[QueryOrchestrator] Top option candidates resolved: {:?}", all_options);
-
-        // Fetch default catalog definitions from storage
-        let catalog = self.storage_port.fetch_catalog(&matched_tool_name)?;
-
-        // Construct a command object matching detected query flags/options
-        let base_command = catalog.tool_name.clone();
-        let mut options = Vec::new();
-        for word in raw_query.split_whitespace() {
-            if word.starts_with('-') {
-                options.push(word.to_string());
-            }
-        }
-        if options.is_empty() {
-            options.push("-la".to_string());
-        }
-
-        let command_object = crate::core::models::CommandObject {
-            base_command,
-            options,
-        };
-
-        // Validate options against catalog rules and build final command
-        self.validator.validate(&command_object, &catalog.rules)
+        Ok(output)
     }
 
     fn update_configuration(&self, config: &EndUserConfig) -> Result<bool, AppError> {
