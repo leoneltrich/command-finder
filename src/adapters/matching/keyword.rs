@@ -28,6 +28,7 @@ pub struct TantivyIndexState {
 pub struct KeywordMatchingEngine {
     index_state: std::sync::Arc<std::sync::RwLock<Option<TantivyIndexState>>>,
     tool_weight: f64,
+    option_weight: f64,
     db_path: String,
     tool_otsu_config: super::otsu::OtsuCutoffConfig,
     option_otsu_config: super::otsu::OtsuCutoffConfig,
@@ -39,6 +40,7 @@ impl KeywordMatchingEngine {
         Self {
             index_state: std::sync::Arc::new(std::sync::RwLock::new(None)),
             tool_weight: 1.0,
+            option_weight: 1.0,
             db_path: "local_assistant.db".to_string(),
             tool_otsu_config: super::otsu::OtsuCutoffConfig::default(),
             option_otsu_config: super::otsu::OtsuCutoffConfig::default(),
@@ -48,6 +50,12 @@ impl KeywordMatchingEngine {
     /// Sets the tool weight for this engine instance.
     pub fn with_tool_weight(mut self, weight: f64) -> Self {
         self.tool_weight = weight;
+        self
+    }
+
+    /// Sets the option weight for this engine instance.
+    pub fn with_option_weight(mut self, weight: f64) -> Self {
+        self.option_weight = weight;
         self
     }
 
@@ -689,6 +697,10 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
 
     fn tool_weight(&self) -> f64 {
         self.tool_weight
+    }
+
+    fn option_weight(&self) -> f64 {
+        self.option_weight
     }
 }
 

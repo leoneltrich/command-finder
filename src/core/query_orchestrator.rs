@@ -2,7 +2,7 @@ use crate::ports::inbound::user_command::UserCommandPort;
 use crate::ports::outbound::storage::StoragePort;
 use crate::ports::outbound::matching_strategy::MatchingStrategyPort;
 use crate::core::errors::AppError;
-use crate::core::models::{EndUserConfig, ScoredTool};
+use crate::core::models::{EndUserConfig, ScoredTool, ScoredCandidate};
 use crate::core::syntactical_validator::SyntacticalValidator;
 use crate::core::similarity_rank_aggregator::SimilarityRankAggregator;
 
@@ -70,28 +70,45 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
         // 4. Retrieve options for the highest scored tool (assume the first ranked is the target tool) and format them at the end
         if let Some(top_tool) = aggregated_tools.first() {
             let tool_name = &top_tool.tool.tool_name;
-            output.push_str("\nOption matching results for the top tool:\n");
-            for (idx, engine) in self.matching_engines.iter().enumerate() {
-                let engine_label = match idx {
-                    0 => "Keyword Matching Engine",
-                    1 => "Embedding Matching Engine",
-                    _ => "Unknown Matching Engine",
-                };
-                output.push_str(&format!("  [{}] Engine:\n", engine_label));
+            
+            let mut engine_option_results = Vec::new();
+            for engine in &self.matching_engines {
                 if let Ok(options) = engine.find_options(&user_query, tool_name) {
-                    if options.is_empty() {
-                        output.push_str("    No options found\n");
-                    } else {
-                        for scored_cand in options {
-                            output.push_str(&format!(
-                                "    Option: {} (Score: {:.4})\n",
-                                scored_cand.option.option_name,
-                                scored_cand.score
-                            ));
-                        }
-                    }
-                } else {
-                    output.push_str("    Failed to retrieve options\n");
+                    engine_option_results.push((options, engine.option_weight()));
+                }
+            }
+
+            // Prepare inputs for the aggregator
+            let option_aggregator_inputs: Vec<(&[ScoredCandidate], f64)> = engine_option_results
+                .iter()
+                .map(|(options, weight)| (options.as_slice(), *weight))
+                .collect();
+
+            // Post-aggregation Otsu config
+            let post_agg_otsu_config = crate::adapters::matching::otsu::OtsuCutoffConfig::new(
+                0.60, // Alpha
+                0.00, // Hard floor
+                1.00, // Multiplier
+            );
+
+            // Aggregate options using SimilarityRankAggregator
+            let aggregated_options = self.rank_aggregator.aggregate_options(
+                &option_aggregator_inputs,
+                &post_agg_otsu_config,
+            )?;
+
+            output.push_str("\nAggregated Option matching results for the top tool:\n");
+            if aggregated_options.is_empty() {
+                output.push_str("  No options found\n");
+            } else {
+                for (i, opt) in aggregated_options.iter().enumerate() {
+                    output.push_str(&format!(
+                        "  [{}] Option: {} (Score: {:.4})\n      Description: {}\n",
+                        i + 1,
+                        opt.option.option_name,
+                        opt.score,
+                        opt.option.description
+                    ));
                 }
             }
         }

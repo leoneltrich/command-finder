@@ -11,6 +11,7 @@ use llama_cpp_2::model::LlamaModel;
 pub struct EmbeddingMatchingEngine {
     inner: std::sync::Arc<std::sync::Mutex<Option<LlamaModel>>>,
     tool_weight: f64,
+    option_weight: f64,
     db_path: String,
     tool_otsu_config: super::otsu::OtsuCutoffConfig,
     option_otsu_config: super::otsu::OtsuCutoffConfig,
@@ -22,6 +23,7 @@ impl EmbeddingMatchingEngine {
         Self {
             inner: std::sync::Arc::new(std::sync::Mutex::new(None)),
             tool_weight: 1.0,
+            option_weight: 1.0,
             db_path: "local_assistant.db".to_string(),
             tool_otsu_config: super::otsu::OtsuCutoffConfig::new(0.95, 0.0, 1.0),
             option_otsu_config: super::otsu::OtsuCutoffConfig::new(0.95, 0.0, 1.0),
@@ -31,6 +33,12 @@ impl EmbeddingMatchingEngine {
     /// Sets the tool weight for this engine instance.
     pub fn with_tool_weight(mut self, weight: f64) -> Self {
         self.tool_weight = weight;
+        self
+    }
+
+    /// Sets the option weight for this engine instance.
+    pub fn with_option_weight(mut self, weight: f64) -> Self {
+        self.option_weight = weight;
         self
     }
 
@@ -492,6 +500,10 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
 
     fn tool_weight(&self) -> f64 {
         self.tool_weight
+    }
+
+    fn option_weight(&self) -> f64 {
+        self.option_weight
     }
 }
 

@@ -32,4 +32,7 @@ pub trait MatchingStrategyPort {
 
     /// Gets the engine weight for tool retrieval.
     fn tool_weight(&self) -> f64;
+
+    /// Gets the engine weight for option retrieval.
+    fn option_weight(&self) -> f64;
 }
