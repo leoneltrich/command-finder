@@ -67,6 +67,35 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
             ));
         }
 
+        // 4. Retrieve options for the highest scored tool (assume the first ranked is the target tool) and format them at the end
+        if let Some(top_tool) = aggregated_tools.first() {
+            let tool_name = &top_tool.tool.tool_name;
+            output.push_str("\nOption matching results for the top tool:\n");
+            for (idx, engine) in self.matching_engines.iter().enumerate() {
+                let engine_label = match idx {
+                    0 => "Keyword Matching Engine",
+                    1 => "Embedding Matching Engine",
+                    _ => "Unknown Matching Engine",
+                };
+                output.push_str(&format!("  [{}] Engine:\n", engine_label));
+                if let Ok(options) = engine.find_options(&user_query, tool_name) {
+                    if options.is_empty() {
+                        output.push_str("    No options found\n");
+                    } else {
+                        for scored_cand in options {
+                            output.push_str(&format!(
+                                "    Option: {} (Score: {:.4})\n",
+                                scored_cand.option.option_name,
+                                scored_cand.score
+                            ));
+                        }
+                    }
+                } else {
+                    output.push_str("    Failed to retrieve options\n");
+                }
+            }
+        }
+
         Ok(output)
     }
 
