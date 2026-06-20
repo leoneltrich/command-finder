@@ -1,5 +1,28 @@
-use crate::core::models::ScoredCandidate;
+use crate::core::models::{ScoredCandidate, ScoredTool};
 use std::collections::HashSet;
+
+pub trait Scored {
+    fn score(&self) -> f64;
+    fn set_score(&mut self, score: f64);
+}
+
+impl Scored for ScoredCandidate {
+    fn score(&self) -> f64 {
+        self.score
+    }
+    fn set_score(&mut self, score: f64) {
+        self.score = score;
+    }
+}
+
+impl Scored for ScoredTool {
+    fn score(&self) -> f64 {
+        self.score
+    }
+    fn set_score(&mut self, score: f64) {
+        self.score = score;
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct OtsuCutoffConfig {
@@ -14,6 +37,16 @@ impl OtsuCutoffConfig {
             alpha,
             hard_floor,
             multiplier,
+        }
+    }
+}
+
+impl Default for OtsuCutoffConfig {
+    fn default() -> Self {
+        Self {
+            alpha: 0.60,
+            hard_floor: 0.0,
+            multiplier: 1.0,
         }
     }
 }
@@ -76,29 +109,29 @@ pub fn compute_otsu_threshold(drops: &[f64]) -> f64 {
     best_t
 }
 
-pub fn apply_otsu_cutoff(
-    mut candidates: Vec<ScoredCandidate>,
+pub fn apply_otsu_cutoff<T: Scored + Clone>(
+    mut candidates: Vec<T>,
     config: &OtsuCutoffConfig,
-) -> Vec<ScoredCandidate> {
+) -> Vec<T> {
     if candidates.is_empty() {
         return candidates;
     }
 
     // 1. Apply score floors (zero out weak matches)
-    let max_score = candidates.first().map(|c| c.score).unwrap_or(0.0);
+    let max_score = candidates.first().map(|c| c.score()).unwrap_or(0.0);
     let rel_floor = max_score * config.alpha;
 
     for c in &mut candidates {
-        if c.score < rel_floor || c.score < config.hard_floor {
-            c.score = 0.0;
+        if c.score() < rel_floor || c.score() < config.hard_floor {
+            c.set_score(0.0);
         }
     }
 
     // 2. Compute adjacent relative drops
     let mut drops = Vec::new();
     for j in 0..candidates.len().saturating_sub(1) {
-        let s_j = candidates[j].score;
-        let s_next = candidates[j+1].score;
+        let s_j = candidates[j].score();
+        let s_next = candidates[j+1].score();
         let drop = if s_j.abs() > 1e-6 { (s_j - s_next) / s_j } else { 0.0 };
         drops.push(drop);
     }
@@ -125,7 +158,7 @@ pub fn apply_otsu_cutoff(
     }
 
     // Also remove any candidates that were zeroed out by the floors
-    candidates.retain(|c| c.score > 0.0);
+    candidates.retain(|c| c.score() > 0.0);
 
     candidates
 }

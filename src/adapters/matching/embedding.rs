@@ -12,6 +12,8 @@ pub struct EmbeddingMatchingEngine {
     inner: std::sync::Arc<std::sync::Mutex<Option<LlamaModel>>>,
     tool_weight: f64,
     db_path: String,
+    tool_otsu_config: super::otsu::OtsuCutoffConfig,
+    option_otsu_config: super::otsu::OtsuCutoffConfig,
 }
 
 impl EmbeddingMatchingEngine {
@@ -21,6 +23,8 @@ impl EmbeddingMatchingEngine {
             inner: std::sync::Arc::new(std::sync::Mutex::new(None)),
             tool_weight: 1.0,
             db_path: "local_assistant.db".to_string(),
+            tool_otsu_config: super::otsu::OtsuCutoffConfig::new(0.95, 0.0, 1.0),
+            option_otsu_config: super::otsu::OtsuCutoffConfig::new(0.95, 0.0, 1.0),
         }
     }
 
@@ -33,6 +37,18 @@ impl EmbeddingMatchingEngine {
     /// Sets the database path for this engine instance.
     pub fn with_db_path(mut self, db_path: &str) -> Self {
         self.db_path = db_path.to_string();
+        self
+    }
+
+    /// Sets the Otsu cutoff config for tool retrieval.
+    pub fn with_tool_otsu_config(mut self, config: super::otsu::OtsuCutoffConfig) -> Self {
+        self.tool_otsu_config = config;
+        self
+    }
+
+    /// Sets the Otsu cutoff config for option retrieval.
+    pub fn with_option_otsu_config(mut self, config: super::otsu::OtsuCutoffConfig) -> Self {
+        self.option_otsu_config = config;
         self
     }
 
@@ -368,7 +384,10 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
-        fetch_matching_tools(&conn, &query_data_bytes)
+        let mut results = fetch_matching_tools(&conn, &query_data_bytes)?;
+        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        let filtered = super::otsu::apply_otsu_cutoff(results, &self.tool_otsu_config);
+        Ok(filtered)
     }
 
     fn find_options(
@@ -392,7 +411,10 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
             .map_err(|e| AppError::Storage(format!("Failed to open DB: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
 
-        fetch_matching_options(&conn, &query_data_bytes, tool_name)
+        let mut results = fetch_matching_options(&conn, &query_data_bytes, tool_name)?;
+        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        let filtered = super::otsu::apply_otsu_cutoff(results, &self.option_otsu_config);
+        Ok(filtered)
     }
 
     fn load_engines(&self) -> Result<bool, AppError> {

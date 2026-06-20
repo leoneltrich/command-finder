@@ -29,6 +29,8 @@ pub struct KeywordMatchingEngine {
     index_state: std::sync::Arc<std::sync::RwLock<Option<TantivyIndexState>>>,
     tool_weight: f64,
     db_path: String,
+    tool_otsu_config: super::otsu::OtsuCutoffConfig,
+    option_otsu_config: super::otsu::OtsuCutoffConfig,
 }
 
 impl KeywordMatchingEngine {
@@ -38,6 +40,8 @@ impl KeywordMatchingEngine {
             index_state: std::sync::Arc::new(std::sync::RwLock::new(None)),
             tool_weight: 1.0,
             db_path: "local_assistant.db".to_string(),
+            tool_otsu_config: super::otsu::OtsuCutoffConfig::default(),
+            option_otsu_config: super::otsu::OtsuCutoffConfig::default(),
         }
     }
 
@@ -50,6 +54,18 @@ impl KeywordMatchingEngine {
     /// Sets the database path for this engine instance.
     pub fn with_db_path(mut self, db_path: &str) -> Self {
         self.db_path = db_path.to_string();
+        self
+    }
+
+    /// Sets the Otsu cutoff config for tool retrieval.
+    pub fn with_tool_otsu_config(mut self, config: super::otsu::OtsuCutoffConfig) -> Self {
+        self.tool_otsu_config = config;
+        self
+    }
+
+    /// Sets the Otsu cutoff config for option retrieval.
+    pub fn with_option_otsu_config(mut self, config: super::otsu::OtsuCutoffConfig) -> Self {
+        self.option_otsu_config = config;
         self
     }
 }
@@ -500,8 +516,9 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
                 score: score as f64,
             });
         }
-
-        Ok(results)
+        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        let filtered = super::otsu::apply_otsu_cutoff(results, &self.tool_otsu_config);
+        Ok(filtered)
     }
 
     fn find_options(
@@ -548,9 +565,11 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
             .map_err(|e| AppError::Matching(format!("Search execution failed: {}", e)))?;
 
         // 4. Map top docs to candidates
-        let candidates = map_search_results_to_candidates(top_docs, &searcher, state)?;
+        let mut candidates = map_search_results_to_candidates(top_docs, &searcher, state)?;
 
-        Ok(candidates)
+        candidates.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        let filtered = super::otsu::apply_otsu_cutoff(candidates, &self.option_otsu_config);
+        Ok(filtered)
     }
 
     fn load_engines(&self) -> Result<bool, AppError> {
