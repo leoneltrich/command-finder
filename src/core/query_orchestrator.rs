@@ -91,11 +91,11 @@ impl<S: StoragePort> QueryOrchestrator<S> {
         
         msg.push_str("• /source/path\n");
         msg.push_str("  Description: Represents the full absolute path of the source file or directory. To target a file in your current working directory, run \"pwd\" in your terminal and append the file name to the printed path.\n");
-        msg.push_str("  Example:     /source/path -> /home/sandbox-noadmin/RustroverProjects/command-finder/data.txt\n\n");
+        msg.push_str("  Example:     /source/path --> pwd outputs: /tmp -> /tmp/data.txt\n\n");
         
         msg.push_str("• /destination/path\n");
         msg.push_str("  Description: Represents the full absolute path of the destination file or directory.\n");
-        msg.push_str("  Example:     /destination/path -> /home/sandbox-noadmin/RustroverProjects/command-finder/backup/");
+        msg.push_str("  Example:     /destination/path -> pwd outputs: /tmp -> /tmp/destination");
         
         msg
     }
