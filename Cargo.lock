@@ -181,6 +181,7 @@ dependencies = [
  "inquire",
  "llama-cpp-2",
  "num_cpus",
+ "regex",
  "rusqlite",
  "rust-stemmers",
  "serde",
