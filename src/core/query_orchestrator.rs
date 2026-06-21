@@ -88,12 +88,15 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
             for opt in &aggregated_options {
                 tokens.push(opt.option.option_name.clone());
             }
+
+            // Validate the tokens against the tool's syntactical rules
+            match self.validator.validate(&tokens, &top_tool.tool.rules) {
+                Ok(validated_command) => Ok(validated_command),
+                Err(_) => Ok("Query unclear".to_string()),
+            }
+        } else {
+            Ok("Query unclear".to_string())
         }
-
-        // Print the entire array
-        println!("{:?}", tokens);
-
-        Ok(format!("{:?}", tokens))
     }
 
     fn update_configuration(&self, config: &EndUserConfig) -> Result<bool, AppError> {
