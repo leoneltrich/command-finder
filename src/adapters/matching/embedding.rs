@@ -64,7 +64,12 @@ impl EmbeddingMatchingEngine {
     fn get_global_backend() -> Result<&'static LlamaBackend, AppError> {
         static GLOBAL_BACKEND: std::sync::OnceLock<Result<LlamaBackend, String>> = std::sync::OnceLock::new();
         let res = GLOBAL_BACKEND.get_or_init(|| {
-            LlamaBackend::init().map_err(|e| format!("{:?}", e))
+            LlamaBackend::init()
+                .map(|mut backend| {
+                    backend.void_logs();
+                    backend
+                })
+                .map_err(|e| format!("{:?}", e))
         });
         res.as_ref().map_err(|err| AppError::Initialization(
             crate::core::errors::InitializationException::new(format!(
