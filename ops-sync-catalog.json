@@ -1,62 +1,62 @@
 {
   "toolName": "ops-sync",
   "description": "This tool bootstraps production environments, appends legacy versioning metadata, and redacts sensitive data in place. It is used to lock configuration states, mark file versions, and sanitize logs, but requires an explicit header rotation flag for legacy updates and outputs logs solely via a configured audit signature.",
-  "userFriendlyDescription": "",
+  "userFriendlyDescription": "This tool helps you quickly set up project folders, add version info to files, and safely clean up passwords and secrets.",
   "keywords": "devops config management file sync stream data pipelines security ops-sync ops orchestrate bootstrap configuration production lock legacy versioning metadata append header rotation sanitization redact password wipe clean.log audit fsm validator validation verify verifier verify.sh ops-lock data.txt clean pipeline",
   "version": "0.1",
   "options": [
     {
       "optionName": "--genesis",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --genesis. Function: Production environment initialization state lock generation.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Sets up a secure environment folder for production use.",
       "keywords": "--genesis genesis bootstrap initialize setup start prepare prod production env environment folder directory create lock state generation origin deployment verification verify-1 matrix signature ops-lock ops-sync"
     },
     {
       "optionName": "--force-rotate",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --force-rotate. Function: Legacy lifecycle stream header rotation override.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Safely updates old files and rotates stream headers to prevent errors and data loss.",
       "keywords": "--force-rotate force rotate rotation header stream legacy-v2 legacy version marker metadata append add insert data.txt corruption override downstream lifecycle maintenance verification verify-2 data ops-sync"
     },
     {
       "optionName": "-m",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: -m:. Function: Structural security encapsulation configuration delimiter syntax.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Chooses how secure the setup should be (use -m:secure for production folder setups).",
       "keywords": "-m -m: mode secure lax colon delimiter syntax security encapsulation configuration genesis setup structural constraints ops-sync"
     },
     {
       "optionName": "--env",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --env . Function: Target deployment context specification constraint.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Tells the tool which environment (like 'prod' for production) to target.",
       "keywords": "--env env environment prod production target deployment context config genesis specification variables constraints verification verify-1 ops-sync"
     },
     {
       "optionName": "--append",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --append . Function: Legacy ingestion workflow data insertion destination.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Specifies the file you want to add the legacy version marker to.",
       "keywords": "--append append add insert write legacy legacy-v2 version marker stream signature destination data.txt file mutation ingestion metadata verify-2 ops-sync"
     },
     {
       "optionName": "--stream",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --stream . Function: Data ingestion protocol descriptor selection.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Selects the data stream format type, which must be 'legacy-v2' when appending markers.",
       "keywords": "--stream stream type format protocol legacy legacy-v2 version metadata append descriptor selection ingestion pipeline verify-2 ops-sync"
     },
     {
       "optionName": "-s",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: -s . Function: In-place data sanitization source identification.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Specifies the file you want to clean up in-place.",
       "keywords": "-s s source clean sanitize scrub wipe erase remove delete password file data.txt redaction redact pattern in-place target pipeline verification verify-3 ops-sync"
     },
     {
       "optionName": "-x",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: -x . Function: Sanitization audit log destination declaration.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Defines the name of the log file where the cleanup status will be saved.",
       "keywords": "-x x log clean.log output destination audit report record export pipeline status verification verify-3 execution signature ops-sync"
     },
     {
       "optionName": "--scrub",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --scrub . Function: Technical pattern removal text match erasure.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Specifies the text pattern (like 'PASSWORD') you want to search for and delete from the file.",
       "keywords": "--scrub scrub remove delete wipe erase clean password word text term line pattern redact redaction filter match sanitization erasure verify-3 ops-sync"
     }
   ],

@@ -51,13 +51,13 @@
       "optionName": "-f",
       "description": "passage: Parent: cp (filesystem management). Option: -f (--force). Function: Overwrite enforcement; absolute removal of unopenable destination files ahead of creation attempts.",
       "userFriendlyDescription": "Forces the copy to succeed by removing and replacing existing destination files that cannot be opened.",
-      "keywords": "force overwrite remove deletion clobber force-overwrite override-permissions unopenable bypass-protection delete-unwritable replace duplicate exist collision conflict silent-overwrite silent dont-ask no-warnings override-warnings override-confirmation suppress-prompts ignore-protection"
+      "keywords": "force overwrite silent automatic override bypass skip suppress ignore permissions protection clobber unconditional non-interactive automatically silently unopenable delete-unwritable remove deletion"
     },
     {
       "optionName": "-i",
       "description": "passage: Parent: cp (filesystem management). Option: -i (--interactive). Function: Confirmation intervention; mandatory user prompting prior to destination data overwrites.",
       "userFriendlyDescription": "Asks you for confirmation before overwriting any existing files.",
-      "keywords": "interactive prompt overwrite confirmation user-input ask-before confirm-overwrite clobber prompt-overwrite verify-overwrite replace duplicate exist collision conflict ask-first prompt-me interactive-prompt user-confirmation validation-prompt confirm-replacement safety-warning"
+      "keywords": "interactive prompt confirmation ask confirm check verify warning safety user validation query question overwrite replacement input prompt-overwrite confirm-overwrite verify-overwrite interactive-prompt user-confirmation validation-prompt confirm-replacement safety-warning"
     },
     {
       "optionName": "-H",
