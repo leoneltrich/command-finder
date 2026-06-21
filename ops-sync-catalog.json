@@ -101,7 +101,7 @@
             "position": "Immediate",
             "separator": " ",
             "tokens": [
-              "[filename_of_file_to_modify]",
+              "[FILENAME_OF_FILE_TO_MODIFY]",
               "--stream",
               "--force-rotate"
             ]
@@ -121,7 +121,7 @@
             "position": "Immediate",
             "separator": " ",
             "tokens": [
-              "[log_filename]",
+              "[LOG_FILENAME]",
               "-s",
               "--scrub"
             ]
@@ -185,7 +185,7 @@
             "position": "Immediate",
             "separator": " ",
             "tokens": [
-              "[filename_of_file_to_clean]"
+              "[FILENAME_OF_FILE_TO_CLEAN]"
             ]
           }
         },
@@ -198,7 +198,7 @@
             "position": "Immediate",
             "separator": " ",
             "tokens": [
-              "\"LINES_TO_REMOVE\""
+              "[\"LINES_TO_REMOVE\"]"
             ]
           }
         }
@@ -208,13 +208,13 @@
           "input": "\"LINES_TO_REMOVE\"",
           "isRegex": false,
           "to": "OPTIONS",
-          "optionId": "\"LINES_TO_REMOVE\""
+          "optionId": "[\"LINES_TO_REMOVE\"]"
         },
         {
-          "input": "[filename_of_file_to_clean]",
+          "input": "[FILENAME_OF_FILE_TO_CLEAN]",
           "isRegex": false,
           "to": "OPTIONS",
-          "optionId": "[filename_of_file_to_clean]"
+          "optionId": "[FILENAME_OF_FILE_TO_CLEAN]"
         },
         {
           "input": "legacy-v2",
@@ -229,16 +229,16 @@
           "optionId": "prod"
         },
         {
-          "input": "[filename_of_file_to_modify]",
+          "input": "[FILENAME_OF_FILE_TO_MODIFY]",
           "isRegex": false,
           "to": "OPTIONS",
-          "optionId": "[filename_of_file_to_modify]"
+          "optionId": "[FILENAME_OF_FILE_TO_MODIFY]"
         },
         {
-          "input": "[log_filename]",
+          "input": "[LOG_FILENAME]",
           "isRegex": false,
           "to": "OPTIONS",
-          "optionId": "[log_filename]"
+          "optionId": "[LOG_FILENAME]"
         }
       ]
     }

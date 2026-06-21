@@ -229,7 +229,7 @@
           "injection": {
             "position": "Immediate",
             "separator": "=",
-            "tokens": ["numbered"]
+            "tokens": ["[all|none|older]"]
           }
         },
         {
