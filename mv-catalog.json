@@ -84,5 +84,142 @@
       "keywords": "selinux-context security-context selinux security-label access-control default-context restore-context security-attributes"
     }
   ],
-  "rules": {}
+  "rules": {
+    "initialState": "START",
+    "acceptingStates": [
+      "END_STATE"
+    ],
+    "transitions": {
+      "START": [
+        {
+          "input": "mv",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "mv",
+          "injection": {
+            "position": "End",
+            "separator": " ",
+            "tokens": ["/source/path", "/destination/path"]
+          }
+        }
+      ],
+      "OPTIONS": [
+        {
+          "input": "-i",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-i",
+          "excludes": ["-n", "-f"]
+        },
+        {
+          "input": "-n",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-n",
+          "excludes": ["-i", "-f", "--backup"]
+        },
+        {
+          "input": "-f",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-f",
+          "excludes": ["-i", "-n"]
+        },
+        {
+          "input": "--backup",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--backup",
+          "injection": {
+            "position": "Immediate",
+            "separator": "=",
+            "tokens": ["[numbered|existing|simple]"]
+          },
+          "excludes": ["-n"]
+        },
+        {
+          "input": "--update",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--update",
+          "injection": {
+            "position": "Immediate",
+            "separator": "=",
+            "tokens": ["[all|none|older]"]
+          }
+        },
+        {
+          "input": "-S",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-S",
+          "injection": {
+            "position": "Immediate",
+            "separator": "=",
+            "tokens": ["[SUFFIX_TO_USE]"]
+          }
+        },
+        {
+          "input": "-t",
+          "isRegex": false,
+          "to": "END_STATE",
+          "optionId": "-t",
+          "pull": {
+            "id": "/destination/path",
+            "to": "OPTIONS"
+          }
+        },
+        {
+          "input": "/source/path",
+          "isRegex": false,
+          "to": "END_STATE",
+          "optionId": "/source/path"
+        },
+        {
+          "input": "-v",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-v"
+        },
+        {
+          "input": "--debug",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--debug"
+        },
+        {
+          "input": "--no-copy",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--no-copy"
+        },
+        {
+          "input": "--strip-trailing-slashes",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--strip-trailing-slashes"
+        },
+        {
+          "input": "-Z",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-Z"
+        },
+        {
+          "input": "-T",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-T"
+        }
+      ],
+      "END_STATE": [
+        {
+          "input": "/destination/path",
+          "isRegex": false,
+          "to": "END_STATE",
+          "optionId": "/destination/path"
+        }
+      ]
+    }
+  }
 }

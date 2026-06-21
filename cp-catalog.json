@@ -186,5 +186,278 @@
       "keywords": "one-file-system stay-local-mount cross-boundary limit-device restrict-partition same-filesystem local-mount-only stay-local same-device"
     }
   ],
-  "rules": {}
+  "rules": {
+    "initialState": "START",
+    "acceptingStates": [
+      "END_STATE"
+    ],
+    "transitions": {
+      "START": [
+        {
+          "input": "cp",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "cp",
+          "injection": {
+            "position": "End",
+            "separator": " ",
+            "tokens": ["/source/path", "/destination/path"]
+          }
+        }
+      ],
+      "OPTIONS": [
+        {
+          "input": "-n",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-n",
+          "excludes": ["-i", "--update"]
+        },
+        {
+          "input": "-i",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-i",
+          "excludes": ["--update", "-n"]
+        },
+        {
+          "input": "--update",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--update",
+          "excludes": ["-n", "-i"],
+          "injection": {
+            "position": "Immediate",
+            "separator": "=",
+            "tokens": ["numbered"]
+          }
+        },
+        {
+          "input": "-f",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-f"
+        },
+        {
+          "input": "-H",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-H",
+          "excludes": ["-L"]
+        },
+        {
+          "input": "-L",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-L",
+          "excludes": ["-H"]
+        },
+        {
+          "input": "-T",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-T",
+          "excludes": ["-t"]
+        },
+        {
+          "input": "-t",
+          "isRegex": false,
+          "to": "END_STATE",
+          "optionId": "-t",
+          "excludes": ["-T"],
+          "pull":  {
+            "id": "/destination/path",
+            "to": "OPTIONS"
+          }
+        },
+        {
+          "input": "--no-preserve",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--no-preserve",
+          "injection": {
+            "position": "Immediate",
+            "separator": "=",
+            "tokens": ["mode,ownership,timestamps,links,context,xattr"]
+          }
+        },
+        {
+          "input": "--preserve",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--preserve",
+          "injection": {
+            "position": "Immediate",
+            "separator": "=",
+            "tokens": ["mode,ownership,timestamps,links,context,xattr"]
+          }
+        },
+        {
+          "input": "--reflink",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--reflink",
+          "injection": {
+            "position": "Immediate",
+            "separator": "=",
+            "tokens": ["[always|auto|never]"]
+          }
+        },
+        {
+          "input": "--sparse",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--sparse",
+          "injection": {
+            "position": "Immediate",
+            "separator": "=",
+            "tokens": ["[auto|always|never]"]
+          }
+        },
+        {
+          "input": "--suffix",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--suffix",
+          "injection": {
+            "position": "Immediate",
+            "separator": "=",
+            "tokens": ["[YOUR_SUFFIX]"]
+          }
+        },
+        {
+          "input": "--backup",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--backup",
+          "injection": {
+            "position": "Immediate",
+            "separator": "=",
+            "tokens": ["[all|older|none]"]
+          }
+        },
+        {
+          "input": "--copy-contents",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--copy-contents",
+          "injection": {
+            "position": "Immediate",
+            "separator": " ",
+            "tokens": ["-R"]
+          }
+        },
+        {
+          "input": "-a",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-a"
+        },
+        {
+          "input": "--attributes-only",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--attributes-only"
+        },
+        {
+          "input": "-d",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-d"
+        },
+        {
+          "input": "--debug",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--debug"
+        },
+        {
+          "input": "-l",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-l"
+        },
+        {
+          "input": "-L",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-L"
+        },
+        {
+          "input": "-P",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-P"
+        },
+        {
+          "input": "-p",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-p"
+        },
+        {
+          "input": "--parents",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--parents"
+        },
+        {
+          "input": "-R",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-R"
+        },
+        {
+          "input": "-R",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-R"
+        },
+        {
+          "input": "--remove-destination",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--remove-destiantion"
+        },
+        {
+          "input": "--stript-trailing-slashes",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "--stript-trailing-slashes"
+        },
+        {
+          "input": "-s",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-s"
+        },
+        {
+          "input": "-v",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-v"
+        },
+        {
+          "input": "-x",
+          "isRegex": false,
+          "to": "OPTIONS",
+          "optionId": "-x"
+        },
+        {
+          "input": "/source/path",
+          "isRegex": false,
+          "to": "END_STATE",
+          "optionId": "/source/path"
+        }
+      ],
+      "END_STATE": [
+        {
+          "input": "/destination/path",
+          "isRegex": false,
+          "to": "END_STATE",
+          "optionId": "/destination/path"
+        }
+      ]
+    }
+  }
 }

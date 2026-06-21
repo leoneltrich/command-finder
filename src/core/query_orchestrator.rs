@@ -51,25 +51,12 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
         // 3. Aggregate tool matches using SimilarityRankAggregator
         let aggregated_tools = self.rank_aggregator.aggregate_tools(&aggregator_inputs)?;
 
-        // Format final aggregated tool matches
-        let mut output = String::new();
-        output.push_str("Aggregated Tool matching results:\n");
-        for (i, tool) in aggregated_tools.iter().enumerate() {
-            output.push_str(&format!(
-                "  [{}] Name: {} (Score: {:.4})\n      Description: {}\n      Keywords: {}\n      Version: {}\n      Rules: {:?}\n",
-                i + 1,
-                tool.tool.tool_name,
-                tool.score,
-                tool.tool.description,
-                tool.tool.keywords,
-                tool.tool.version,
-                tool.tool.rules
-            ));
-        }
+        let mut tokens = Vec::new();
 
-        // 4. Retrieve options for the highest scored tool (assume the first ranked is the target tool) and format them at the end
+        // 4. Retrieve options for the highest scored tool (only the best ranked tool is used)
         if let Some(top_tool) = aggregated_tools.first() {
             let tool_name = &top_tool.tool.tool_name;
+            tokens.push(tool_name.clone());
             
             let mut engine_option_results = Vec::new();
             for engine in &self.matching_engines {
@@ -97,23 +84,16 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
                 &post_agg_otsu_config,
             )?;
 
-            output.push_str("\nAggregated Option matching results for the top tool:\n");
-            if aggregated_options.is_empty() {
-                output.push_str("  No options found\n");
-            } else {
-                for (i, opt) in aggregated_options.iter().enumerate() {
-                    output.push_str(&format!(
-                        "  [{}] Option: {} (Score: {:.4})\n      Description: {}\n",
-                        i + 1,
-                        opt.option.option_name,
-                        opt.score,
-                        opt.option.description
-                    ));
-                }
+            // Add all aggregated options to our token array
+            for opt in &aggregated_options {
+                tokens.push(opt.option.option_name.clone());
             }
         }
 
-        Ok(output)
+        // Print the entire array
+        println!("{:?}", tokens);
+
+        Ok(format!("{:?}", tokens))
     }
 
     fn update_configuration(&self, config: &EndUserConfig) -> Result<bool, AppError> {
