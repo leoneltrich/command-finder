@@ -205,7 +205,7 @@
       ],
       "INJECTED_TOKENS": [
         {
-          "input": "\"LINES_TO_REMOVE\"",
+          "input": "[\"LINES_TO_REMOVE\"]",
           "isRegex": false,
           "to": "OPTIONS",
           "optionId": "[\"LINES_TO_REMOVE\"]"
