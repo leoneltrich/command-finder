@@ -333,7 +333,7 @@
           "injection": {
             "position": "Immediate",
             "separator": "=",
-            "tokens": ["[all|older|none]"]
+            "tokens": ["[none|numbered|existing|simple]"]
           }
         },
         {
