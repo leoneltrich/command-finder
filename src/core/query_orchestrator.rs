@@ -69,6 +69,36 @@ impl<S: StoragePort> QueryOrchestrator<S> {
 
         msg.trim_end_matches('\n').to_string()
     }
+
+    fn format_success_message(&self, command: &str) -> String {
+        let mut msg = String::new();
+        msg.push_str(&format!("\u{001b}[1;32m{}\u{001b}[0m\n\n", command));
+        
+        msg.push_str("Note: This command may contain placeholders. Please substitute them with actual values before running the command.\n\n");
+        
+        msg.push_str("Placeholder Reference:\n");
+        msg.push_str("• [SOME_DESCRIPTIVE_TEXT]\n");
+        msg.push_str("  Description: Represents a variable parameter. Substitute the bracketed block with the actual value described (e.g. a file name, directory, or custom string).\n");
+        msg.push_str("  Example:     tool [file_name] -> tool data.txt\n\n");
+        
+        msg.push_str("• [option1|option2]\n");
+        msg.push_str("  Description: Represents a choice between multiple options. You must choose exactly one option that fits your specific needs.\n");
+        msg.push_str("  Example:     tool --backup=[all|older] -> tool --backup=older\n\n");
+        
+        msg.push_str("• [\"descriptive_text\"]\n");
+        msg.push_str("  Description: Represents a variable parameter where the surrounding double quotes (\"\") must be preserved around your input value.\n");
+        msg.push_str("  Example:     tool --message=[\"commit message\"] -> tool --message=\"Initial commit\"\n\n");
+        
+        msg.push_str("• /source/path\n");
+        msg.push_str("  Description: Represents the full absolute path of the source file or directory. To target a file in your current working directory, run \"pwd\" in your terminal and append the file name to the printed path.\n");
+        msg.push_str("  Example:     /source/path -> /home/sandbox-noadmin/RustroverProjects/command-finder/data.txt\n\n");
+        
+        msg.push_str("• /destination/path\n");
+        msg.push_str("  Description: Represents the full absolute path of the destination file or directory.\n");
+        msg.push_str("  Example:     /destination/path -> /home/sandbox-noadmin/RustroverProjects/command-finder/backup/");
+        
+        msg
+    }
 }
 
 impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
@@ -136,7 +166,10 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
 
             // Validate the tokens against the tool's syntactical rules
             match self.validator.validate(&tokens, &top_tool.tool.rules) {
-                Ok(validated_command) => Ok(validated_command),
+                Ok(validated_command) => {
+                    let formatted_success = self.format_success_message(&validated_command);
+                    Ok(formatted_success)
+                }
                 Err(_) => {
                     let formatted_msg = self.format_disambiguation_message(&top_tool.tool, &aggregated_options);
                     Ok(formatted_msg)
@@ -256,7 +289,7 @@ mod tests {
         let orchestrator = QueryOrchestrator::new(MockStorage, vec![]);
         let msg = orchestrator.format_disambiguation_message(&tool, &options);
 
-        assert!(msg.starts_with("\u{001b}[1;31mThe query could not be resolved. Please revise your query.\u{001b}[0m\n\n"));
+        assert!(msg.starts_with("\u{001b}[1;31mThe query could not be resolved. Please revise your query."));
 
         let lines: Vec<&str> = msg.lines().collect();
         let tool_line_idx = lines.iter().position(|l| l.starts_with("test-tool ")).unwrap();
@@ -274,5 +307,34 @@ mod tests {
         let opt_spaces = opt_next_line.chars().take_while(|&c| c == ' ').count();
         assert_eq!(opt_spaces, 26, "opt next line: {:?}", opt_next_line);
         assert!(!opt_next_line.trim().is_empty());
+    }
+
+    #[test]
+    fn test_format_success_message() {
+        struct MockStorage;
+        impl crate::ports::outbound::storage::StoragePort for MockStorage {
+            fn save_catalog(&self, _: &ToolCatalog) -> Result<bool, AppError> { Ok(true) }
+            fn update_catalog(&self, _: &ToolCatalog) -> Result<bool, AppError> { Ok(true) }
+            fn delete_catalog(&self, _: &str) -> Result<bool, AppError> { Ok(true) }
+            fn fetch_catalog(&self, _: &str) -> Result<ToolCatalog, AppError> { unimplemented!() }
+            fn fetch_all_catalogs(&self) -> Result<Vec<ToolCatalog>, AppError> { Ok(vec![]) }
+            fn save_maintainer(&self, _: &crate::core::models::CatalogMaintainer) -> Result<bool, AppError> { Ok(true) }
+            fn update_maintainer(&self, _: &crate::core::models::CatalogMaintainer) -> Result<bool, AppError> { Ok(true) }
+            fn fetch_maintainer(&self, _: &str) -> Result<crate::core::models::CatalogMaintainer, AppError> { unimplemented!() }
+            fn delete_maintainer(&self, _: &str) -> Result<bool, AppError> { Ok(true) }
+            fn load_configuration(&self) -> Result<EndUserConfig, AppError> { Ok(EndUserConfig { logging_opt_in: false }) }
+            fn save_configuration(&self, _: &EndUserConfig) -> Result<bool, AppError> { Ok(true) }
+        }
+
+        let orchestrator = QueryOrchestrator::new(MockStorage, vec![]);
+        let msg = orchestrator.format_success_message("cp -R source dest");
+        
+        assert!(msg.starts_with("\u{001b}[1;32mcp -R source dest\u{001b}[0m\n\n"));
+        assert!(msg.contains("Note: This command may contain placeholders."));
+        assert!(msg.contains("[SOME_DESCRIPTIVE_TEXT]"));
+        assert!(msg.contains("[option1|option2]"));
+        assert!(msg.contains("[\"descriptive_text\"]"));
+        assert!(msg.contains("/source/path"));
+        assert!(msg.contains("/destination/path"));
     }
 }
