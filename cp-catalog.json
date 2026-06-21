@@ -1,188 +1,188 @@
 {
   "toolName": "cp",
   "description": "The copy tool is a filesystem utility designed to duplicate files, clone data, and replicate entire directory trees for backups or asset creation.",
-  "userFriendlyDescription": "",
+  "userFriendlyDescription": "Copies files and folders from one location to another.",
   "keywords": "cp copy duplicate clone replica backup directory folder transfer recursive replicate archiving preserve symlink hardlink override overwrite data sync migrate source destination path",
   "version": "0.1",
   "options": [
     {
       "optionName": "-a",
       "description": "Parent: cp (filesystem management). Option: -a (--archive). Function: Archive deployment; exact replication via recursive symlink preservation and comprehensive attribute retention.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Copies files and folders while keeping all of their original properties, permissions, and shortcuts intact.",
       "keywords": "archive recursive recurse links metadata ownership timestamps permissions retention preserve-all backup-archive entire-directory-tree preserve-attributes attributes symbolic symlink keep-all-details keep-details entire-folder-contents"
     },
     {
       "optionName": "--attributes-only",
       "description": "passage: Parent: cp (filesystem management). Option: --attributes-only (). Function: Metadata replication; absolute restriction to file attributes with absolute omission of data payloads.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Creates empty files that copy only the settings and info of the original files without copying their contents.",
       "keywords": "attributes-only metadata-only attributes permissions ownership timestamps retention size skip-data omit-payload do-not-copy-content no-data-transfer metadata empty-files copy-only-attributes no-data"
     },
     {
       "optionName": "--backup",
       "description": "passage: Parent: cp (filesystem management). Option: --backup (=CONTROL). Function: Destination redundancy; generation of structured backups for existing destination targets.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Makes a backup copy of any file at the destination that would otherwise be overwritten.",
       "keywords": "backup control suffix versioning overwrite redundancy backups numbered-backup backup-method control-parameter replace duplicate exist collision conflict safety-copy save-old keep-old auto-backup versioned-backups"
     },
     {
       "optionName": "-b",
       "description": "Parent: cp (filesystem management). Option: -b (). Function: Argument-free redundancy; generation of standard destination backups without parameter configuration.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Makes a standard backup of destination files before overwriting them without requiring extra settings.",
       "keywords": "backup default argumentless redundancy standard-backup simple-backup parameterless-backup argumentless-backup replace duplicate exist collision conflict overwrite safety-copy save-old keep-old auto-backup default-backup"
     },
     {
       "optionName": "--copy-contents",
       "description": "passage: Parent: cp (filesystem management). Option: --copy-contents (). Function: Special file payload replication; recursive processing of character, block, or pipe device data.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Copies the actual contents of special system files instead of just copying the files themselves.",
       "keywords": "copy-contents special-files fifo block character devices nodes pipes devices-contents special-device-nodes recursive copy-special-device-payloads"
     },
     {
       "optionName": "-d",
       "description": "passage: Parent: cp (filesystem management). Option: -d (). Function: Link structural replication; absolute symbolic link retention and preservation across targets.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Copies shortcuts as shortcuts rather than copying the files they point to.",
       "keywords": "no-dereference symbolic symlink link shortcut preserve-symlinks link-replication keep-symbolic-links copy-symlinks-as-links resolution dereference copy-shortcut-itself keep-shortcuts"
     },
     {
       "optionName": "--debug",
       "description": "passage: Parent: cp (filesystem management). Option: --debug (). Function: Execution introspection; verbose diagnostics detailing copying mechanisms with implicit verbosity activation.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Shows detailed technical information to help troubleshoot how files are copied.",
       "keywords": "debug verbose explain diagnostics logging traces execution-introspection troubleshooting diagnose-copy diagnostics-telemetry"
     },
     {
       "optionName": "-f",
       "description": "passage: Parent: cp (filesystem management). Option: -f (--force). Function: Overwrite enforcement; absolute removal of unopenable destination files ahead of creation attempts.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Forces the copy to succeed by removing and replacing existing destination files that cannot be opened.",
       "keywords": "force overwrite remove deletion clobber force-overwrite override-permissions unopenable bypass-protection delete-unwritable replace duplicate exist collision conflict silent-overwrite silent dont-ask no-warnings override-warnings override-confirmation suppress-prompts ignore-protection"
     },
     {
       "optionName": "-i",
       "description": "passage: Parent: cp (filesystem management). Option: -i (--interactive). Function: Confirmation intervention; mandatory user prompting prior to destination data overwrites.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Asks you for confirmation before overwriting any existing files.",
       "keywords": "interactive prompt overwrite confirmation user-input ask-before confirm-overwrite clobber prompt-overwrite verify-overwrite replace duplicate exist collision conflict ask-first prompt-me interactive-prompt user-confirmation validation-prompt confirm-replacement safety-warning"
     },
     {
       "optionName": "-H",
       "description": "passage: Parent: cp (filesystem management). Option: -H (). Function: Source command-line symlink resolution; physical traversal of explicit command-line symbolic parameters.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Follows and copies the actual files for shortcuts specified directly in the command.",
       "keywords": "follow-command-line symbolic symlink link shortcut dereference resolution traversal-links command-line-arguments-only follow-explicit-links command-line-symlinks resolve-command-line-parameters"
     },
     {
       "optionName": "-l",
       "description": "passage: Parent: cp (filesystem management). Option: -l (--link). Function: Hard link creation instead of file replication.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Creates links pointing to the original files on the hard drive instead of copying their data.",
       "keywords": "hardlink link-creation pointer inode-reference inode pointer reference create-hard-links-instead link copy-hardlink"
     },
     {
       "optionName": "-L",
       "description": "passage: Parent: cp (filesystem management). Option: -L (--dereference). Function: Mandatory source symbolic link resolution.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Always follows shortcuts and copies the actual files they point to.",
       "keywords": "dereference follow-symlinks symbolic symlink link shortcut resolution traversal follow-symbolic follow-all-links copy-link-contents follow-shortcuts follow-all-shortcuts copy-target-content actual-files-instead-of-shortcuts"
     },
     {
       "optionName": "-n",
       "description": "passage: Parent: cp (filesystem management). Option: -n (--no-clobber). Function: Existing file protection; override of updates or interactive prompts.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Prevents overwriting any files that already exist at the destination.",
       "keywords": "no-clobber do-not-overwrite overwrite-protection skip-existing safety ignore-collision prevent-clobbering replace duplicate exist collision conflict dont-delete skip-duplicates prevent-overwrite keep-old-files"
     },
     {
       "optionName": "-P",
       "description": "passage: Parent: cp (filesystem management). Option: -P (--no-dereference). Function: Symbolic link preservation; strict restriction to source link entities.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Copies shortcuts as shortcuts and never follows them to copy the original files.",
       "keywords": "no-dereference preserve-symlinks symbolic symlink link shortcut copy-symlinks skip-resolution never-dereference-links resolution dereference never-follow-symlinks dont-follow-shortcuts"
     },
     {
       "optionName": "-p",
       "description": "passage: Parent: cp (filesystem management). Option: -p. Function: Default preservation of mode, ownership, and timestamp metadata.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Preserves the original file owner, permissions, and timestamps when copying.",
       "keywords": "preserve-metadata preserve-mode preserve-ownership preserve-timestamps preserve-permissions attributes metadata maintain-attributes permissions ownership timestamps retention keep-details keep-permissions keep-owner keep-dates creation-time"
     },
     {
       "optionName": "--preserve",
       "description": "passage: Parent: cp (filesystem management). Option: --preserve[=ATTR_LIST]. Function: Selective retention of specified file attributes.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Allows you to choose specific file properties, like ownership or timestamps, to keep during the copy.",
       "keywords": "preserve-attributes preserve-acl preserve-security preserve-context selective-preserve attributes permissions ownership timestamps metadata retention custom-preservation selective-metadata keep-acl keep-context security-attributes"
     },
     {
       "optionName": "--no-preserve",
       "description": "passage: Parent: cp (filesystem management). Option: --no-preserve]. Function: Selective omission of specified file attributes.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Allows you to choose specific file properties to discard during the copy.",
       "keywords": "no-preserve discard drop strip attributes permissions ownership timestamps metadata retention omit-attributes discard-metadata skip-permissions skip-metadata omit-permissions"
     },
     {
       "optionName": "--parents",
       "description": "passage: Parent: cp (filesystem management). Option: --parents. Function: Path structural replication under target directory.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Recreates the original folder structure inside the destination folder.",
       "keywords": "parents recreate-parents create-parent-directories path-structure directory-hierarchy directory-creation path-hierarchy recreate-subdirectories full-path create-folders"
     },
     {
       "optionName": "-R",
       "description": "passage: Parent: cp (filesystem management). Option: -R (-r, --recursive). Function: Recursive directory tree traversal and duplication.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Copies folders and all of their contents, including subfolders and files.",
       "keywords": "recursive recurse copy-directories copy-folder tree-traversal nested-folders entire-folder-contents copy-subfolders recursive-copy copy-directories-and-contents subdirectories everything-inside"
     },
     {
       "optionName": "--reflink",
       "description": "passage: Parent: cp (filesystem management). Option: --reflink[=WHEN]. Function: Copy-on-write clone behavior management.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Performs a quick, space-saving copy that only duplicates data when it is modified.",
       "keywords": "reflink clone cow copy-on-write btrfs zfs snapshot lightweight-copy copy-on-write-clone lightweight-clone"
     },
     {
       "optionName": "--remove-destination",
       "description": "passage: Parent: cp (filesystem management). Option: --remove-destination (). Function: Pre-emptive target file erasure prior to initialization.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Deletes any existing destination files before starting the copy.",
       "keywords": "remove-destination delete-existing unlink-before-open force-overwrite unlink-destination remove-before-copy replace duplicate exist collision conflict overwrite delete-before-write delete-first unlink-target"
     },
     {
       "optionName": "--sparse",
       "description": "passage: Parent: cp (filesystem management). Option: --sparse=[WHEN]. Function: Conditional sparse file allocation management.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Saves disk space when copying files by optimizing empty blocks of data.",
       "keywords": "sparse sparse-file hole-allocation space-saving efficiency sparse-creation dynamic-allocation dynamic-blocks"
     },
     {
       "optionName": "--strip-trailing-slashes",
       "description": "passage: Parent: cp (filesystem management). Option: --strip-trailing-slashes (). Function: Source argument trailing slash deletion.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Removes slash marks from the ends of folder names before copying them.",
       "keywords": "strip-trailing-slashes remove-trailing-slashes path-normalization trim-pathname strip-slashes remove-slash"
     },
     {
       "optionName": "-s",
       "description": "passage: Parent: cp (filesystem management). Option: -s (--symbolic-link). Function: Symbolic link generation substitution for data replication.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Creates shortcuts to the source files instead of copying their data.",
       "keywords": "symbolic-link symlink soft-link softlink shortcut make-shortcuts instead-copying create-symlinks-instead link resolution create-shortcuts softlink-generation"
     },
     {
       "optionName": "--suffix",
       "description": "passage: Parent: cp (filesystem management). Option: -S (--suffix). Function: Backup suffix identifier override.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Adds a custom ending to the names of backup files.",
       "keywords": "backup-suffix custom-suffix override-suffix backup-extension versioning suffix-string backup custom-extension suffix-override"
     },
     {
       "optionName": "-t",
       "description": "passage: Parent: cp (filesystem management). Option: -t (--target-directory). Function: Bulk source argument replication into designated directory.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Specifies the destination folder where all files should be copied.",
       "keywords": "target-directory destination-folder bulk-copy copy-to-directory target-folder target-destination copy-into-folder bulk-transfer"
     },
     {
       "optionName": "-T",
       "description": "passage: Parent: cp (filesystem management). Option: -T (--no-target-directory). Function: Target treating strictly as standard file entity.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Treats the destination strictly as a normal file rather than a folder.",
       "keywords": "no-target-directory treat-destination-as-file literal-destination regular-file-target enforce-file-target target-directory destination-folder treat-as-normal-file do-not-create-directory"
     },
     {
       "optionName": "--update",
       "description": "passage: Parent: cp (filesystem management). Option: --update (UPDATE). Function: Differential modification time-based replication control.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Only copies files that are newer than the files already in the destination.",
       "keywords": "update-only conditional-update replace-older timestamp-update copy-newer incremental update-newer replace duplicate exist collision conflict overwrite newer-only fresh-files modification-time"
     },
     {
       "optionName": "-v",
       "description": "passage: Parent: cp (filesystem management). Option: -v (--verbose). Function: Verbose execution logging; detailed operation output generation.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Displays the name of each file as it is being copied.",
       "keywords": "verbose explain progress done print log output display track process-telemetry show-copied-files show-progress print-details explain-copy"
     },
     {
       "optionName": "-x",
       "description": "passage: Parent: cp (filesystem management). Option: -x (--one-file-system). Function: Active filesystem boundary containment; exclusive processing of local mount source.",
-      "userFriendlyDescription": "",
+      "userFriendlyDescription": "Prevents the copy from crossing onto different hard drives or storage partitions.",
       "keywords": "one-file-system stay-local-mount cross-boundary limit-device restrict-partition same-filesystem local-mount-only stay-local same-device"
     }
   ],

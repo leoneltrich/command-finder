@@ -89,7 +89,7 @@ impl EmbeddingMatchingEngine {
         ))?;
 
         if guard.is_none() {
-            let model_path = "/home/sandbox-noadmin/RustroverProjects/embedding_models_testing/models/embeddinggemma-300M-BF16.gguf";
+            let model_path = "/usr/share/command-finder/models/embeddinggemma-300M-BF16.gguf";
 
             if !std::path::Path::new(model_path).exists() {
                 return Err(AppError::Initialization(
