@@ -477,12 +477,14 @@ mod tests {
         let fetched = adapter.fetch_catalog(&catalog.tool_name).unwrap();
         assert_eq!(fetched.tool_name, catalog.tool_name);
         assert_eq!(fetched.description, catalog.description);
+        assert_eq!(fetched.user_friendly_description, catalog.user_friendly_description);
         assert_eq!(fetched.keywords, catalog.keywords);
         assert_eq!(fetched.options.len(), catalog.options.len());
 
         for (i, opt) in fetched.options.iter().enumerate() {
             assert_eq!(opt.option_name, catalog.options[i].option_name);
             assert_eq!(opt.description, catalog.options[i].description);
+            assert_eq!(opt.user_friendly_description, catalog.options[i].user_friendly_description);
             assert_eq!(opt.keywords, catalog.options[i].keywords);
         }
         cleanup_db(&test_db);
