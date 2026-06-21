@@ -1,54 +1,65 @@
 {
   "toolName": "ops-sync",
   "description": "This tool bootstraps production environments, appends legacy versioning metadata, and redacts sensitive data in place. It is used to lock configuration states, mark file versions, and sanitize logs, but requires an explicit header rotation flag for legacy updates and outputs logs solely via a configured audit signature.",
-  "keywords": "",
-  "version": "",
+  "keywords": "devops config management file sync stream data pipelines security ops-sync ops orchestrate bootstrap configuration production lock legacy versioning metadata append header rotation sanitization redact password wipe clean.log audit fsm validator validation verify verifier verify.sh ops-lock data.txt clean pipeline",
+  "version": "0.1",
   "options": [
     {
       "optionName": "--genesis",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --genesis. Function: Production environment initialization state lock generation.",
-      "keywords": "--genesis bootstrap env prod secure ops-lock configuration block file mutation collision"
+      "keywords": "--genesis genesis bootstrap initialize setup start prepare prod production env environment folder directory create lock state generation origin deployment verification verify-1 matrix signature ops-lock ops-sync"
     },
     {
       "optionName": "--force-rotate",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --force-rotate. Function: Legacy lifecycle stream header rotation override.",
-      "keywords": "--force-rotate append mutate stream header lifecycle corruption safety override rotation confirmation"
+      "keywords": "--force-rotate force rotate rotation header stream legacy-v2 legacy version marker metadata append add insert data.txt corruption override downstream lifecycle maintenance verification verify-2 data ops-sync"
     },
     {
       "optionName": "-m",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: -m:. Function: Structural security encapsulation configuration delimiter syntax.",
-      "keywords": "-m secure lax colon delimiter syntax security encapsulation production initialization workflow"
+      "keywords": "-m -m: mode secure lax colon delimiter syntax security encapsulation configuration genesis setup structural constraints ops-sync"
     },
     {
       "optionName": "--env",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --env . Function: Target deployment context specification constraint.",
-      "keywords": "--env target prod environment deployment context initialization workflow verification"
+      "keywords": "--env env environment prod production target deployment context config genesis specification variables constraints verification verify-1 ops-sync"
     },
     {
       "optionName": "--append",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --append . Function: Legacy ingestion workflow data insertion destination.",
-      "keywords": "--append file path data insertion legacy-v2 stream legacy signature stream rotation dependency"
+      "keywords": "--append append add insert write legacy legacy-v2 version marker stream signature destination data.txt file mutation ingestion metadata verify-2 ops-sync"
     },
     {
       "optionName": "--stream",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --stream . Function: Data ingestion protocol descriptor selection.",
-      "keywords": "--stream type protocol legacy-v2 metadata append pipeline verification format descriptor"
+      "keywords": "--stream stream type format protocol legacy legacy-v2 version metadata append descriptor selection ingestion pipeline verify-2 ops-sync"
     },
     {
       "optionName": "-s",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: -s . Function: In-place data sanitization source identification.",
-      "keywords": "s path source sanitization redaction scrubbing filter pattern target pipeline execution"
+      "keywords": "-s s source clean sanitize scrub wipe erase remove delete password file data.txt redaction redact pattern in-place target pipeline verification verify-3 ops-sync"
     },
     {
       "optionName": "-x",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: -x . Function: Sanitization audit log destination declaration.",
-      "keywords": "-x path destination sanitization audit log execution status report execution pipeline"
+      "keywords": "-x x log clean.log output destination audit report record export pipeline status verification verify-3 execution signature ops-sync"
     },
     {
       "optionName": "--scrub",
       "description": "passage: Parent: ops-sync (devops environment orchestration). Option: --scrub . Function: Technical pattern removal text match erasure.",
-      "keywords": "--scrub term text pattern removal source line erasure deletion redaction match term"
+      "keywords": "--scrub scrub remove delete wipe erase clean password word text term line pattern redact redaction filter match sanitization erasure verify-3 ops-sync"
     }
   ],
-  "rules": {}
+  "rules": {
+    "dependencies": {
+      "--genesis": ["-m", "--env"],
+      "--append": ["--stream", "--force-rotate"],
+      "-x": ["-s", "--scrub"]
+    },
+    "exclusions": {
+      "--genesis": ["--append", "-x"],
+      "--append": ["--genesis", "-x"],
+      "-x": ["--genesis", "--append"]
+    }
+  }
 }
