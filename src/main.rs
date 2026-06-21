@@ -12,12 +12,15 @@ use crate::core::errors::AppError;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
+    // Retrieve database path from the environment, defaulting to "local_assistant.db"
+    let db_path = env::var("DATABASE_PATH").unwrap_or_else(|_| "local_assistant.db".to_string());
+
     // 1. Instantiate the Storage/Persistence Adapter (outbound StoragePort implementation)
-    let storage = PersistenceAdapter::new();
+    let storage = PersistenceAdapter::new().with_db_path(&db_path);
 
     // 2. Instantiate concrete matching engines
-    let keyword_engine = crate::adapters::matching::keyword::KeywordMatchingEngine::new();
-    let embedding_engine = crate::adapters::matching::embedding::EmbeddingMatchingEngine::new();
+    let keyword_engine = crate::adapters::matching::keyword::KeywordMatchingEngine::new().with_db_path(&db_path);
+    let embedding_engine = crate::adapters::matching::embedding::EmbeddingMatchingEngine::new().with_db_path(&db_path);
 
     let matching_engines: Vec<Box<dyn crate::ports::outbound::matching_strategy::MatchingStrategyPort>> = vec![
         Box::new(keyword_engine.clone()),

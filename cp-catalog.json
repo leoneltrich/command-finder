@@ -96,14 +96,14 @@
       "keywords": "preserve-metadata preserve-mode preserve-ownership preserve-timestamps preserve-permissions attributes metadata maintain-attributes permissions ownership timestamps retention keep-details keep-permissions keep-owner keep-dates creation-time"
     },
     {
-      "optionName": "--preserve=[ATTR_LIST]",
+      "optionName": "--preserve",
       "description": "passage: Parent: cp (filesystem management). Option: --preserve[=ATTR_LIST]. Function: Selective retention of specified file attributes.",
       "userFriendlyDescription": "",
       "keywords": "preserve-attributes preserve-acl preserve-security preserve-context selective-preserve attributes permissions ownership timestamps metadata retention custom-preservation selective-metadata keep-acl keep-context security-attributes"
     },
     {
-      "optionName": "--no-preserve=ATTR_LIST",
-      "description": "passage: Parent: cp (filesystem management). Option: --no-preserve=ATTR_LIST]. Function: Selective omission of specified file attributes.",
+      "optionName": "--no-preserve",
+      "description": "passage: Parent: cp (filesystem management). Option: --no-preserve]. Function: Selective omission of specified file attributes.",
       "userFriendlyDescription": "",
       "keywords": "no-preserve discard drop strip attributes permissions ownership timestamps metadata retention omit-attributes discard-metadata skip-permissions skip-metadata omit-permissions"
     },
@@ -133,7 +133,7 @@
     },
     {
       "optionName": "--sparse",
-      "description": "passage: Parent: cp (filesystem management). Option: --sparse (WHEN). Function: Conditional sparse file allocation management.",
+      "description": "passage: Parent: cp (filesystem management). Option: --sparse=[WHEN]. Function: Conditional sparse file allocation management.",
       "userFriendlyDescription": "",
       "keywords": "sparse sparse-file hole-allocation space-saving efficiency sparse-creation dynamic-allocation dynamic-blocks"
     },
@@ -150,7 +150,7 @@
       "keywords": "symbolic-link symlink soft-link softlink shortcut make-shortcuts instead-copying create-symlinks-instead link resolution create-shortcuts softlink-generation"
     },
     {
-      "optionName": "-S",
+      "optionName": "--suffix",
       "description": "passage: Parent: cp (filesystem management). Option: -S (--suffix). Function: Backup suffix identifier override.",
       "userFriendlyDescription": "",
       "keywords": "backup-suffix custom-suffix override-suffix backup-extension versioning suffix-string backup custom-extension suffix-override"
