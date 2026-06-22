@@ -51,6 +51,7 @@ impl FsmConfig {
         let mut stream: VecDeque<String> = initial_tokens.iter().cloned().collect();
         let mut output_stream: Vec<String> = Vec::new();
         let mut seen_options: HashSet<String> = HashSet::new();
+        let mut processed_tokens: HashSet<String> = HashSet::new();
         let mut pending_pull_state: Option<String> = None;
 
         while let Some(token) = stream.pop_front() {
@@ -60,11 +61,20 @@ impl FsmConfig {
                 }
 
                 seen_options.insert(t.option_id.clone());
+                processed_tokens.insert(token.clone());
 
                 current_state = pending_pull_state.take().unwrap_or_else(|| t.to.clone());
 
                 let mut processed_token = token.clone();
-                self.apply_injection(t, &mut stream, &output_stream, &token, &mut processed_token);
+                self.apply_injection(
+                    t,
+                    &mut stream,
+                    &output_stream,
+                    &token,
+                    &mut processed_token,
+                    &seen_options,
+                    &processed_tokens,
+                );
                 self.apply_pull(t, &mut stream, &mut pending_pull_state);
 
                 output_stream.push(processed_token);
@@ -108,6 +118,8 @@ impl FsmConfig {
         output_stream: &[String],
         current_token: &str,
         processed_token: &mut String,
+        seen_options: &HashSet<String>,
+        processed_tokens: &HashSet<String>,
     ) {
         if let Some(inj) = &transition.injection {
             let sep = inj.separator.as_deref().unwrap_or(" ");
@@ -118,13 +130,27 @@ impl FsmConfig {
                         for tok in inj.tokens.iter().rev() {
                             let exists = current_token == tok
                                 || output_stream.contains(tok)
-                                || stream.contains(tok);
+                                || stream.contains(tok)
+                                || seen_options.contains(tok)
+                                || processed_tokens.contains(tok);
                             if !exists {
                                 stream.push_front(tok.clone());
                             }
                         }
                     } else {
-                        let fused_suffix = inj.tokens.join("");
+                        let filtered_tokens: Vec<String> = inj.tokens
+                            .iter()
+                            .filter(|tok| {
+                                let exists = current_token == *tok
+                                    || output_stream.contains(tok)
+                                    || stream.contains(tok)
+                                    || seen_options.contains(*tok)
+                                    || processed_tokens.contains(*tok);
+                                !exists
+                            })
+                            .cloned()
+                            .collect();
+                        let fused_suffix = filtered_tokens.join("");
                         *processed_token = format!("{}{}{}", processed_token, sep, fused_suffix);
                     }
                 }
@@ -132,7 +158,9 @@ impl FsmConfig {
                     for tok in &inj.tokens {
                         let exists = current_token == tok
                             || output_stream.contains(tok)
-                            || stream.contains(tok);
+                            || stream.contains(tok)
+                            || seen_options.contains(tok)
+                            || processed_tokens.contains(tok);
                         if !exists {
                             stream.push_back(tok.clone());
                         }
@@ -514,5 +542,85 @@ mod tests {
         let invalid_tokens = vec!["invalid_cmd".to_string()];
         let res_invalid = validator.validate(&invalid_tokens, &rules);
         assert!(matches!(res_invalid, Err(AppError::Validation(_))));
+    }
+
+    #[test]
+    fn test_circular_injection_with_fusion() {
+        let mut transitions = HashMap::new();
+        transitions.insert(
+            "START".to_string(),
+            vec![
+                make_transition("ops-sync", "OPTIONS", false, "ops-sync", None, None, None),
+            ],
+        );
+        transitions.insert(
+            "OPTIONS".to_string(),
+            vec![
+                make_transition(
+                    "--genesis",
+                    "OPTIONS",
+                    false,
+                    "--genesis",
+                    Some(Injection {
+                        position: InjectionPosition::Immediate,
+                        tokens: vec!["-m".to_string(), "--env".to_string()],
+                        separator: Some(" ".to_string()),
+                    }),
+                    None,
+                    None,
+                ),
+                make_transition(
+                    "-m",
+                    "OPTIONS",
+                    false,
+                    "-m",
+                    Some(Injection {
+                        position: InjectionPosition::Immediate,
+                        tokens: vec!["[secure|lax]".to_string(), "--genesis".to_string(), "--env".to_string()],
+                        separator: Some(":".to_string()),
+                    }),
+                    None,
+                    None,
+                ),
+                make_transition(
+                    "--env",
+                    "INJECTED_TOKENS",
+                    false,
+                    "--env",
+                    Some(Injection {
+                        position: InjectionPosition::Immediate,
+                        tokens: vec!["prod".to_string(), "--genesis".to_string(), "-m".to_string()],
+                        separator: Some(" ".to_string()),
+                    }),
+                    None,
+                    None,
+                ),
+            ],
+        );
+        transitions.insert(
+            "INJECTED_TOKENS".to_string(),
+            vec![
+                make_transition("prod", "OPTIONS", false, "prod", None, None, None),
+            ],
+        );
+
+        let fsm = FsmConfig {
+            initial_state: "START".to_string(),
+            accepting_states: vec!["OPTIONS".to_string()],
+            transitions,
+        };
+
+        let (valid, out) = fsm.validate(&["ops-sync".to_string(), "--genesis".to_string()]);
+        assert!(valid);
+        assert_eq!(
+            out,
+            vec![
+                "ops-sync",
+                "--genesis",
+                "-m:[secure|lax]",
+                "--env",
+                "prod"
+            ]
+        );
     }
 }
