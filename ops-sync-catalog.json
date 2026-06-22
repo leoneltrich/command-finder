@@ -140,7 +140,9 @@
             "position": "Immediate",
             "separator": ":",
             "tokens": [
-              "[secure|lax]"
+              "[secure|lax]",
+              "--genesis",
+              "--env"
             ]
           }
         },
@@ -153,7 +155,9 @@
             "position": "Immediate",
             "separator": " ",
             "tokens": [
-              "prod"
+              "prod",
+              "--genesis",
+              "-m"
             ]
           }
         },
@@ -166,7 +170,9 @@
             "position": "Immediate",
             "separator": " ",
             "tokens": [
-              "legacy-v2"
+              "legacy-v2",
+              "--append",
+              "--force-rotate"
             ]
           }
         },
@@ -174,7 +180,15 @@
           "input": "--force-rotate",
           "isRegex": false,
           "to": "OPTIONS",
-          "optionId": "--force-rotate"
+          "optionId": "--force-rotate",
+          "injection": {
+            "position": "Immediate",
+            "separator": " ",
+            "tokens": [
+              "--append",
+              "--stream"
+            ]
+          }
         },
         {
           "input": "-s",
@@ -185,7 +199,9 @@
             "position": "Immediate",
             "separator": " ",
             "tokens": [
-              "[FILENAME_OF_FILE_TO_CLEAN]"
+              "[FILENAME_OF_FILE_TO_CLEAN]",
+              "-x",
+              "--scrub"
             ]
           }
         },
@@ -198,7 +214,9 @@
             "position": "Immediate",
             "separator": " ",
             "tokens": [
-              "[\"LINES_TO_REMOVE\"]"
+              "[\"LINES_TO_REMOVE\"]",
+              "-x",
+              "-s"
             ]
           }
         }
