@@ -441,7 +441,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
             let state_read = self.index_state.read().map_err(|e| AppError::Matching(format!("Lock poisoned: {}", e)))?;
             if state_read.is_none() {
                 drop(state_read);
-                self.load_engines()?;
+                self.load_engine()?;
             }
         }
 
@@ -539,7 +539,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
             let state_read = self.index_state.read().map_err(|e| AppError::Matching(format!("Lock poisoned: {}", e)))?;
             if state_read.is_none() {
                 drop(state_read);
-                self.load_engines()?;
+                self.load_engine()?;
             }
         }
 
@@ -580,7 +580,7 @@ impl MatchingStrategyPort for KeywordMatchingEngine {
         Ok(filtered)
     }
 
-    fn load_engines(&self) -> Result<bool, AppError> {
+    fn load_engine(&self) -> Result<bool, AppError> {
         let conn = rusqlite::Connection::open(&self.db_path)
             .map_err(|e| AppError::Storage(format!("Failed to open DB for BM25: {}", e)))?;
         let _ = conn.execute("PRAGMA busy_timeout = 5000;", []);
@@ -829,7 +829,7 @@ mod tests {
         engine.create_optimized_catalog(&catalog).unwrap();
 
         // 4. Load engines to reload the Tantivy index from the DB
-        let load_res = engine.load_engines().unwrap();
+        let load_res = engine.load_engine().unwrap();
         assert!(load_res);
 
         // 5. Query the engine for tools

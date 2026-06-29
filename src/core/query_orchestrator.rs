@@ -112,7 +112,7 @@ impl<S: StoragePort> UserCommandPort for QueryOrchestrator<S> {
         // 2. Find matching tools (catalogs) from all engines
         let mut engine_tool_results = Vec::new();
         for engine in &self.matching_engines {
-            engine.load_engines()?;
+            engine.load_engine()?;
             let tools = engine.find_tools(&user_query)?;
             engine_tool_results.push((tools, engine.tool_weight()));
         }

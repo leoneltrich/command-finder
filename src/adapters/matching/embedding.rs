@@ -89,7 +89,7 @@ impl EmbeddingMatchingEngine {
         ))?;
 
         if guard.is_none() {
-            let model_path = "/usr/share/command-finder/models/embeddinggemma-300M-BF16.gguf";
+            let model_path = "/home/sandbox-noadmin/RustroverProjects/command-finder/models/embeddinggemma-300M-BF16.gguf";
 
             if !std::path::Path::new(model_path).exists() {
                 return Err(AppError::Initialization(
@@ -430,7 +430,7 @@ impl MatchingStrategyPort for EmbeddingMatchingEngine {
         Ok(filtered)
     }
 
-    fn load_engines(&self) -> Result<bool, AppError> {
+    fn load_engine(&self) -> Result<bool, AppError> {
         let _guard = self.get_or_init_model()?;
         Ok(true)
     }
@@ -693,10 +693,10 @@ mod tests {
     #[test]
     fn test_engine_lifecycle_methods() {
         let engine = EmbeddingMatchingEngine::new();
-        assert!(engine.load_engines().is_ok());
+        assert!(engine.load_engine().is_ok());
 
         let default_engine = EmbeddingMatchingEngine::default();
-        assert!(default_engine.load_engines().is_ok());
+        assert!(default_engine.load_engine().is_ok());
     }
 
     #[test]

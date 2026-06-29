@@ -164,6 +164,7 @@
           "isRegex": false,
           "to": "END_STATE",
           "optionId": "-t",
+          "excludes": ["-T"],
           "pull": {
             "id": "/destination/path",
             "to": "OPTIONS"
@@ -209,7 +210,8 @@
           "input": "-T",
           "isRegex": false,
           "to": "OPTIONS",
-          "optionId": "-T"
+          "optionId": "-T",
+          "excludes": ["-t"]
         }
       ],
       "END_STATE": [
