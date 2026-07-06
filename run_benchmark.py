@@ -280,6 +280,3 @@ def main():
         print("  No correct tool selections to report option statistics.")
     print("="*50)
     print(f"Detailed run log exported to: {args.output}\n")
-
-if __name__ == "__main__":
-    main()

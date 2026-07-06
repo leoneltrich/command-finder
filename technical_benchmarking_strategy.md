@@ -139,4 +139,4 @@ Using $S_i$, each correct tool run is categorized into one of three buckets:
 The benchmark suite should produce two outputs:
 1. **Summary Table:** A human-readable Markdown summary printout.
 2. **Detailed Run Log (`benchmark_results.csv`):** A CSV file recording for each query:
-   `ID, Raw Query, Expected Tool, Generated Tool, Expected Options, Generated Options, Tool Correctness, Option Recall Score (%), Status`
+   `ID, Raw Query, Expected Tool, Generated Tool, Expected Options, Generated Options, Tool Correctness, Option Recall Score (%), FLAGS/DEST Symmetric Error, Status`
