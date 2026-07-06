@@ -9,6 +9,11 @@ This document outlines the strategy for running the final technical benchmarking
 1. **Evaluate Tool Selection Accuracy:** Verify if the correct command/tool (e.g., `mv`, `cp`, `ops-sync`) is resolved.
 2. **Evaluate Option Flag Precision & Recall:** Measure the presence of expected option flags in the generated commands, including partial matches.
 3. **Track Retrieval Robustness:** Quantify the failure rates (errors and unresolved queries) of the orchestrator.
+   * *Robustness tracking* measures how reliably the orchestrator handles queries without falling back to unresolved states or crashing. We categorize failure modes as:
+     * **System Errors:** The program fails to execute (e.g. database file locking issues, missing tables) or crashes.
+     * **Disambiguation Prompts:** The query is parsed but contains conflicting requirements (e.g., `-i` and `-f` at the same time), which triggers a red warning highlighting conflicting options. While the tool successfully detected conflicts, it is technically an unresolved retrieval because no runnable command line could be produced.
+     * **Unclear Queries:** The search engines cannot find any tool or option matching the user input, returning "Query unclear".
+   * Quantifying these failure rates helps distinguish between a system-level bug, a failure to match the semantic space, or a conflict in the rules.
 
 ---
 
@@ -25,9 +30,9 @@ The benchmark will be executed against [test_set_with_options.csv](file:///home/
 ## 3. Tool Execution and Output Parsing
 
 ### 3.1 Invocation
-The benchmark runner will compile the binary in release mode and invoke it for each test query:
+The benchmark runner will use the existing pre-compiled binary (`target/x86_64-unknown-linux-musl/release/command-finder`) and invoke it for each test query:
 ```bash
-DATABASE_PATH=local_assistant.db target/release/command-finder query "<Original Text>"
+DATABASE_PATH=local_assistant.db ./target/x86_64-unknown-linux-musl/release/command-finder query "<Original Text>"
 ```
 
 ### 3.2 Output Classification
@@ -56,15 +61,14 @@ For each query, the benchmark runner parses the response as follows:
 
 ## 4. Option Flag Matching Logic
 
-Because options can be formatted in multiple ways (e.g., grouped short flags, flag-value assignments), the runner must parse the generated command tokens into a standardized set of **Predicted Options** ($P$).
+Because option flags are always written as individual tokens (e.g., `-f` and `-v` are never grouped into `-fv`), the runner must parse the generated command tokens into a standardized set of **Predicted Options** ($P$).
 
 ### 4.1 Token Extraction Rules
 For each token in the generated command after the tool name:
 * **Long Flags with Arguments:** If a token starts with `--` and contains `=`, split it by `=` and extract the left-hand side (e.g., `--backup=numbered` $\rightarrow$ `--backup`, `--update=older` $\rightarrow$ `--update`).
 * **Long Flags without Arguments:** If a token starts with `--` (and has no `=`), extract the token as-is (e.g., `--genesis`).
-* **Short Flag Groups:** If a token starts with a single `-` followed by multiple characters (e.g., `-iv` or `-uri`), expand it into separate single-character flags (e.g., `-iv` $\rightarrow$ `-i`, `-v`).
 * **Special Delimited Flags:** Check for custom tool patterns, such as `-m:secure` $\rightarrow$ `-m`.
-* **Standard Short Flags:** If a token starts with `-` followed by a single character (e.g., `-f`, `-s`), extract it as-is.
+* **Standard Short Flags:** If a token starts with `-` (and does not start with `--`), extract it as-is (e.g., `-f`, `-s`, `-v`, `-i`, `-x`). Grouped flags are never produced by the tool.
 
 ### 4.2 Matching Definition
 Let $E$ be the set of **Expected Options** (from the CSV `options` column) and $P$ be the set of **Predicted Options** extracted from the output.
