@@ -1,321 +1,321 @@
 ID,Raw Query,Expected Tool,Generated Tool,Expected Options,Generated Options,Tool Correctness,Option Recall Score (%),FLAGS/DEST Symmetric Error,Status
 670,Kindly move these documents to the target path; confirm any potential overwrites and provide detailed feedback for each success.,mv,mv,"['-i', '-v']","['-i', '-t']",Yes,50.00,1.00,Partial Option Match (50.0%)
 626,"Relocate all data to the new path, print a report for every success, and ensure a warning pops up if there's a name conflict.",mv,mv,"['-i', '-v']","['-i', '-v']",Yes,100.00,1.00,Full Option Match
-680,"Help me shift data to the target path, making sure to flag duplicates for my approval and list every successful file relocation.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+680,"Help me shift data to the target path, making sure to flag duplicates for my approval and list every successful file relocation.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 11,"I want to relocate my data, get a confirmation before anything is replaced, and see a status line for every single item that moves.",mv,mv,"['-i', '-v']",['-i'],Yes,50.00,2.00,Partial Option Match (50.0%)
-65,"Safely transfer every file from the original directory to the new path, making sure to show progress and verify before replacing duplicates.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-18,Help me move all files to the target folder while providing a live play-by-play and asking for confirmation before any overwriting.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-78,Transfer the data to the destination directory. Be sure to show the status of every file and ask for my input if there's a duplicate.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-643,I need to shift files from one directory to another; please list each action in the terminal and double-check with me before overwriting anything.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-51,"Transfer the files, tell me what you're doing for each one, and verify with me before replacing anything in the target folder.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-652,"Move everything from the source over to the destination folder, but please ask me before you replace any files that already exist and show me exactly what is getting moved as you go.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-3,Help me shift files to the new directory. Please display the progress of each move and make sure to prompt me before overwriting any existing items.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-674,Safely relocate those items to the destination. Make sure to confirm before replacing files and print out each transfer as it finishes.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-644,How can I safely relocate files to a new path while seeing exactly what is happening and getting a prompt if a file already exists there?,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+65,"Safely transfer every file from the original directory to the new path, making sure to show progress and verify before replacing duplicates.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+18,Help me move all files to the target folder while providing a live play-by-play and asking for confirmation before any overwriting.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+78,Transfer the data to the destination directory. Be sure to show the status of every file and ask for my input if there's a duplicate.,mv,cp,"['-i', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
+643,I need to shift files from one directory to another; please list each action in the terminal and double-check with me before overwriting anything.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+51,"Transfer the files, tell me what you're doing for each one, and verify with me before replacing anything in the target folder.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+652,"Move everything from the source over to the destination folder, but please ask me before you replace any files that already exist and show me exactly what is getting moved as you go.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+3,Help me shift files to the new directory. Please display the progress of each move and make sure to prompt me before overwriting any existing items.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+674,Safely relocate those items to the destination. Make sure to confirm before replacing files and print out each transfer as it finishes.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+644,How can I safely relocate files to a new path while seeing exactly what is happening and getting a prompt if a file already exists there?,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 669,Perform a move operation that displays each successful transfer and pauses for my permission if an existing file is detected at the destination.,mv,mv,"['-i', '-v']","['-n', '-t', '-v']",Yes,50.00,1.50,Partial Option Match (50.0%)
-667,"Hey, dump the files from the source to the destination. Make sure it tells me when a file is moved and stops to ask if a file with the same name already exists.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-642,"Move everything from the source into the target folder, making sure to show me every step and ask before replacing any duplicate files.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+667,"Hey, dump the files from the source to the destination. Make sure it tells me when a file is moved and stops to ask if a file with the same name already exists.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+642,"Move everything from the source into the target folder, making sure to show me every step and ask before replacing any duplicate files.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 657,How do I move my files while keeping a close eye on the process and ensuring I'm warned before any files are accidentally replaced?,mv,mv,"['-i', '-v']",['-i'],Yes,50.00,2.00,Partial Option Match (50.0%)
 33,I need to relocate these files. Can you ensure it prompts me before replacing existing ones and provides a verbose output of the process?,mv,mv,"['-i', '-v']","['-i', '-v']",Yes,100.00,1.00,Full Option Match
-20,"Dump all files into the new path, but notify me for every successful transfer and hold off on overwriting until I say yes.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-67,I want to move these files to the target path. Please output every move detail and pause to seek approval if a file already exists.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+20,"Dump all files into the new path, but notify me for every successful transfer and hold off on overwriting until I say yes.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+67,I want to move these files to the target path. Please output every move detail and pause to seek approval if a file already exists.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 23,I need to relocate these files. Please show me what's happening step-by-step and prompt me before replacing existing files.,mv,mv,"['-i', '-v']","['--update', '-i', '-t']",Yes,50.00,1.50,Partial Option Match (50.0%)
-630,"Safely transfer every file from the source to the target, confirming each step in the terminal and stopping to ask before replacing duplicates.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+630,"Safely transfer every file from the source to the target, confirming each step in the terminal and stopping to ask before replacing duplicates.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 671,"Transfer everything over, ensuring I get a confirmation prompt for collisions and a clear readout of the progress.",mv,mv,"['-i', '-v']",['-i'],Yes,50.00,2.00,Partial Option Match (50.0%)
 38,I want to relocate the source data into the destination path while monitoring the transfer and getting prompted if there is a conflict.,mv,mv,"['-i', '-v']",['-i'],Yes,50.00,2.00,Partial Option Match (50.0%)
 634,How do I relocate all contents to a different path while ensuring I'm warned about overwrites and getting a readout of the actions taken?,mv,mv,"['-i', '-v']",['-i'],Yes,50.00,2.00,Partial Option Match (50.0%)
-54,Safely transfer the contents of the source directory to the destination; make sure to verify before overwriting and print out each action taken.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+54,Safely transfer the contents of the source directory to the destination; make sure to verify before overwriting and print out each action taken.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 41,How do I transfer these files to another location while keeping an eye on the progress and protecting against accidental overwrites?,mv,cp,"['-i', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
 32,"Move everything from the source folder to the target, and make sure to show me every step while asking if I want to overwrite duplicates.",mv,mv,"['-i', '-v']",['-t'],Yes,0.00,2.00,No Option Match
-664,Can you shift these items over to the destination path while keeping me updated on every action and ensuring you verify any overwrite attempts?,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+664,Can you shift these items over to the destination path while keeping me updated on every action and ensuring you verify any overwrite attempts?,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 52,Move everything from the source over to the target location while showing me exactly what happens and asking me before replacing duplicates.,mv,mv,"['-i', '-v']","['--update', '-t']",Yes,0.00,1.00,No Option Match
-34,"Safely transfer the contents of the first directory to the second, verifying each move on screen and confirming before any file is overwritten.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-662,"Move everything from the source folder to the target, showing me exactly what's happening and asking before swapping any existing files.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+34,"Safely transfer the contents of the first directory to the second, verifying each move on screen and confirming before any file is overwritten.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+662,"Move everything from the source folder to the target, showing me exactly what's happening and asking before swapping any existing files.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 76,"Help me shift these files to a different path, ensuring I approve any overwrites and getting a detailed play-by-play of the process.",mv,mv,"['-i', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
 640,"Shift the data to the destination, ensuring every action is printed and each potential overwrite triggers a manual confirmation.",mv,cp,"['-i', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
 58,I want to shift my data to the destination path. Display a play-by-play of the moving process and pause to ask me if a file already exists.,mv,mv,"['-i', '-v']","['-i', '-t', '-v']",Yes,100.00,1.50,Full Option Match
 53,"I need to shift my files to a new folder, but please prompt me if you find existing files and report each successful move in the console.",mv,mv,"['-i', '-v']","['-i', '-t']",Yes,50.00,1.00,Partial Option Match (50.0%)
 663,I need to relocate these files to a new directory. Please give me step-by-step progress reports and make sure to prompt me if you're about to replace anything.,mv,mv,"['-i', '-v']","['-i', '-t']",Yes,50.00,1.00,Partial Option Match (50.0%)
-656,"Hey, shift the contents of that folder to this other directory and be verbose about the output, but definitely stop and ask me if any files are about to be clobbered.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+656,"Hey, shift the contents of that folder to this other directory and be verbose about the output, but definitely stop and ask me if any files are about to be clobbered.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 4,I need to relocate these files. Can you ensure it confirms before replacing anything and prints out every successful transfer as it happens?,mv,mv,"['-i', '-v']",['-i'],Yes,50.00,2.00,Partial Option Match (50.0%)
-678,"Please migrate the files and let me know exactly what is being moved, checking with me if a target file is already there.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+678,"Please migrate the files and let me know exactly what is being moved, checking with me if a target file is already there.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 665,"Safely transfer the contents of that folder to the new location, making sure to show every transfer in the terminal and double-check before overriding duplicates.",mv,cp,"['-i', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
-68,"Relocate all source files into the destination, making sure to report the status of each transfer and warn me before overwriting.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+68,"Relocate all source files into the destination, making sure to report the status of each transfer and warn me before overwriting.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 16,Please migrate all files to the designated folder. I want a verbose log of the process and a safety check for duplicates.,mv,cp,"['-i', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
-659,"Get these files moved over to the target directory and let me know exactly what's happening, while checking in with me before any potential overwrites occur.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-62,Move everything from the source over to the target and show me exactly what is happening while making sure to ask before replacing any existing files.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+659,"Get these files moved over to the target directory and let me know exactly what's happening, while checking in with me before any potential overwrites occur.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+62,Move everything from the source over to the target and show me exactly what is happening while making sure to ask before replacing any existing files.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 647,"Move the contents of the source directory to the destination, showing the progress of each file and pausing for my input if there is a name collision.",mv,mv,"['-i', '-v']",['-t'],Yes,0.00,2.00,No Option Match
 63,I need to shift all content from the source to the destination; please list each step as it happens and prompt me if there is a conflict.,mv,mv,"['-i', '-v']",['-i'],Yes,50.00,2.00,Partial Option Match (50.0%)
-80,"Move these items, check for collisions before overwriting, and give me visual feedback for every successful transfer.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-74,Safely relocate these items to the target directory while keeping me updated on the progress and protecting my current files from being overwritten.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+80,"Move these items, check for collisions before overwriting, and give me visual feedback for every successful transfer.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+74,Safely relocate these items to the target directory while keeping me updated on the progress and protecting my current files from being overwritten.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 658,Perform a move operation with live logging that requests my authorization before substituting any files that share a name with existing ones.,mv,mv,"['-i', '-v']","['--debug', '--update', '-i', '-v']",Yes,100.00,2.00,Full Option Match
 629,Please send these files to the new destination. I want a live log of the transfers and an alert if any files are about to be clobbered.,mv,mv,"['-i', '-v']","['--debug', '-t', '-v']",Yes,50.00,1.50,Partial Option Match (50.0%)
 69,Could you help me move my files? I want to see the progress of each one and need a prompt before any existing files get destroyed.,mv,mv,"['-i', '-v']","['-i', '-v']",Yes,100.00,1.00,Full Option Match
-36,"Help me move these files to the other folder, making sure it shows what's happening and warns me before deleting a file with the same name.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+36,"Help me move these files to the other folder, making sure it shows what's happening and warns me before deleting a file with the same name.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 623,I need to relocate these files to a new directory. Please display the progress step-by-step and prompt me if a file already exists there.,mv,mv,"['-i', '-v']","['-i', '-t', '-v']",Yes,100.00,1.50,Full Option Match
 42,"Move everything from the source folder to the target, showing me each step and asking before replacing any duplicates.",mv,mv,"['-i', '-v']",['-t'],Yes,0.00,2.00,No Option Match
 40,Transition the source contents to the destination folder with verbose output and safety prompts for any existing files.,mv,mv,"['-i', '-v']","['-i', '-v']",Yes,100.00,1.00,Full Option Match
-6,How do I move files to a new path while seeing exactly what is being moved and getting a safety check for duplicates?,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+6,How do I move files to a new path while seeing exactly what is being moved and getting a safety check for duplicates?,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 43,I need to relocate these files to a new directory; please prompt me before overwriting and print the progress of every transfer.,mv,mv,"['-i', '-v']","['-i', '-v']",Yes,100.00,1.00,Full Option Match
-641,Perform a guarded move of these files into the target folder; I need live feedback on the move and a request for permission if conflicts occur.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+641,Perform a guarded move of these files into the target folder; I need live feedback on the move and a request for permission if conflicts occur.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 61,Send the source files to the destination; include a verbose summary and interactive prompts to prevent accidental loss of existing data.,mv,cp,"['-i', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
 635,"Safely transfer these files to the new directory, showing me what's happening and stopping to confirm if any names collide.",mv,mv,"['-i', '-v']","['-i', '-t']",Yes,50.00,1.00,Partial Option Match (50.0%)
-19,Perform a move operation to the destination. Ensure each file movement is documented and I am queried if a file already exists.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+19,Perform a move operation to the destination. Ensure each file movement is documented and I am queried if a file already exists.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 44,Safely transfer contents from the source path to the destination while ensuring I approve any overwrites and see a list of what moves.,mv,mv,"['-i', '-v']",['-t'],Yes,0.00,2.00,No Option Match
-675,Can you run a move operation that reports each action while asking me for permission if a file name already exists?,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+675,Can you run a move operation that reports each action while asking me for permission if a file name already exists?,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 636,Can you help me migrate these files? I need full visibility on the transfers and an interactive check to prevent accidental overwrites.,mv,mv,"['-i', '-v']",['-i'],Yes,50.00,2.00,Partial Option Match (50.0%)
 49,"Handle this move carefully: require my input if a file exists, and display every successful transfer as it happens.",mv,mv,"['-i', '-v']","['--update', '-i', '-v']",Yes,100.00,1.50,Full Option Match
 649,"Please move my files over, but use an interactive mode that shows each step and verifies before overriding existing names.",mv,mv,"['-i', '-v']",['-i'],Yes,50.00,2.00,Partial Option Match (50.0%)
-624,"Transfer all items to the target path, keep me updated on the status of each, and don't overwrite anything without asking first.",mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-648,Safely relocate all items to the destination. Ensure it prompts me if a file exists and keeps me updated on the status of every transfer.,mv,,"['-i', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+624,"Transfer all items to the target path, keep me updated on the status of each, and don't overwrite anything without asking first.",mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+648,Safely relocate all items to the destination. Ensure it prompts me if a file exists and keeps me updated on the status of every transfer.,mv,mv,"['-i', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 673,I need to shift files to the new location; please prompt me for confirmation on duplicates and provide status updates for every file.,mv,mv,"['-i', '-v']",['-i'],Yes,50.00,2.00,Partial Option Match (50.0%)
 192,Move files from source to destination but only update what's changed and show me exactly what's being processed.,mv,mv,"['-u', '-v']","['--update', '-t', '-v']",Yes,50.00,1.50,Partial Option Match (50.0%)
 786,"Can you move files over while being careful not to replace existing newer ones, and tell me what is going on during the process?",mv,mv,"['-u', '-v']","['--update', '-n']",Yes,0.00,1.00,No Option Match
 196,Help me move updated content to the directory; don't overwrite if the version here is newer and display the output.,mv,mv,"['-u', '-v']",['--update'],Yes,0.00,2.00,No Option Match
-753,"I need to sync these directories by moving new or modified files only, and please print a report of the actions taken.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+753,"I need to sync these directories by moving new or modified files only, and please print a report of the actions taken.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 146,"Only migrate files that have been changed recently, show me the output, and don't overwrite anything newer in the destination.",mv,mv,"['-u', '-v']","['--update', '-t']",Yes,0.00,1.00,No Option Match
-193,"I need to sync these folders, so please move newer files to the target and report the progress in the terminal.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+193,"I need to sync these folders, so please move newer files to the target and report the progress in the terminal.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 147,Help me move newer files to a new path while showing a verbose list of actions taken.,mv,mv,"['-u', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
 172,"Move files from the first folder to the second, but only if they are updated or missing, and show me the details of what gets moved.",mv,mv,"['-u', '-v']","['--update', '-t', '-v']",Yes,50.00,1.50,Partial Option Match (50.0%)
 158,"Help me move these over but be careful not to overwrite current ones unless they are older, and definitely output the changes.",mv,mv,"['-u', '-v']","['--update', '-i']",Yes,0.00,1.00,No Option Match
-191,Transfer newer items to the destination directory while ignoring existing files and outputting each step of the operation.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+191,Transfer newer items to the destination directory while ignoring existing files and outputting each step of the operation.,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 150,Safely transfer modified files to the destination and let me see what's happening during the process.,mv,mv,"['-u', '-v']","['-t', '-v']",Yes,50.00,1.00,Partial Option Match (50.0%)
-152,"Move files from the first folder to the second, but only if they're newer and show me exactly what gets transferred.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+152,"Move files from the first folder to the second, but only if they're newer and show me exactly what gets transferred.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 190,Move updated files to this target path. Skip the ones that are already current and report back on everything being moved.,mv,mv,"['-u', '-v']","['--update', '-t']",Yes,0.00,1.00,No Option Match
 742,"Move files from the source to the target, only updating if the newer version exists while showing me everything that happens.",mv,mv,"['-u', '-v']","['--update', '-t']",Yes,0.00,1.00,No Option Match
 144,How can I shift items to a new location while skipping existing ones that aren't old and getting a list of everything moved?,mv,mv,"['-u', '-v']","['--update', '-n', '-t']",Yes,0.00,1.50,No Option Match
-177,Safely transfer modified files to the new location while keeping me updated on every move.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-747,How do I move files to a new path while only grabbing the updated ones and seeing the activity on screen?,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-785,"Safely migrate data to the new path, keeping only the fresher versions of items and detailing the output as you go.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+177,Safely transfer modified files to the new location while keeping me updated on every move.,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+747,How do I move files to a new path while only grabbing the updated ones and seeing the activity on screen?,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+785,"Safely migrate data to the new path, keeping only the fresher versions of items and detailing the output as you go.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 199,"Which command moves stuff to a new spot, ignores identical versions, and outputs a status report during the process?",mv,mv,"['-u', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
 167,Only move items that are newer than the ones already in the destination and display the full log of those changes.,mv,mv,"['-u', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
 787,Execute a smart move of my folder contents that ignores identical files and logs every single move made.,mv,mv,"['-u', '-v']",['--debug'],Yes,0.00,2.00,No Option Match
 165,"Transfer stuff to the target path, skipping anything that hasn't changed or is already current. Let me see the output for every move.",mv,mv,"['-u', '-v']",['-t'],Yes,0.00,2.00,No Option Match
 195,"Safely transfer modified files to the new location, making sure to print out each step so I can see what happened.",mv,mv,"['-u', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
 170,Handle the migration of new or changed content to the target directory and print out a play-by-play of the process.,mv,mv,"['-u', '-v']","['-t', '-v']",Yes,50.00,1.00,Partial Option Match (50.0%)
-798,Efficiently relocate files by only replacing older versions at the target and showing a summary of the operations.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-791,I'm moving a directory and want to be sure I don't overwrite newer files. Please show me a detailed list of what you're doing.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-777,"Only move the files that were modified more recently than the ones at the target, and show me the output.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+798,Efficiently relocate files by only replacing older versions at the target and showing a summary of the operations.,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+791,I'm moving a directory and want to be sure I don't overwrite newer files. Please show me a detailed list of what you're doing.,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+777,"Only move the files that were modified more recently than the ones at the target, and show me the output.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 756,Move updated stuff from here to there. Ensure it only overwrites older versions and keeps me informed with verbose output.,mv,mv,"['-u', '-v']","['--update', '-v']",Yes,50.00,1.00,Partial Option Match (50.0%)
 760,"Just move the newer or missing files over. Don't touch the existing ones unless they're outdated, and show me the status of each move.",mv,mv,"['-u', '-v']","['--update', '-n']",Yes,0.00,1.00,No Option Match
-783,"I need to sync my files to a new directory. Make sure to only grab updated versions, skip anything that hasn't changed, and print the progress in the terminal.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-159,Perform a conditional move of files to that destination and display each action being taken.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-800,"I want to move data to a new path, keeping only the most recent files and getting output for every action.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-795,How do I move files selectively so I only copy fresher versions and get a play-by-play of the file movements?,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-162,"Move files from source to target, but only if they are newer, and show me a list of what gets processed.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+783,"I need to sync my files to a new directory. Make sure to only grab updated versions, skip anything that hasn't changed, and print the progress in the terminal.",mv,ops-sync,"['-u', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
+159,Perform a conditional move of files to that destination and display each action being taken.,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+800,"I want to move data to a new path, keeping only the most recent files and getting output for every action.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+795,How do I move files selectively so I only copy fresher versions and get a play-by-play of the file movements?,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+162,"Move files from source to target, but only if they are newer, and show me a list of what gets processed.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 145,Update my target folder with newer stuff from the source and print out the changes as it works.,mv,mv,"['-u', '-v']","['--update', '-t', '-v']",Yes,50.00,1.50,Partial Option Match (50.0%)
-755,How can I migrate only fresh or changed content between these two paths and have the console list every step?,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+755,How can I migrate only fresh or changed content between these two paths and have the console list every step?,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 156,"Safely migrate my files and only replace ones if the source is fresher, plus make sure it prints the progress to my screen.",mv,mv,"['-u', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
 771,Transfer missing or updated files to the destination and show me the operation details while skipping current files.,mv,mv,"['-u', '-v']","['--update', '-t', '-v']",Yes,50.00,1.50,Partial Option Match (50.0%)
-181,Sync these paths by moving only modified content. I need to see the process in the terminal.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+181,Sync these paths by moving only modified content. I need to see the process in the terminal.,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 198,I want to migrate my data and only include newer modifications while getting a full report on the move.,mv,mv,"['-u', '-v']",['--update'],Yes,0.00,2.00,No Option Match
-169,"Migrate files from source to destination, avoiding overwrites of existing newer files, and output the details of each transfer.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-164,How can I safely update my destination directory with only the fresh items from the source folder while seeing every action performed?,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+169,"Migrate files from source to destination, avoiding overwrites of existing newer files, and output the details of each transfer.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+164,How can I safely update my destination directory with only the fresh items from the source folder while seeing every action performed?,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 767,"Only move files from here to there if the source is more recent, and print out a status report of what was transferred.",mv,mv,"['-u', '-v']","['--update', '-t', '-v']",Yes,50.00,1.50,Partial Option Match (50.0%)
 743,"I need to sync these folders but only copy over items that have changed, and please print the status of each move.",mv,cp,"['-u', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
-766,Move newer items to the destination directory. Be sure to report everything you do and skip any files that are already up to date.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+766,Move newer items to the destination directory. Be sure to report everything you do and skip any files that are already up to date.,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 765,"How do I transfer items selectively where only updated versions move, showing a verbose output for every file?",mv,mv,"['-u', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
-186,"Update the destination folder with files from the source, only if they are more recent, and list everything you process in the terminal.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-153,I need to sync my stuff to the target path; only overwrite older files and list out every operation as it happens.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+186,"Update the destination folder with files from the source, only if they are more recent, and list everything you process in the terminal.",mv,ops-sync,"['-u', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
+153,I need to sync my stuff to the target path; only overwrite older files and list out every operation as it happens.,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 185,How do I move files to a different location while ensuring I only replace older versions and get a play-by-play output?,mv,mv,"['-u', '-v']","['--backup', '--update', '-t']",Yes,0.00,1.50,No Option Match
-754,Safely transfer data from the source to the destination. Skip anything that hasn't changed and make sure to show me a detailed log of the process.,mv,mv,"['-u', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
+754,Safely transfer data from the source to the destination. Skip anything that hasn't changed and make sure to show me a detailed log of the process.,mv,ops-sync,"['-u', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
 189,I want to relocate files but only overwrite the old ones at the destination and display the full log of what you're doing.,mv,mv,"['-u', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
 788,"Only move files that aren't already there or have been updated, and keep the output verbose so I can see what changed.",mv,mv,"['-u', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
-772,"Move files from source to destination, but only update if they are newer and show me the progress.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-168,Safely sync my folders by moving only modified data to the target and report the status of every file operation.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-770,"Perform a conditional move where only newer source files are sent to the target, ensuring I see a log of all updates.",mv,ops-sync,"['-u', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
-782,"Move files from the source to the target folder, but only copy the ones that have been changed or are brand new while showing me exactly what is happening.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-776,Safely shift my files over; only process newer versions and keep me informed by displaying the update log.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+772,"Move files from source to destination, but only update if they are newer and show me the progress.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+168,Safely sync my folders by moving only modified data to the target and report the status of every file operation.,mv,ops-sync,"['-u', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
+770,"Perform a conditional move where only newer source files are sent to the target, ensuring I see a log of all updates.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+782,"Move files from the source to the target folder, but only copy the ones that have been changed or are brand new while showing me exactly what is happening.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+776,Safely shift my files over; only process newer versions and keep me informed by displaying the update log.,mv,ops-sync,"['-u', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 745,Can you move only the modified files to the destination directory and show a log of the progress?,mv,mv,"['-u', '-v']","['-t', '-v']",Yes,50.00,1.00,Partial Option Match (50.0%)
-748,"I want to selectively move files to another path, skipping any that haven't been modified recently and displaying the full report.",mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-176,Only move files if they are newer or don't exist yet at the destination. Be verbose so I can see what is happening.,mv,,"['-u', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-698,Securely move these assets to the folder; confirm what was added and skip over anything that clashes with existing content.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-687,Transfer the contents to the destination directory. Don't touch files that are already there and give me a play-by-play output.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-126,Safely transfer contents between these paths. Ensure nothing is replaced and display every successful action taken.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+748,"I want to selectively move files to another path, skipping any that haven't been modified recently and displaying the full report.",mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+176,Only move files if they are newer or don't exist yet at the destination. Be verbose so I can see what is happening.,mv,mv,"['-u', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+698,Securely move these assets to the folder; confirm what was added and skip over anything that clashes with existing content.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+687,Transfer the contents to the destination directory. Don't touch files that are already there and give me a play-by-play output.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+126,Safely transfer contents between these paths. Ensure nothing is replaced and display every successful action taken.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 110,"Transfer the data over, skipping any items that already exist in the folder and showing me a readout of what was actually processed.",mv,cp,"['-n', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
-714,"Shift everything from source to target, but make sure it never overwrites existing items and lists everything it processes.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+714,"Shift everything from source to target, but make sure it never overwrites existing items and lists everything it processes.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 98,"Move over those items, but if a file is already there, don't touch it. I want to see the list of what's been handled.",mv,mv,"['-n', '-v']","['--update', '-t']",Yes,0.00,1.00,No Option Match
-717,Safely relocate these items to another path; don't touch existing files and just let me know what actually gets moved.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-697,Dump everything from this source into that directory but skip duplicates and print every action to my screen.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+717,Safely relocate these items to another path; don't touch existing files and just let me know what actually gets moved.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+697,Dump everything from this source into that directory but skip duplicates and print every action to my screen.,mv,cp,"['-n', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 739,"Move these assets to the new directory, skip any naming conflicts, and print out all the actions taken.",mv,mv,"['-n', '-v']","['-n', '-t', '-v']",Yes,100.00,1.50,Full Option Match
-726,"Tell me which files are moved into the destination folder, making sure to avoid overwriting current data.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-124,I need to sync these directories. Only add missing files and report which ones were successful.,mv,mv,"['-n', '-v']",['-t'],Yes,0.00,2.00,No Option Match
+726,"Tell me which files are moved into the destination folder, making sure to avoid overwriting current data.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+124,I need to sync these directories. Only add missing files and report which ones were successful.,mv,ops-sync,"['-n', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 730,Run a safe migration of files to the new folder that skips existing ones and prints the activity log.,mv,mv,"['-n', '-v']","['-n', '-v']",Yes,100.00,1.00,Full Option Match
 682,"Move everything from the source to the target folder, but skip duplicates and show me what was moved.",mv,mv,"['-n', '-v']",['-t'],Yes,0.00,2.00,No Option Match
 685,How do I migrate these files while preventing data loss? Only copy what's missing and print the list of additions.,mv,cp,"['-n', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
-720,Help me move these files safely—ignore any existing files at the destination and keep me updated on the additions.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+720,Help me move these files safely—ignore any existing files at the destination and keep me updated on the additions.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 709,I want to shift my files to the new location; please keep it safe by skipping collisions and give me a play-by-play list.,mv,mv,"['-n', '-v']",['-n'],Yes,50.00,2.00,Partial Option Match (50.0%)
-710,Perform a move operation that reports each action and skips any files that have already landed in the destination.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+710,Perform a move operation that reports each action and skips any files that have already landed in the destination.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 132,"Move everything from the source into the destination, skip anything that’s already there, and show me a list of what actually got copied.",mv,mv,"['-n', '-v']",['-t'],Yes,0.00,2.00,No Option Match
 96,"Safely transfer these files, skipping duplicates and showing me the log of what actually migrated.",mv,cp,"['-n', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
-711,"Move source to destination, outputting all moves, and making sure not to overwrite anything.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+711,"Move source to destination, outputting all moves, and making sure not to overwrite anything.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 712,"Move files from the first folder to the second one, but skip anything that's already there and show me the progress.",mv,mv,"['-n', '-v']","['-t', '-v']",Yes,50.00,1.00,Partial Option Match (50.0%)
 121,Execute a move command that skips duplicates and prints a record of all files moved to the new directory.,mv,mv,"['-n', '-v']","['-n', '-t', '-v']",Yes,100.00,1.50,Full Option Match
-686,"Please move files to this location, skipping any collisions and reporting back on each successful transfer.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+686,"Please move files to this location, skipping any collisions and reporting back on each successful transfer.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 741,I need to safely migrate files to a new path while skipping duplicates and keeping a verbose record of the changes.,mv,mv,"['-n', '-v']",['-n'],Yes,50.00,2.00,Partial Option Match (50.0%)
 688,"Move source files over, avoiding duplicates and keeping me informed of every new file added.",mv,mv,"['-n', '-v']","['--update', '-n']",Yes,50.00,1.00,Partial Option Match (50.0%)
-128,"Please send these files over to the target folder. Don't let me lose any existing data, and keep me updated on the output.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-104,Can you shift these items over to the target directory without overwriting anything? Print out the names of the files as they transfer.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-694,Safely shift my items to the destination path. I want to see the progress of the move but absolutely do not touch any files that are currently in the target.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-707,Move these files but keep the process informative and ensure no files currently in the destination are touched.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-90,Perform a non-destructive move of these files into the target folder and list all the updates in the console.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-111,"Move the source files to the destination without destroying existing data, and print each successful move to the terminal.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-135,"I need to safely relocate my data to the target path without overwriting any duplicates, and I want to see the progress of the files being processed.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-108,"Please send these files to the target folder, preventing any overwrites and letting me know exactly what was moved.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-725,"Safely transfer contents into the target directory, ensure no overwriting occurs, and print the names of the files being processed.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+128,"Please send these files over to the target folder. Don't let me lose any existing data, and keep me updated on the output.",mv,cp,"['-n', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
+104,Can you shift these items over to the target directory without overwriting anything? Print out the names of the files as they transfer.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+694,Safely shift my items to the destination path. I want to see the progress of the move but absolutely do not touch any files that are currently in the target.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+707,Move these files but keep the process informative and ensure no files currently in the destination are touched.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+90,Perform a non-destructive move of these files into the target folder and list all the updates in the console.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+111,"Move the source files to the destination without destroying existing data, and print each successful move to the terminal.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+135,"I need to safely relocate my data to the target path without overwriting any duplicates, and I want to see the progress of the files being processed.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+108,"Please send these files to the target folder, preventing any overwrites and letting me know exactly what was moved.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+725,"Safely transfer contents into the target directory, ensure no overwriting occurs, and print the names of the files being processed.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 84,How can I shift these items over to the destination without overwriting anything and get a detailed list of the successful moves?,mv,mv,"['-n', '-v']",['-t'],Yes,0.00,2.00,No Option Match
 122,"Move everything from the first folder to the second one, but skip existing files and show me exactly what gets moved.",mv,mv,"['-n', '-v']","['-n', '-t', '-v']",Yes,100.00,1.50,Full Option Match
-695,Can you help me pipe these files over to the new folder? Only bring over the missing ones and give me a detailed list of what happened.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-107,"Move the contents into the destination path, avoiding any conflicts with current files, and make it verbose so I can see the list.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+695,Can you help me pipe these files over to the new folder? Only bring over the missing ones and give me a detailed list of what happened.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+107,"Move the contents into the destination path, avoiding any conflicts with current files, and make it verbose so I can see the list.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 97,How do I dump these files into the target path while ensuring I see the output and nothing gets overwritten?,mv,mv,"['-n', '-v']",['-t'],Yes,0.00,2.00,No Option Match
 123,Help me relocate items to a new location. Don't overwrite anything that is already there and give me a play-by-play of the process.,mv,mv,"['-n', '-v']","['-i', '-t', '-v']",Yes,50.00,1.50,Partial Option Match (50.0%)
-120,I want to relocate files but don't want to lose existing ones; show me what moves as it happens.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-86,Can you help me transfer these files into another directory? Make sure it doesn't replace current data and tell me which ones you processed.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+120,I want to relocate files but don't want to lose existing ones; show me what moves as it happens.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+86,Can you help me transfer these files into another directory? Make sure it doesn't replace current data and tell me which ones you processed.,mv,cp,"['-n', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 703,I need to relocate these files to a new path; please don't overwrite anything and let me know exactly what you transferred.,mv,mv,"['-n', '-v']",['-t'],Yes,0.00,2.00,No Option Match
-87,Relocate files to the target path while maintaining a strict 'no-overwrite' policy and printing the status of every item moved.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-693,I need to relocate these files to a new directory. Make sure it skips files that are already there and let me know exactly what gets transferred.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+87,Relocate files to the target path while maintaining a strict 'no-overwrite' policy and printing the status of every item moved.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+693,I need to relocate these files to a new directory. Make sure it skips files that are already there and let me know exactly what gets transferred.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 696,Please migrate all my files to the new location without replacing anything already present. I need to see the output of every file processed.,mv,mv,"['-n', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
 92,"Move everything from the source to the target, but keep me updated and make sure it doesn't overwrite anything existing.",mv,mv,"['-n', '-v']","['--update', '-t']",Yes,0.00,1.00,No Option Match
-719,"Can you move these files to the new folder without clobbering what is already there, and print out the activity?",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-114,I need to shift contents to a new path; please protect existing files from being replaced and provide a log of the successful transfers.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-702,"Move everything from the source to the destination, but skip existing files and show me a list of what got moved.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+719,"Can you move these files to the new folder without clobbering what is already there, and print out the activity?",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+114,I need to shift contents to a new path; please protect existing files from being replaced and provide a log of the successful transfers.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+702,"Move everything from the source to the destination, but skip existing files and show me a list of what got moved.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 689,Cleanly move these objects to the target folder while ignoring collisions and outputting a log of the new additions.,mv,mv,"['-n', '-v']","['-t', '-v']",Yes,50.00,1.00,Partial Option Match (50.0%)
-700,"I want to relocate my data, but stop if a file exists. Just show me the list of what successfully moved.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-740,"Quickly move these to the target folder, but keep it safe by ignoring existing files and showing me the moved list.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-102,"Move everything from the first folder to the second, but don't touch files that are already there and show me a list of what got moved.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+700,"I want to relocate my data, but stop if a file exists. Just show me the list of what successfully moved.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+740,"Quickly move these to the target folder, but keep it safe by ignoring existing files and showing me the moved list.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+102,"Move everything from the first folder to the second, but don't touch files that are already there and show me a list of what got moved.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 718,"Run a move operation from here to there, skipping existing matches and providing a verbose output of the result.",mv,mv,"['-n', '-v']",['-v'],Yes,50.00,2.00,Partial Option Match (50.0%)
-713,I need to relocate these files to a new directory without overwriting existing ones; tell me exactly what gets moved.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+713,I need to relocate these files to a new directory without overwriting existing ones; tell me exactly what gets moved.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 116,"Migrate these files, skip any conflicts, and keep me informed about exactly what was added.",mv,mv,"['-n', '-v']","['--update', '-n']",Yes,50.00,1.00,Partial Option Match (50.0%)
-129,Execute a move operation that ignores existing files at the destination and explains what it is doing as it finishes.,mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-119,"Run a non-destructive transfer from the source folder to the target, verifying only new files get added and showing me the status.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-85,"Move all content from source to destination, avoiding duplicates and logging every successful file transfer.",mv,,"['-n', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-261,Perform a deep folder merge from source to destination without touching pre-existing items.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-203,"Help me copy the entire directory structure over, but skip any files that are already sitting in the destination.",cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+129,Execute a move operation that ignores existing files at the destination and explains what it is doing as it finishes.,mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+119,"Run a non-destructive transfer from the source folder to the target, verifying only new files get added and showing me the status.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+85,"Move all content from source to destination, avoiding duplicates and logging every successful file transfer.",mv,mv,"['-n', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+261,Perform a deep folder merge from source to destination without touching pre-existing items.,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+203,"Help me copy the entire directory structure over, but skip any files that are already sitting in the destination.",cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 850,Safely transfer all items from the source to the destination recursively without modifying existing data.,cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 816,Safely transfer every file and subfolder from the source path to the destination without messing with any existing files.,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
-812,I need to recursively move everything from the source folder into the destination without ever replacing the files already there.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-835,I want to dump all content from one folder to another; just ensure no existing data gets wiped out.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+812,I need to recursively move everything from the source folder into the destination without ever replacing the files already there.,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+835,I want to dump all content from one folder to another; just ensure no existing data gets wiped out.,cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 804,"How do I merge these two directories together while making sure that if a file is already in the destination, it stays exactly as is?",cp,mv,"['-n', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
 246,Can you give me the command to copy all subdirectories from here to there without destroying my existing data?,cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-815,"I want to sync these folders, so please copy all nested content into the target but leave current files alone.",cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+815,"I want to sync these folders, so please copy all nested content into the target but leave current files alone.",cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 802,I need to move everything from the first folder into the second one without ever deleting or replacing the files already there.,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
-855,Transfer all files and subdirectories to the new location without touching or overwriting what is already there.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-260,"I want to integrate all these subdirectories into a new path, just don't delete or override my existing stuff.",cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+855,Transfer all files and subdirectories to the new location without touching or overwriting what is already there.,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+260,"I want to integrate all these subdirectories into a new path, just don't delete or override my existing stuff.",cp,mv,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 228,Safely merge these two directory trees without ever overwriting existing items.,cp,cp,"['-n', '-r']","['-n', '-r']",Yes,100.00,1.00,Full Option Match
-252,I need to copy everything from one folder to another without replacing any existing files.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+252,I need to copy everything from one folder to another without replacing any existing files.,cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 806,"Copy all files and subfolders over to the new location, but keep existing files safe by refusing to overwrite anything.",cp,cp,"['-n', '-r']","['-n', '-r']",Yes,100.00,1.00,Full Option Match
 853,Safely merge these directories by copying all subfolders while ensuring no data in the target path gets replaced.,cp,cp,"['-n', '-r']",['-t'],Yes,0.00,2.00,No Option Match
-230,I need to copy a whole directory tree to a new location but keep it non-destructive so it leaves my current files alone.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-224,How do I merge these directories while keeping the files that are currently in the target location?,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-834,How do I mirror all subdirectories into a target path while keeping current files in the destination safe?,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-814,"Can you copy all subfolders from one path to another, but skip any files that already exist at the destination?",cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+230,I need to copy a whole directory tree to a new location but keep it non-destructive so it leaves my current files alone.,cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
+224,How do I merge these directories while keeping the files that are currently in the target location?,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+834,How do I mirror all subdirectories into a target path while keeping current files in the destination safe?,cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
+814,"Can you copy all subfolders from one path to another, but skip any files that already exist at the destination?",cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 225,"Transfer the contents of this folder over to the other one, but make sure it doesn't replace anything that already exists.",cp,mv,"['-n', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
 251,"Perform a safe, recursive file copy from source to destination that leaves all pre-existing files completely untouched.",cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-237,Perform a deep folder merge from /source/path into /destination/path where existing files are strictly preserved.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-809,"Perform a deep folder merge from source to target, ensuring that no current data is replaced during the process.",cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+237,Perform a deep folder merge from /source/path into /destination/path where existing files are strictly preserved.,cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
+809,"Perform a deep folder merge from source to target, ensuring that no current data is replaced during the process.",cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 231,Run a recursive copy that protects existing destination files from being replaced.,cp,cp,"['-n', '-r']","['--remove-destination', '-a', '-n', '-r']",Yes,100.00,2.00,Full Option Match
 207,"I want to transfer a whole folder tree into another path, keeping it safe by refusing to overwrite anything.",cp,mv,"['-n', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
 836,"Recursively sync my source folder into the destination, but keep the current destination contents untouched.",cp,cp,"['-n', '-r']","['-a', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
 229,Copy all subdirectories from here to there and stop if a file with the same name exists.,cp,cp,"['-n', '-r']","['--parents', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
 859,Please perform a recursive file transfer into the destination folder that strictly avoids overwriting any existing items.,cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 854,Can you run a recursive copy from the source to the destination that skips any files already present?,cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-212,"I need to merge everything from this folder into that one, but please make sure not to overwrite anything already there.",cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+212,"I need to merge everything from this folder into that one, but please make sure not to overwrite anything already there.",cp,ops-sync,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 248,How do I recursively transfer all directory contents to another location while ensuring I don't accidentally replace existing items?,cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-241,Can you copy the full contents of /source/path into /destination/path without causing any overwrites?,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+241,Can you copy the full contents of /source/path into /destination/path without causing any overwrites?,cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 844,Can you move all subfolders to the new location while making sure not to overwrite my existing data?,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
 249,"Just copy everything from one path to the other recursively, but be careful not to overwrite anything that is already present.",cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 244,Help me perform a recursive copy that keeps the destination safe by refusing to overwrite anything.,cp,cp,"['-n', '-r']","['--remove-destination', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
 221,"Copy all nested files over, but ensure zero overwriting happens during the process.",cp,cp,"['-n', '-r']","['--attributes-only', '--copy-contents', '--no-preserve', '--preserve', '-f', '-n', '-p', '-r', '-t', '-v', '-x']",Yes,100.00,5.50,Full Option Match
-240,Recursive move: pull everything from /source/path to /destination/path but protect existing files from being replaced.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+240,Recursive move: pull everything from /source/path to /destination/path but protect existing files from being replaced.,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 858,"I want to bulk copy everything into this folder, just ensure it protects current files and processes all sub-items.",cp,cp,"['-n', '-r']",['-t'],Yes,0.00,2.00,No Option Match
-245,"I want to dump all files and subdirectories from my source into the target folder, but please ensure it doesn't touch anything currently in the target.",cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-829,Use a command that copies subdirectories but protects existing files in the target directory.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-210,Safely replicate the full directory hierarchy into my target location without swapping out existing files.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-813,Help me merge these two directories while making sure existing data in the target folder is safe from being overwritten.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+245,"I want to dump all files and subdirectories from my source into the target folder, but please ensure it doesn't touch anything currently in the target.",cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
+829,Use a command that copies subdirectories but protects existing files in the target directory.,cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
+210,Safely replicate the full directory hierarchy into my target location without swapping out existing files.,cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
+813,Help me merge these two directories while making sure existing data in the target folder is safe from being overwritten.,cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 852,"I need to copy everything from one folder to another recursively, but please make sure it doesn't overwrite any existing files.",cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 239,Copy all subfolders from /source/path over to /destination/path while ensuring none of my existing destination files get touched.,cp,cp,"['-n', '-r']","['--parents', '-r', '-t']",Yes,50.00,1.50,Partial Option Match (50.0%)
-831,I want to bring in all files and folders from the source without losing what I already have in the destination.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-820,Perform a deep folder merge from source to destination without touching or replacing any files currently present in the target.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+831,I want to bring in all files and folders from the source without losing what I already have in the destination.,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+820,Perform a deep folder merge from source to destination without touching or replacing any files currently present in the target.,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 253,Perform a recursive copy of /source/path into /destination/path and make sure it never overwrites anything already there.,cp,cp,"['-n', '-r']","['--remove-destination', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
 823,Safely merge these directories without replacing any existing data in the target path.,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
 817,How do I run a recursive copy that merges directories and ignores existing files to prevent data loss?,cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-215,Safely transfer the contents of /source/path to /destination/path while preserving all pre-existing files.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-857,"Recursively move contents to the target directory, but force it to keep existing files intact.",cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-840,"Copy everything inside the source, including subdirectories, but skip any files that already exist in the target.",cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+215,Safely transfer the contents of /source/path to /destination/path while preserving all pre-existing files.,cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
+857,"Recursively move contents to the target directory, but force it to keep existing files intact.",cp,mv,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+840,"Copy everything inside the source, including subdirectories, but skip any files that already exist in the target.",cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 222,"I need to copy everything from one folder to another without overwriting any files already there, including all subfolders.",cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-830,"Perform a non-destructive merge of these two directories, including all nested items.",cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+830,"Perform a non-destructive merge of these two directories, including all nested items.",cp,cp,"['-n', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 255,Dump all files from the source to the destination recursively but skip anything that already exists.,cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-250,Merge /source/path into /destination/path and make sure it traverses all nested directories without modifying existing files.,cp,,"['-n', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+250,Merge /source/path into /destination/path and make sure it traverses all nested directories without modifying existing files.,cp,mv,"['-n', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 259,"Recursive copy from source to target, but force it to ignore files already present.",cp,cp,"['-n', '-r']",['-f'],Yes,0.00,2.00,No Option Match
 223,Perform a recursive copy from /source/path to /destination/path that skips existing files so I don't lose any data.,cp,cp,"['-n', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-891,"Sync the source and destination paths recursively, only touching modified files and requiring my explicit go-ahead for any overwrites.",cp,cp,"['-i', '-r', '-u']","['--remove-destination', '-a', '-r']",Yes,33.33,1.00,Partial Option Match (33.3%)
-296,Safely transfer files to my target directory by only picking up changes and checking in with me before overwriting anything.,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-321,"Update my target folder with the source files, but keep it interactive so I can authorize any overwrites that happen during the deep scan.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
+891,"Sync the source and destination paths recursively, only touching modified files and requiring my explicit go-ahead for any overwrites.",cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
+296,Safely transfer files to my target directory by only picking up changes and checking in with me before overwriting anything.,cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
+321,"Update my target folder with the source files, but keep it interactive so I can authorize any overwrites that happen during the deep scan.",cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
 873,Can you recursively copy everything from this folder to that one while skipping files that haven't changed and prompting for confirmation if an update is needed?,cp,cp,"['-i', '-r', '-u']","['-i', '-r']",Yes,66.67,1.50,Partial Option Match (66.7%)
-273,"Sync these directories recursively, ensuring I'm prompted for confirmation on existing files and skip items that aren't actually newer.",cp,cp,"['-i', '-r', '-u']","['-i', '-r']",Yes,66.67,1.50,Partial Option Match (66.7%)
+273,"Sync these directories recursively, ensuring I'm prompted for confirmation on existing files and skip items that aren't actually newer.",cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
 876,How do I mirror this directory to another path where it only grabs updates and checks with me before replacing any changed files?,cp,cp,"['-i', '-r', '-u']","['--parents', '--update', '-t']",Yes,0.00,1.00,No Option Match
-319,I want to selectively update my backup directory; copy only new/modified sub-items and force an interactive prompt for any existing collisions.,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+319,I want to selectively update my backup directory; copy only new/modified sub-items and force an interactive prompt for any existing collisions.,cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
 279,"Recursively update the target folder with the source contents, but only overwrite if I say yes to the prompt and only if the source file is actually newer.",cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
 883,"Help me move everything from one directory to another, ensuring I confirm any existing file overrides and checking all subdirectories for updates.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
-265,"Sync the source and destination paths. Make it recursive, keep only the updated files, and require my approval for any file substitutions.",cp,cp,"['-i', '-r', '-u']","['--parents', '--update', '-a', '-r', '-t']",Yes,33.33,1.67,Partial Option Match (33.3%)
-316,"Perform an interactive update copy between these two directories, ensuring subdirectories are included and no data is replaced without my say-so.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-295,"I want to mirror all the new and updated files from one location to another, but verify with me first for every single change.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-865,"Transfer these subdirectories over, but ensure it only grabs newer versions and pauses to ask before touching any existing destination items.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+265,"Sync the source and destination paths. Make it recursive, keep only the updated files, and require my approval for any file substitutions.",cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
+316,"Perform an interactive update copy between these two directories, ensuring subdirectories are included and no data is replaced without my say-so.",cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
+295,"I want to mirror all the new and updated files from one location to another, but verify with me first for every single change.",cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
+865,"Transfer these subdirectories over, but ensure it only grabs newer versions and pauses to ask before touching any existing destination items.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
 877,"Run a recursive copy that handles new and updated items, just remember to pause and ask me before hitting 'yes' on any overwrites.",cp,cp,"['-i', '-r', '-u']","['--update', '-r']",Yes,33.33,1.50,Partial Option Match (33.3%)
 898,"Run a recursive update from source to target, asking for confirmation on file conflicts and showing me the progress.",cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
-869,"Sync these directories, keeping existing files unless they are outdated, and definitely ask me before replacing anything.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-921,Efficiently sync my directories by copying only fresh or revised data. Make sure it stays safe by asking for my go-ahead before overwriting any files.,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+869,"Sync these directories, keeping existing files unless they are outdated, and definitely ask me before replacing anything.",cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
+921,Efficiently sync my directories by copying only fresh or revised data. Make sure it stays safe by asking for my go-ahead before overwriting any files.,cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
 269,"Run a recursive copy from the source path to the destination. Only transfer changes, but protect my data by asking for confirmation before any overwrites.",cp,cp,"['-i', '-r', '-u']","['--copy-contents', '-a', '-i', '-r']",Yes,66.67,1.33,Partial Option Match (66.7%)
-285,"Safely transfer new files from the source to the destination, ensuring the process is interactive if there's a conflict.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+285,"Safely transfer new files from the source to the destination, ensuring the process is interactive if there's a conflict.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
 900,"Incrementally backup this folder structure to the new path, with confirmation prompts for overwrites and update logging enabled.",cp,cp,"['-i', '-r', '-u']","['--backup', '-i']",Yes,33.33,1.50,Partial Option Match (33.3%)
-297,Run a recursive update that only grabs changed files and insists on user approval for any duplicate name conflicts.,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+297,Run a recursive update that only grabs changed files and insists on user approval for any duplicate name conflicts.,cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
 268,Mirror the source folder to the destination. Update only the changed items and don't overwrite anything without my explicit 'yes'.,cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
 307,"Update the destination path from the source path, including subfolders, with interactive prompts and verbose feedback.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
 320,Sync /source/path to /destination/path recursively. Only copy what is new or changed and make sure it prompts me before overwriting.,cp,cp,"['-i', '-r', '-u']","['-i', '-r']",Yes,66.67,1.50,Partial Option Match (66.7%)
-874,"Safely transfer directories so I only get newer stuff, and make sure to stop and verify with me before overwriting a local file.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-911,Perform a recursive sync between paths that only updates new or edited files and demands user approval to overwrite.,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+874,"Safely transfer directories so I only get newer stuff, and make sure to stop and verify with me before overwriting a local file.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
+911,Perform a recursive sync between paths that only updates new or edited files and demands user approval to overwrite.,cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
 917,"Copy all subfolders from source to target, but skip files that haven't changed. Please ensure it triggers a confirmation prompt for any file collisions.",cp,cp,"['-i', '-r', '-u']","['-i', '-t']",Yes,33.33,1.50,Partial Option Match (33.3%)
 908,Run a conditional recursive copy from source to dest that only touches new/modified files and pauses to confirm overwrites.,cp,cp,"['-i', '-r', '-u']",['-r'],Yes,33.33,3.00,Partial Option Match (33.3%)
-289,"Update the target directory with contents from the source, making sure to hit every subfolder but stop and ask before replacing modified items.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-863,"I need to sync two folders recursively, keeping only fresh data and prompting for confirmation before replacing any file.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-293,Help me perform an incremental copy of everything in that folder while making sure to prompt me if a file already exists.,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-862,"Copy everything from source to destination, but only update what has changed and ask me if I want to overwrite existing files.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+289,"Update the target directory with contents from the source, making sure to hit every subfolder but stop and ask before replacing modified items.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
+863,"I need to sync two folders recursively, keeping only fresh data and prompting for confirmation before replacing any file.",cp,cp,"['-i', '-r', '-u']","['-i', '-r']",Yes,66.67,1.50,Partial Option Match (66.7%)
+293,Help me perform an incremental copy of everything in that folder while making sure to prompt me if a file already exists.,cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
+862,"Copy everything from source to destination, but only update what has changed and ask me if I want to overwrite existing files.",cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
 264,What command updates my destination files from the source path while keeping everything safe by prompting for confirmation on changes?,cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
 263,"I need to sync these directories. Use recursive mode, update only what has changed, and verify with me prior to any overwrites.",cp,cp,"['-i', '-r', '-u']","['--parents', '-a', '-i', '-r']",Yes,66.67,1.33,Partial Option Match (66.7%)
 271,Efficiently sync my source to the target path. Copy updated files recursively and enforce a confirmation prompt for every overwrite operation.,cp,cp,"['-i', '-r', '-u']",['-i'],Yes,33.33,3.00,Partial Option Match (33.3%)
 274,How can I perform a recursive copy to update my destination folder while keeping it safe with interactive prompts and only transferring modified data?,cp,cp,"['-i', '-r', '-u']","['-i', '-r']",Yes,66.67,1.50,Partial Option Match (66.7%)
 910,I want to sync files between these paths recursively; be sure to only process updates and force a confirmation prompt before modifying existing destination files.,cp,cp,"['-i', '-r', '-u']",['--update'],Yes,0.00,3.00,No Option Match
-281,"Update my destination directory from the source; ensure it's recursive, only copies modified files, and always asks for my approval before touching existing data.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-885,"Update the target folder with files from the source, recurse through subfolders, and pause for my permission before replacing any modified data.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+281,"Update my destination directory from the source; ensure it's recursive, only copies modified files, and always asks for my approval before touching existing data.",cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
+885,"Update the target folder with files from the source, recurse through subfolders, and pause for my permission before replacing any modified data.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
 893,I need to sync my files from here to there recursively. Please make sure I confirm before overwriting existing data and show me what's happening.,cp,cp,"['-i', '-r', '-u']","['-i', '-r']",Yes,66.67,1.50,Partial Option Match (66.7%)
-283,"Sync these folders while checking subdirectories, and prompt for my permission before overwriting anything.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
-882,"I need to sync my files from source to destination, but only copy if they are new or changed and always ask me before overwriting anything.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+283,"Sync these folders while checking subdirectories, and prompt for my permission before overwriting anything.",cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
+882,"I need to sync my files from source to destination, but only copy if they are new or changed and always ask me before overwriting anything.",cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
 890,"Safely refresh my folder contents, adding missing bits and checking for updates, while making sure to query me before modifying any target files.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
-909,Use a safe copy method to update my target directory from the source; skip duplicates and prompt me for each file change.,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-888,Efficiently sync my subdirectories to a target path; just update what is different and verify with me before overwriting.,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-280,Copy all subdirectories to the new path. Skip files that haven't changed and make sure to prompt me before overwriting anything in the target.,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+909,Use a safe copy method to update my target directory from the source; skip duplicates and prompt me for each file change.,cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
+888,Efficiently sync my subdirectories to a target path; just update what is different and verify with me before overwriting.,cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
+280,Copy all subdirectories to the new path. Skip files that haven't changed and make sure to prompt me before overwriting anything in the target.,cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
 905,"How do I recursively update the target folder with new source data, keeping existing content safe unless I manually approve a swap?",cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
 899,I want to refresh my destination directory with new source files. Please prompt me if a file already exists and make sure it checks nested folders too.,cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
-272,"I need to copy everything from one folder to another, but please check with me before overwriting and only update if the files are newer or changed.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+272,"I need to copy everything from one folder to another, but please check with me before overwriting and only update if the files are newer or changed.",cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
 309,"Mirror the contents, only moving newer stuff and pausing to ask me before clobbering any files in the destination.",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Incorrect Tool Selected
-864,"How do I mirror a folder to a new location, ignoring identical files while checking in before modifying anything?",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+864,"How do I mirror a folder to a new location, ignoring identical files while checking in before modifying anything?",cp,mv,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
 292,"I need to update my backup folder with changes from the source, but please ask me before you replace any existing files.",cp,cp,"['-i', '-r', '-u']","['--backup', '--update']",Yes,0.00,1.50,No Option Match
-906,"Sync the source over to the destination. Ensure it hits all subfolders, only picks up fresh or edited files, and waits for my okay before overwriting.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+906,"Sync the source over to the destination. Ensure it hits all subfolders, only picks up fresh or edited files, and waits for my okay before overwriting.",cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
 920,"I want to mirror everything from this source into that folder without duplicates, only adding or updating changed files and prompting for approval on conflicts.",cp,cp,"['-i', '-r', '-u']",['--update'],Yes,0.00,3.00,No Option Match
-305,Can you run a recursive update from here to there while checking with me before changing any files?,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-318,"Can you copy everything over while keeping subfolders, updating only modified items, and pausing to ask for permission on existing files?",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-290,"Keep my destination in sync with the source. Only copy if the file is newer or missing, and definitely ask me before writing over old versions.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-291,"Sync source to destination: scan recursively, copy only updates, and prompt me before overwriting any altered files.",cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
+305,Can you run a recursive update from here to there while checking with me before changing any files?,cp,ops-sync,"['-i', '-r', '-u']",[],No,N/A,N/A,Error: Disambiguation warning
+318,"Can you copy everything over while keeping subfolders, updating only modified items, and pausing to ask for permission on existing files?",cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
+290,"Keep my destination in sync with the source. Only copy if the file is newer or missing, and definitely ask me before writing over old versions.",cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
+291,"Sync source to destination: scan recursively, copy only updates, and prompt me before overwriting any altered files.",cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
 282,"Copy everything from source to destination, but only update what changed and ask me if I want to replace existing files.",cp,cp,"['-i', '-r', '-u']",['--update'],Yes,0.00,3.00,No Option Match
-880,I want to selectively update my backup directory recursively; prompt me before any overwrites and only process what has changed.,cp,,"['-i', '-r', '-u']",[],N/A,N/A,N/A,Error: Disambiguation warning
-613,"Safely relocate this file and if there's a conflict, make sure it saves a sequential backup version instead of overwriting the original.",mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+880,I want to selectively update my backup directory recursively; prompt me before any overwrites and only process what has changed.,cp,cp,"['-i', '-r', '-u']",[],Yes,N/A,N/A,Error: Disambiguation warning
+613,"Safely relocate this file and if there's a conflict, make sure it saves a sequential backup version instead of overwriting the original.",mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1070,What command moves a file and guarantees a numbered backup is kept for every replaced file?,mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
-1098,"Relocate the data, keeping previous versions safe by appending sequential numbers if the name is already taken.",mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+1098,"Relocate the data, keeping previous versions safe by appending sequential numbers if the name is already taken.",mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 468,"Help me move this over, but I want to keep numbered backups of the original file if it already exists there.",mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
 1075,I need to shift this path over to the target location while ensuring older versions are safely kept as numbered backups.,mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
-463,I need to shift this item to the new location while keeping a numbered history of any existing files I overwrite.,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+463,I need to shift this item to the new location while keeping a numbered history of any existing files I overwrite.,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 424,How do I relocate this file while forcing the system to archive previous versions with sequential numbers instead of overwriting?,mv,mv,['--backup'],['-f'],Yes,0.00,1.00,No Option Match
-1065,"Perform a move operation, but keep a safety net by auto-renaming existing target files with numbers instead of deleting them.",mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+1065,"Perform a move operation, but keep a safety net by auto-renaming existing target files with numbers instead of deleting them.",mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1097,Could you move this over to the new path and automatically create numbered backups for any conflicts?,mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
 433,I need to shift my file to the target location while ensuring the old version isn't deleted by appending a sequential number instead.,mv,ops-sync,['--backup'],[],No,N/A,N/A,Incorrect Tool Selected
 445,"Perform a move operation, but keep existing files safe by auto-renaming them with sequences instead of overwriting.",mv,mv,['--backup'],['-n'],Yes,0.00,1.00,No Option Match
@@ -326,48 +326,48 @@ ID,Raw Query,Expected Tool,Generated Tool,Expected Options,Generated Options,Too
 617,I want to move this file to the other directory; make sure it creates a backup copy with a number suffix if a duplicate exists.,mv,cp,['--backup'],[],No,N/A,N/A,Incorrect Tool Selected
 427,Rename my current destination files with numbers as backups while moving these new items into the path.,mv,mv,['--backup'],"['--backup', '-t']",Yes,100.00,2.00,Full Option Match
 1072,"Move this file to that folder, but please keep a numbered backup version instead of overwriting anything.",mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
-434,"Safely transfer this to the new directory, making sure to keep an indexed copy of any file I might overwrite.",mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+434,"Safely transfer this to the new directory, making sure to keep an indexed copy of any file I might overwrite.",mv,cp,['--backup'],[],No,N/A,N/A,Error: Disambiguation warning
 1081,"Move /source/path to /destination/path, but keep my old files safe by creating numbered backups for them.",mv,mv,['--backup'],"['--backup', '-t']",Yes,100.00,2.00,Full Option Match
 454,Safely transfer these assets to the target directory and create numbered backups for any existing files I am overwriting.,mv,cp,['--backup'],[],No,N/A,N/A,Incorrect Tool Selected
-426,Can you handle this move operation by keeping numbered safety copies of any files that get replaced?,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+426,Can you handle this move operation by keeping numbered safety copies of any files that get replaced?,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 465,Is there a way to overwrite a file during a move while automatically backing up the original with a numbered suffix?,mv,mv,['--backup'],"['--backup', '-f', '-s=[suffix_to_use]']",Yes,100.00,3.00,Full Option Match
-425,Safely transfer this to the target directory and append incremental backup digits if a file is already there.,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
-435,How can I relocate this item and have the system keep a numbered history of replaced files?,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1085,Could you perform a move operation while automatically versioning any files that get replaced?,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+425,Safely transfer this to the target directory and append incremental backup digits if a file is already there.,mv,cp,['--backup'],[],No,N/A,N/A,Error: Disambiguation warning
+435,How can I relocate this item and have the system keep a numbered history of replaced files?,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1085,Could you perform a move operation while automatically versioning any files that get replaced?,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1045,How do I shift these files over and force the system to keep numbered backups of any files it replaces?,mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
-1043,I need to relocate my file to the target directory while auto-renaming any existing copies with sequence numbers so I don't lose data.,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
-459,"Take everything from the source to the target folder, but rename the replaced items with sequential numbers rather than destroying them.",mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+1043,I need to relocate my file to the target directory while auto-renaming any existing copies with sequence numbers so I don't lose data.,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
+459,"Take everything from the source to the target folder, but rename the replaced items with sequential numbers rather than destroying them.",mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1082,I need to relocate these files to a new folder but make sure it generates numbered backups of any existing versions so I don't lose anything.,mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
 440,Help me move this and keep old versions on disk with numbered filenames instead of just wiping them.,mv,mv,['--backup'],['-t'],Yes,0.00,1.00,No Option Match
 1087,I want to relocate this file. Use the numbered backup mode to avoid deleting existing files in the destination directory.,mv,mv,['--backup'],"['--backup', '-t']",Yes,100.00,2.00,Full Option Match
-461,I need a command that renames older versions with a number before moving the new file over them.,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+461,I need a command that renames older versions with a number before moving the new file over them.,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1056,How do I transfer files to a new location while forcing the system to keep every overwritten version as a numbered copy?,mv,cp,['--backup'],[],No,N/A,N/A,Incorrect Tool Selected
 1092,Move this file but keep an indexed backup of the original if there's already a copy in the destination.,mv,cp,['--backup'],[],No,N/A,N/A,Incorrect Tool Selected
 1080,"Transfer the file over, ensuring automatic sequential numbering for all backups created during the move.",mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
 447,"Transfer the item to the destination, but make sure I have numbered backups of any files that get displaced.",mv,cp,['--backup'],[],No,N/A,N/A,Incorrect Tool Selected
-443,"Can you safely relocate this file and ensure that if the target already has one, the old one stays behind with a version number?",mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1054,Safely relocate these assets and ensure old versions are archived with incremental suffixes instead of being deleted.,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+443,"Can you safely relocate this file and ensure that if the target already has one, the old one stays behind with a version number?",mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1054,Safely relocate these assets and ensure old versions are archived with incremental suffixes instead of being deleted.,mv,ops-sync,['--backup'],[],No,N/A,N/A,Error: Disambiguation warning
 422,"Move this file to the other folder, but keep a numbered backup of any existing files so I don't lose anything.",mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
-466,"Transfer the data to the destination path, but keep every previous version indexed with numbers if a conflict occurs.",mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
+466,"Transfer the data to the destination path, but keep every previous version indexed with numbers if a conflict occurs.",mv,ops-sync,['--backup'],[],No,N/A,N/A,Incorrect Tool Selected
 1057,Move /source/path to /destination/path and make sure I don't lose the originals by creating numbered backup files.,mv,mv,['--backup'],"['--backup', '-t']",Yes,100.00,2.00,Full Option Match
-1090,"Shift files to the new directory, making sure to protect my current data by renaming replaced files with numbered suffixes.",mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+1090,"Shift files to the new directory, making sure to protect my current data by renaming replaced files with numbered suffixes.",mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 467,"Perform a move operation, ensuring any replaced files are renamed and saved with numbered extensions to avoid data loss.",mv,mv,['--backup'],"['--backup', '-s=[suffix_to_use]']",Yes,100.00,2.00,Full Option Match
 1079,How do I relocate this file while forcing the system to store existing ones as numbered backup files?,mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
 436,Shift this to that location and prevent data loss by auto-renaming existing files with a numbered extension.,mv,mv,['--backup'],"['-n', '-s=[suffix_to_use]']",Yes,0.00,2.00,No Option Match
-460,Safely move my files to the new destination and ensure any clashing files are backed up with an automatic numbered suffix.,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+460,Safely move my files to the new destination and ensure any clashing files are backed up with an automatic numbered suffix.,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 612,"I need to move a file, but please automatically create numbered backups of any existing files at the destination so nothing gets lost.",mv,mv,['--backup'],['--backup'],Yes,100.00,1.00,Full Option Match
 1089,"Move the contents to this destination, but keep a backup of the overwritten files by appending a sequential number.",mv,mv,['--backup'],"['--backup', '-t']",Yes,100.00,2.00,Full Option Match
-469,How do I move files to a new directory while appending a numbered tag to any existing files I displace?,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1099,I want to overwrite the target but keep a numbered copy of the old file just in case.,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+469,How do I move files to a new directory while appending a numbered tag to any existing files I displace?,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1099,I want to overwrite the target but keep a numbered copy of the old file just in case.,mv,cp,['--backup'],[],No,N/A,N/A,Error: Disambiguation warning
 1076,Move /source/path to /destination/path and trigger sequential numbering for any backups so I don't lose the originals.,mv,mv,['--backup'],"['--backup', '-t']",Yes,100.00,2.00,Full Option Match
-620,Move this file and don't just overwrite the destination; save a numbered copy of any file that gets displaced.,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1083,"Safely shift my items to that path, keeping an indexed copy of anything I'm overwriting.",mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+620,Move this file and don't just overwrite the destination; save a numbered copy of any file that gets displaced.,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1083,"Safely shift my items to that path, keeping an indexed copy of anything I'm overwriting.",mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1096,"Shift the file, but keep a versioned backup history for whatever gets overwritten.",mv,ops-sync,['--backup'],[],No,N/A,N/A,Incorrect Tool Selected
-444,I need to shift this file over to the new path; please keep a versioned copy of the original if a conflict pops up.,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+444,I need to shift this file over to the new path; please keep a versioned copy of the original if a conflict pops up.,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
 429,Move the source to the destination and use numbered extension backups to prevent data loss.,mv,mv,['--backup'],"['--backup', '-s=[suffix_to_use]']",Yes,100.00,2.00,Full Option Match
 1068,Move this to that path and use the numbered backup feature so I don't lose the files currently sitting in the destination.,mv,mv,['--backup'],"['--backup', '-t']",Yes,100.00,2.00,Full Option Match
-446,How do I move this to the target location while forcing the system to archive previous versions with numbered suffixes?,mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1069,"Help me move these files, creating numbered copies of any duplicates encountered along the way.",mv,,['--backup'],[],N/A,N/A,N/A,Error: Disambiguation warning
+446,How do I move this to the target location while forcing the system to archive previous versions with numbered suffixes?,mv,mv,['--backup'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1069,"Help me move these files, creating numbered copies of any duplicates encountered along the way.",mv,cp,['--backup'],[],No,N/A,N/A,Error: Disambiguation warning
 954,How can I set up symbolic links for every subfolder in /source/path inside /destination/path?,cp,mv,"['-r', '-s']",[],No,N/A,N/A,Incorrect Tool Selected
 971,Make /destination/path a recursive alias of /source/path using symbolic links to save space.,cp,cp,"['-r', '-s']","['-a', '-d', '-l', '-p', '-s']",Yes,50.00,2.50,Partial Option Match (50.0%)
 340,Link everything recursively from /source/path over to /destination/path so I don't waste any extra space.,cp,cp,"['-r', '-s']","['-a', '-d', '-l', '-p', '-r', '-s']",Yes,100.00,3.00,Full Option Match
@@ -376,7 +376,7 @@ ID,Raw Query,Expected Tool,Generated Tool,Expected Options,Generated Options,Too
 334,I want to populate /destination/path with symbolic links that mirror the recursive file tree of /source/path.,cp,cp,"['-r', '-s']","['-a', '-d', '-l', '-p', '-r', '-s']",Yes,100.00,3.00,Full Option Match
 373,How can I recursively link the structure from /source/path to /destination/path without consuming any extra storage?,cp,cp,"['-r', '-s']","['-a', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
 344,"Perform a deep recursive copy of /source/path into /destination/path, but make sure it uses symbolic links instead of copying the actual data content.",cp,cp,"['-r', '-s']","['-a', '-d', '-l', '-r']",Yes,50.00,2.00,Partial Option Match (50.0%)
-955,Generate a virtual replica of the source files in my target directory by linking them instead of duplicating them.,cp,,"['-r', '-s']",[],N/A,N/A,N/A,Error: Disambiguation warning
+955,Generate a virtual replica of the source files in my target directory by linking them instead of duplicating them.,cp,cp,"['-r', '-s']",[],Yes,N/A,N/A,Error: Disambiguation warning
 979,Please recreate the hierarchy of /source/path inside /destination/path using only soft links for the contents.,cp,mv,"['-r', '-s']",[],No,N/A,N/A,Incorrect Tool Selected
 329,Create a folder structure in /destination/path that mirrors /source/path via symbolic links for instant access.,cp,cp,"['-r', '-s']","['--parents', '-d', '-l']",Yes,0.00,1.50,No Option Match
 348,Quickly create a shortcut-based replica of the /source/path structure within /destination/path for instant file access without duplication.,cp,cp,"['-r', '-s']",['--parents'],Yes,0.00,2.00,No Option Match
@@ -392,12 +392,12 @@ ID,Raw Query,Expected Tool,Generated Tool,Expected Options,Generated Options,Too
 966,Replicate the directory layout of /source/path over at /destination/path using only soft links for the entire tree.,cp,cp,"['-r', '-s']","['--parents', '-r', '-s', '-t']",Yes,100.00,2.00,Full Option Match
 358,Link all files and directories from /source/path into /destination/path recursively.,cp,cp,"['-r', '-s']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 932,Make a mirror of the /source/path folder inside /destination/path using symbolic links so I don't use up extra storage.,cp,cp,"['-r', '-s']","['-a', '-d', '-l', '-p', '-s']",Yes,50.00,2.50,Partial Option Match (50.0%)
-374,Please create a set of symlinks that replicate the entire directory tree from /source/path over to /destination/path.,cp,,"['-r', '-s']",[],N/A,N/A,N/A,Error: Disambiguation warning
+374,Please create a set of symlinks that replicate the entire directory tree from /source/path over to /destination/path.,cp,cp,"['-r', '-s']",[],Yes,N/A,N/A,Error: Disambiguation warning
 924,How can I recursively link every item from one directory into another instead of performing a physical data copy?,cp,cp,"['-r', '-s']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-377,Quickly set up a mirrored directory structure at /destination/path that points back to /source/path without using real file copies.,cp,,"['-r', '-s']",[],N/A,N/A,N/A,Error: Disambiguation warning
+377,Quickly set up a mirrored directory structure at /destination/path that points back to /source/path without using real file copies.,cp,cp,"['-r', '-s']",[],Yes,N/A,N/A,Error: Disambiguation warning
 937,Please link the whole tree from /source/path into /destination/path so I can access the files without duplicating them.,cp,cp,"['-r', '-s']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 332,I need to mirror the folder structure from /source/path into /destination/path using symlinks recursively to save disk space.,cp,cp,"['-r', '-s']","['--parents', '-a', '-r']",Yes,50.00,1.50,Partial Option Match (50.0%)
-927,"I'm trying to gain instant access to these files in a different path, so please perform a recursive symbolic link operation.",cp,,"['-r', '-s']",[],N/A,N/A,N/A,Error: Disambiguation warning
+927,"I'm trying to gain instant access to these files in a different path, so please perform a recursive symbolic link operation.",cp,cp,"['-r', '-s']",[],Yes,N/A,N/A,Error: Disambiguation warning
 357,I want to access files from /source/path via /destination/path without creating duplicates on my drive.,cp,cp,"['-r', '-s']","['--remove-destination', '-t']",Yes,0.00,1.00,No Option Match
 926,Can you create a virtual copy of all files and subfolders from here to there without duplicating the content itself?,cp,cp,"['-r', '-s']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 957,Link all the files and folders from the source into the destination directory recursively.,cp,cp,"['-r', '-s']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
@@ -405,15 +405,15 @@ ID,Raw Query,Expected Tool,Generated Tool,Expected Options,Generated Options,Too
 949,I need to save space by symlinking every file from one directory structure to another recursively.,cp,cp,"['-r', '-s']","['-a', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
 930,Set up a symlinked replica of this whole directory branch in the new path without using any disk space for file contents.,cp,cp,"['-r', '-s']","['--parents', '-t']",Yes,0.00,1.00,No Option Match
 350,Recursively generate a symlink tree at /destination/path that references every file located in /source/path.,cp,cp,"['-r', '-s']","['-a', '-r', '-s']",Yes,100.00,1.50,Full Option Match
-371,Make /destination/path a symbolic reflection of the /source/path tree so I don't waste any more drive space.,cp,,"['-r', '-s']",[],N/A,N/A,N/A,Error: Disambiguation warning
-946,I want to populate the target directory with symlinks that mirror the structure of my source folder.,cp,,"['-r', '-s']",[],N/A,N/A,N/A,Error: Disambiguation warning
+371,Make /destination/path a symbolic reflection of the /source/path tree so I don't waste any more drive space.,cp,mv,"['-r', '-s']",[],No,N/A,N/A,Error: Disambiguation warning
+946,I want to populate the target directory with symlinks that mirror the structure of my source folder.,cp,cp,"['-r', '-s']",[],Yes,N/A,N/A,Error: Disambiguation warning
 970,Deeply link the contents of /source/path into /destination/path instead of performing a standard file copy.,cp,cp,"['-r', '-s']","['-d', '-l', '-s']",Yes,50.00,1.50,Partial Option Match (50.0%)
 952,Create a recursive mirror of the source directory in the destination folder using symlinks to save space.,cp,cp,"['-r', '-s']","['-a', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
-978,I need to access the entire /source/path layout from /destination/path via symlinks to avoid using extra storage.,cp,,"['-r', '-s']",[],N/A,N/A,N/A,Error: Disambiguation warning
+978,I need to access the entire /source/path layout from /destination/path via symlinks to avoid using extra storage.,cp,cp,"['-r', '-s']",[],Yes,N/A,N/A,Error: Disambiguation warning
 359,Create a tree of symbolic links in /destination/path that replicates the structure of /source/path.,cp,cp,"['-r', '-s']","['--parents', '-d', '-l']",Yes,0.00,1.50,No Option Match
 380,I'm trying to reorganize by pointing a new location to my old folder structure without physically moving or copying the data.,cp,mv,"['-r', '-s']",[],No,N/A,N/A,Incorrect Tool Selected
 378,Can you recursively link everything from /source/path to /destination/path so I don't use up my disk space?,cp,cp,"['-r', '-s']","['-a', '-d', '-l', '-p', '-r', '-s']",Yes,100.00,3.00,Full Option Match
-968,Map the entire hierarchy of /source/path into /destination/path using symbolic links rather than physically copying them.,cp,,"['-r', '-s']",[],N/A,N/A,N/A,Error: Disambiguation warning
+968,Map the entire hierarchy of /source/path into /destination/path using symbolic links rather than physically copying them.,cp,cp,"['-r', '-s']",[],Yes,N/A,N/A,Error: Disambiguation warning
 356,Can you help me map all subfolders from /source/path to /destination/path using soft links?,cp,mv,"['-r', '-s']",[],No,N/A,N/A,Incorrect Tool Selected
 965,How do I make a folder in /destination/path that recursively points to files in /source/path without eating up any extra disk space?,cp,cp,"['-r', '-s']","['--parents', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
 339,I'm trying to create a light-weight reference of /source/path at /destination/path; keep the structure identical using links.,cp,mv,"['-r', '-s']",[],No,N/A,N/A,Incorrect Tool Selected
@@ -426,164 +426,164 @@ ID,Raw Query,Expected Tool,Generated Tool,Expected Options,Generated Options,Too
 367,I want to instantly access all files from /source/path inside /destination/path without using extra disk space; use links.,cp,mv,"['-r', '-s']",[],No,N/A,N/A,Incorrect Tool Selected
 351,Please replicate the directory hierarchy of /source/path into /destination/path using soft links for all content to save space.,cp,cp,"['-r', '-s']",['-s'],Yes,50.00,2.00,Partial Option Match (50.0%)
 928,"Link all files and directories from the origin to the target path recursively, making sure no real data is duplicated.",cp,cp,"['-r', '-s']","['-d', '-l', '-r', '-t']",Yes,50.00,2.00,Partial Option Match (50.0%)
-379,Map the full directory contents of /source/path to /destination/path using soft links for the whole tree.,cp,,"['-r', '-s']",[],N/A,N/A,N/A,Error: Disambiguation warning
+379,Map the full directory contents of /source/path to /destination/path using soft links for the whole tree.,cp,mv,"['-r', '-s']",[],No,N/A,N/A,Error: Disambiguation warning
 362,Create a recursive map of all files in /source/path to /destination/path using symlinks to save space.,cp,cp,"['-r', '-s']","['-a', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
 1019,"Force-copy this entire directory branch to the target path, skipping all user prompts about overwriting locked files.",cp,mv,"['-f', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
 1028,Can you run a recursive copy that bulldozes through existing write-protected files at the destination?,cp,cp,"['-f', '-r']","['--remove-destination', '-a', '-r']",Yes,50.00,1.50,Partial Option Match (50.0%)
 392,"I need to recursively clone everything from the source into the destination, making sure to overwrite any existing files even if they are read-only.",cp,cp,"['-f', '-r']","['--remove-destination', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
-991,Help me perform an aggressive recursive move to the target directory where all existing files are replaced silently.,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-1005,Could you please move all contents from here to there and automatically delete and override existing files if they exist?,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+991,Help me perform an aggressive recursive move to the target directory where all existing files are replaced silently.,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+1005,Could you please move all contents from here to there and automatically delete and override existing files if they exist?,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 988,"Duplicate everything from the source folder tree to the destination, and don't stop for any permission errors.",cp,cp,"['-f', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 600,I want to copy all subfolders and files into a new place and have it automatically overwrite any existing files.,cp,cp,"['-f', '-r']","['-f', '-r']",Yes,100.00,1.00,Full Option Match
-399,How do I move an entire directory structure and forcefully replace any existing files in the target directory?,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+399,How do I move an entire directory structure and forcefully replace any existing files in the target directory?,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 1007,Send all the nested files to the destination path and make sure it doesn't fail on protected files by just forcing the write.,cp,cp,"['-f', '-r']",['-f'],Yes,50.00,2.00,Partial Option Match (50.0%)
-1001,"Need to batch replicate this directory to the new path, ignoring errors and automatically swapping out any conflicting files.",cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1001,"Need to batch replicate this directory to the new path, ignoring errors and automatically swapping out any conflicting files.",cp,cp,"['-f', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 986,"Perform a total recursive sync from the source to the destination, clearing out any blocked files automatically.",cp,cp,"['-f', '-r']","['--copy-contents', '-a', '-r']",Yes,50.00,1.50,Partial Option Match (50.0%)
 604,Need to bulk move these files to a new location. Please overwrite any read-only files in the target directory automatically.,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
 1039,Recursively sync my source folder to the destination and don't stop for permission errors when replacing read-only files.,cp,cp,"['-f', '-r']","['-a', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
-402,I need to recursively move everything from /source/path to /destination/path and overwrite any existing files without getting stuck by write-protection.,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+402,I need to recursively move everything from /source/path to /destination/path and overwrite any existing files without getting stuck by write-protection.,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 1020,"Hey, recursive copy this directory over, and make sure it replaces every file without nagging me about permissions.",cp,cp,"['-f', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 384,How do I force a recursive copy of /source/path to /destination/path and overwrite any conflicts automatically?,cp,cp,"['-f', '-r']","['-f', '-r']",Yes,100.00,1.00,Full Option Match
 390,Perform a forced recursive copy of /source/path to /destination/path so I don't have to manually confirm file replacements.,cp,cp,"['-f', '-r']","['-f', '-i', '-r']",Yes,100.00,1.50,Full Option Match
-1023,I need to recursively move all files over to a new path while automatically overwriting existing data without any manual confirmation.,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1023,I need to recursively move all files over to a new path while automatically overwriting existing data without any manual confirmation.,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 1004,I need to mirror this directory recursively and skip all confirmation prompts for write-protected files.,cp,cp,"['-f', '-r']","['-i', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
-1025,"How do I bulk migrate a directory structure and its nested contents, specifically overriding any locked files that might be in the way?",cp,mv,"['-f', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
+1025,"How do I bulk migrate a directory structure and its nested contents, specifically overriding any locked files that might be in the way?",cp,cp,"['-f', '-r']","['--parents', '-t']",Yes,0.00,1.00,No Option Match
 1034,Can you replicate this directory tree somewhere else and just blast through any write-protected files that get in the way?,cp,cp,"['-f', '-r']","['-r', '-t']",Yes,50.00,1.00,Partial Option Match (50.0%)
 994,How do I recursively dump these files into the new directory while forcing an override of every existing file?,cp,cp,"['-f', '-r']","['-f', '-r']",Yes,100.00,1.00,Full Option Match
 995,"Perform a bulk copy from source to target, ensuring that read-only items are deleted and replaced automatically.",cp,cp,"['-f', '-r']",['-t'],Yes,0.00,2.00,No Option Match
-1021,Move the contents of the source recursively to the target and force it to clear out any blocked or existing files.,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1021,Move the contents of the source recursively to the target and force it to clear out any blocked or existing files.,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 1033,Perform a deep folder copy into the destination and make sure it forces an override on any protected files encountered.,cp,cp,"['-f', '-r']",['-f'],Yes,50.00,2.00,Partial Option Match (50.0%)
 985,"Bulk move everything in this directory to the new path, making sure to replace conflicting files automatically.",cp,mv,"['-f', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
-611,Quickly sync this folder to another path by replacing existing read-only files without asking me.,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+611,Quickly sync this folder to another path by replacing existing read-only files without asking me.,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 1008,Do a recursive folder transfer and override any duplicates without me having to manually approve every single one.,cp,cp,"['-f', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-1029,Need to sync these directories including all subfolders; please make sure it replaces existing files without triggering any prompts.,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-415,Can you move these files into the target folder and just bulldoze through any write errors or existing duplicates?,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-1003,"Perform a deep folder copy to the target location and force replace every existing file, even if it's read-only.",cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1029,Need to sync these directories including all subfolders; please make sure it replaces existing files without triggering any prompts.,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+415,Can you move these files into the target folder and just bulldoze through any write errors or existing duplicates?,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+1003,"Perform a deep folder copy to the target location and force replace every existing file, even if it's read-only.",cp,cp,"['-f', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 608,"Deep copy these directories into the new path, ignoring errors for read-only files by forcing an overwrite.",cp,cp,"['-f', '-r']","['--parents', '-f', '-t']",Yes,50.00,1.50,Partial Option Match (50.0%)
-1000,How can I copy all files including subfolders and forcibly replace whatever is already in the target folder?,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-396,"Go ahead and dump all contents from that folder into the other one, just overwrite anything currently sitting there.",cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-408,"Can you help me move this full directory to a new spot, making sure it wipes out and replaces any existing read-only files automatically?",cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
-602,"Copy everything from the source to the target folder, overriding any existing files that are locked.",cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1000,How can I copy all files including subfolders and forcibly replace whatever is already in the target folder?,cp,cp,"['-f', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
+396,"Go ahead and dump all contents from that folder into the other one, just overwrite anything currently sitting there.",cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+408,"Can you help me move this full directory to a new spot, making sure it wipes out and replaces any existing read-only files automatically?",cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
+602,"Copy everything from the source to the target folder, overriding any existing files that are locked.",cp,cp,"['-f', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 1013,Perform a deep folder copy into the destination directory and force it to replace existing protected files.,cp,cp,"['-f', '-r']","['--remove-destination', '-f', '-r', '-t']",Yes,100.00,2.00,Full Option Match
-993,I need to mirror the folder structure from /source/path to /destination/path and overwrite anything currently there without being asked.,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+993,I need to mirror the folder structure from /source/path to /destination/path and overwrite anything currently there without being asked.,cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 401,"Need to forcefully copy this entire directory to another location, making sure it doesn't ask me about write permissions.",cp,cp,"['-f', '-r']","['-f', '-t']",Yes,50.00,1.00,Partial Option Match (50.0%)
-1024,"Force-copy all subfolders and contents from the original path to the destination, clearing out any blocked files as you go.",cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1024,"Force-copy all subfolders and contents from the original path to the destination, clearing out any blocked files as you go.",cp,cp,"['-f', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 593,"I need to recursively clone all items from one path to another, overwriting existing files without any prompts.",cp,cp,"['-f', '-r']","['-i', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
 391,"I need to push everything from /source/path into /destination/path recursively, replacing all existing files regardless of their current permissions.",cp,mv,"['-f', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
 605,"Perform a deep copy of the source to the destination, forcing the replacement of files even if they are write-protected.",cp,cp,"['-f', '-r']",['-f'],Yes,50.00,2.00,Partial Option Match (50.0%)
 595,"Perform a deep copy from source to destination, ignoring all write permissions and skipping any confirmation requests.",cp,cp,"['-f', '-r']","['--no-preserve', '-f']",Yes,50.00,1.00,Partial Option Match (50.0%)
 1016,Please run a recursive transfer that overrides destination file locks automatically during the process.,cp,cp,"['-f', '-r']","['-f', '-r']",Yes,100.00,1.00,Full Option Match
-1032,"I need to move everything from the source folder to the target, and please just overwrite existing files without stopping to ask me.",cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1032,"I need to move everything from the source folder to the target, and please just overwrite existing files without stopping to ask me.",cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 601,Run a recursive sync to the target that automatically removes old protected versions to make room.,cp,ops-sync,"['-f', '-r']",[],No,N/A,N/A,Incorrect Tool Selected
-1037,"Take all the files in that source path and shove them into the new folder, overwriting any read-only files automatically.",cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1037,"Take all the files in that source path and shove them into the new folder, overwriting any read-only files automatically.",cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 407,"Run a recursive copy job from /source/path to /destination/path, making sure it stays silent and overwrites everything in its way.",cp,cp,"['-f', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 386,Can you execute a recursive copy of /source/path to /destination/path while automatically discarding any write-protected files in the way?,cp,cp,"['-f', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-389,Is there a way to copy a full directory tree from /source/path to /destination/path that ignores read-only protections and just overwrites everything?,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+389,Is there a way to copy a full directory tree from /source/path to /destination/path that ignores read-only protections and just overwrites everything?,cp,cp,"['-f', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 609,"Automatically replace any existing files in the target folder with the source files using a recursive, force-enabled approach.",cp,cp,"['-f', '-r']","['-r', '-t']",Yes,50.00,1.00,Partial Option Match (50.0%)
 987,How do I recursively copy files and force them into a destination directory even if the files there are locked?,cp,cp,"['-f', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
-385,"Move a copy of the contents of /source/path over to /destination/path, ignoring permission errors and replacing target files immediately.",cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+385,"Move a copy of the contents of /source/path over to /destination/path, ignoring permission errors and replacing target files immediately.",cp,mv,"['-f', '-r']",[],No,N/A,N/A,Error: Disambiguation warning
 393,Force copy the entire folder structure to the new location and ignore any write permission errors.,cp,cp,"['-f', '-r']",['-f'],Yes,50.00,2.00,Partial Option Match (50.0%)
 403,Force-copy the entire directory structure from /source/path into /destination/path while ignoring file permissions that might block the replacement.,cp,cp,"['-f', '-r']","['--parents', '-f']",Yes,50.00,1.00,Partial Option Match (50.0%)
 1040,Streamline the file transfer by forcing an overwrite of everything in the destination path during the recursive copy.,cp,cp,"['-f', '-r']","['-f', '-r']",Yes,100.00,1.00,Full Option Match
-1022,Copy everything from the source folder to the target directory and ignore all write-protection barriers.,cp,,"['-f', '-r']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1022,Copy everything from the source folder to the target directory and ignore all write-protection barriers.,cp,cp,"['-f', '-r']",[],Yes,N/A,N/A,Error: Disambiguation warning
 412,"Copy everything from the source folder into the target folder, making sure to overwrite any existing files even if they are locked.",cp,cp,"['-f', '-r']","['--remove-destination', '-t']",Yes,0.00,1.00,No Option Match
 400,Just wipe out whatever is in the destination path and replace it with the source contents recursively.,cp,cp,"['-f', '-r']",['-r'],Yes,50.00,2.00,Partial Option Match (50.0%)
 518,"Relocate these files to the final destination; don't bother asking for permission, just overwrite them.",mv,mv,['-f'],"['-f', '-t']",Yes,100.00,2.00,Full Option Match
-1140,Execute a move command for these paths that bypasses all safety prompts and forces the replacement of existing files.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-516,"Dump the contents of the source directory into the target directory immediately, overwriting any clashes without stopping.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-495,Can you move these files over and automatically overwrite duplicates without bugging me for permission?,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1159,"Just get these files moved to the new spot; don't bother asking for permission, just overwrite.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1135,How do I move files to a new directory while ensuring it overwrites duplicates silently?,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1146,How do I move files to a new directory and have it silently overwrite duplicates?,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1113,I need to relocate these files to a new folder. Please do it forcefully so it replaces existing files without showing me any prompts.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+1140,Execute a move command for these paths that bypasses all safety prompts and forces the replacement of existing files.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+516,"Dump the contents of the source directory into the target directory immediately, overwriting any clashes without stopping.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+495,Can you move these files over and automatically overwrite duplicates without bugging me for permission?,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1159,"Just get these files moved to the new spot; don't bother asking for permission, just overwrite.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1135,How do I move files to a new directory while ensuring it overwrites duplicates silently?,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1146,How do I move files to a new directory and have it silently overwrite duplicates?,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1113,I need to relocate these files to a new folder. Please do it forcefully so it replaces existing files without showing me any prompts.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 515,Force-transfer these files to the target path and disable all confirmation warnings.,mv,mv,['-f'],['-t'],Yes,0.00,1.00,No Option Match
-520,Migrate the data from here to there and ensure it overrides everything in its path without any interaction.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-484,How do I dump these files into the target location and have it just overwrite duplicates without stopping to prompt me?,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1120,"Get these files moved into the destination path, replacing any conflicting files along the way.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+520,Migrate the data from here to there and ensure it overrides everything in its path without any interaction.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+484,How do I dump these files into the target location and have it just overwrite duplicates without stopping to prompt me?,mv,cp,['-f'],[],No,N/A,N/A,Error: Disambiguation warning
+1120,"Get these files moved into the destination path, replacing any conflicting files along the way.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1151,Forcefully transfer the entire source contents to the destination path without stopping for any prompts.,mv,mv,['-f'],['-f'],Yes,100.00,1.00,Full Option Match
 1109,Transfer these files to the destination immediately; don't ask for approval if a file name collision occurs.,mv,mv,['-f'],['-t'],Yes,0.00,1.00,No Option Match
 525,How do I relocate those files to the new path so it replaces current data immediately without asking?,mv,mv,['-f'],"['--update', '-i', '-t']",Yes,0.00,3.00,No Option Match
-476,"Transfer these files over, overwriting duplicates automatically without interrupting me for confirmation.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-480,"Move all data to the new path, suppressing any prompts and ensuring existing files are overridden.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+476,"Transfer these files over, overwriting duplicates automatically without interrupting me for confirmation.",mv,cp,['-f'],[],No,N/A,N/A,Error: Disambiguation warning
+480,"Move all data to the new path, suppressing any prompts and ensuring existing files are overridden.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 496,Instantly shift files to the target path; I want all existing files replaced without any user input.,mv,mv,['-f'],['-t'],Yes,0.00,1.00,No Option Match
-1130,Just move the source files into that folder and don't bother me with any questions if files are already there.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1125,"Dump the contents of my source folder into the destination right now, replacing any duplicates silently.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1127,I want to shift my files to a different directory. Can you do it in one go without stopping for 'already exists' warnings?,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+1130,Just move the source files into that folder and don't bother me with any questions if files are already there.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1125,"Dump the contents of my source folder into the destination right now, replacing any duplicates silently.",mv,cp,['-f'],[],No,N/A,N/A,Error: Disambiguation warning
+1127,I want to shift my files to a different directory. Can you do it in one go without stopping for 'already exists' warnings?,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1138,Help me move everything over and just steamroll any existing files that are in the way.,mv,mv,['-f'],"['-n', '-t']",Yes,0.00,2.00,No Option Match
-1148,Just force move these files over to the target directory and skip the 'are you sure' messages.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+1148,Just force move these files over to the target directory and skip the 'are you sure' messages.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 529,Instantly transfer these items to the destination folder and ignore any collision errors or confirmation requests.,mv,mv,['-f'],['-f'],Yes,100.00,1.00,Full Option Match
-519,Perform an aggressive move of the source files to the target directory while auto-confirming all overwrites.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+519,Perform an aggressive move of the source files to the target directory while auto-confirming all overwrites.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 473,I need to relocate these files to a new path; please force the move and ignore any existing file warnings.,mv,mv,['-f'],['-f'],Yes,100.00,1.00,Full Option Match
-485,"Shift the contents of source over to the destination, ignoring existing file warnings.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1150,Help me relocate these files to a different spot and make sure it doesn't pause for confirmation when it finds a duplicate.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1103,Can you shift these items to that destination without stopping to ask me for permission if files already exist?,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+485,"Shift the contents of source over to the destination, ignoring existing file warnings.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1150,Help me relocate these files to a different spot and make sure it doesn't pause for confirmation when it finds a duplicate.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1103,Can you shift these items to that destination without stopping to ask me for permission if files already exist?,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1104,I need to relocate these files to a new directory and I want it to happen forcefully without any manual confirmation.,mv,mv,['-f'],"['-f', '-t']",Yes,100.00,2.00,Full Option Match
-517,"Can you run a blind move of these files into the target, bypassing all overwrite restrictions?",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-472,"Move everything from the source to the target folder, and just overwrite whatever is already there without asking me.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1115,"Force a move of the files at /source/path to /destination/path, ignoring any warnings or confirmation requests.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+517,"Can you run a blind move of these files into the target, bypassing all overwrite restrictions?",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+472,"Move everything from the source to the target folder, and just overwrite whatever is already there without asking me.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1115,"Force a move of the files at /source/path to /destination/path, ignoring any warnings or confirmation requests.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1134,"I need to dump the contents of /source/path into /destination/path, overriding any conflicts automatically.",mv,cp,['-f'],[],No,N/A,N/A,Incorrect Tool Selected
 1153,I need to forcefully relocate all content into the target folder and ignore all conflict warnings.,mv,mv,['-f'],['-f'],Yes,100.00,1.00,Full Option Match
 488,Can you run a command to move these documents and just overwrite everything silently?,mv,mv,['-f'],['-f'],Yes,100.00,1.00,Full Option Match
-521,Send these files to the new path and make sure it suppresses all prompts while replacing current files.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1149,"Perform an aggressive move of the source files to the destination path, ensuring every conflict is overwritten silently.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+521,Send these files to the new path and make sure it suppresses all prompts while replacing current files.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1149,"Perform an aggressive move of the source files to the destination path, ensuring every conflict is overwritten silently.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1121,"Shift /source/path content to /destination/path, ensuring every overwrite happens silently without any stops.",mv,mv,['-f'],['-f'],Yes,100.00,1.00,Full Option Match
-1110,"Perform a blind move of my files to that directory, ignoring existing duplicates to finish the job quickly.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+1110,"Perform a blind move of my files to that directory, ignoring existing duplicates to finish the job quickly.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 507,"I want to smash /source/path into /destination/path, letting it overwrite files and ignoring any prompts.",mv,mv,['-f'],['-f'],Yes,100.00,1.00,Full Option Match
 1145,"Instantly dump the contents of that source location into the destination folder, ignoring any existing files.",mv,mv,['-f'],"['-f', '-t']",Yes,100.00,2.00,Full Option Match
-1136,Get those files moved to the target directory; ignore existing files and don't prompt me for anything.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1116,"Go ahead and dump the files from that source into the destination directory, overwriting whatever is there.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1139,I want to relocate my data to the destination folder without the system stopping to ask for permission to overwrite.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-522,"Move everything from the source to the destination, ignoring any existing files and skipping the confirm prompt.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+1136,Get those files moved to the target directory; ignore existing files and don't prompt me for anything.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1116,"Go ahead and dump the files from that source into the destination directory, overwriting whatever is there.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1139,I want to relocate my data to the destination folder without the system stopping to ask for permission to overwrite.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+522,"Move everything from the source to the destination, ignoring any existing files and skipping the confirm prompt.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 1157,"Force a move of the source directory into the destination path, ignoring pre-existing file conflicts.",mv,mv,['-f'],"['-f', '-t']",Yes,100.00,2.00,Full Option Match
 478,"Perform an aggressive move of /source/path into the target folder, bypassing all safety checks for duplicates.",mv,mv,['-f'],['-t'],Yes,0.00,1.00,No Option Match
-514,"How can I instantly move these items over to the destination, ignoring any existing files?",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+514,"How can I instantly move these items over to the destination, ignoring any existing files?",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 492,Move everything from the source folder to the target and just overwrite anything in my way without asking.,mv,mv,['-f'],['-t'],Yes,0.00,1.00,No Option Match
 1133,Can you force a move of all files from /source/path to /destination/path while skipping any confirmation alerts?,mv,mv,['-f'],['-f'],Yes,100.00,1.00,Full Option Match
-498,Just overwrite existing files when moving /source/path to /destination/path without prompting for confirmation.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-1107,How do I conduct a forced migration of these files to the target path without being interrupted by safety prompts?,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+498,Just overwrite existing files when moving /source/path to /destination/path without prompting for confirmation.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+1107,How do I conduct a forced migration of these files to the target path without being interrupted by safety prompts?,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 502,Move everything from /source/path to /destination/path and overwrite any existing files without asking me for permission.,mv,mv,['-f'],"['--update', '-f', '-t']",Yes,100.00,3.00,Full Option Match
-1108,"Clear out that source directory by pushing everything into the new path, replacing existing duplicates automatically.",mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
+1108,"Clear out that source directory by pushing everything into the new path, replacing existing duplicates automatically.",mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
 503,I need to relocate these files to the new folder immediately; bypass any warning prompts and just overwrite what is already there.,mv,mv,['-f'],"['-i', '-t']",Yes,0.00,2.00,No Option Match
 524,"Quickly shove the contents of the source directory into the target, just force the move and skip all warnings.",mv,mv,['-f'],['-t'],Yes,0.00,1.00,No Option Match
 512,"Move everything from the source folder to the target, and just wipe over whatever is already there without asking me.",mv,mv,['-f'],['-t'],Yes,0.00,1.00,No Option Match
 499,"I'm moving directories, so please force the operation and ignore any conflicts by overwriting.",mv,mv,['-f'],['-f'],Yes,100.00,1.00,Full Option Match
-509,Relocate /source/path to /destination/path and make sure it replaces existing files without needing my input.,mv,,['-f'],[],N/A,N/A,N/A,Error: Disambiguation warning
-571,Need a command to recursively move files to a new path that logs every file and perfectly replicates the existing file metadata.,cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+509,Relocate /source/path to /destination/path and make sure it replaces existing files without needing my input.,mv,mv,['-f'],[],Yes,N/A,N/A,Error: Disambiguation warning
+571,Need a command to recursively move files to a new path that logs every file and perfectly replicates the existing file metadata.,cp,mv,"['-a', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 1211,"Transfer the contents of this directory to that folder, listing every item transferred while ensuring zero changes to the file metadata.",cp,cp,"['-a', '-v']",['-t'],Yes,0.00,2.00,No Option Match
-1207,I want to mirror my files to another location while keeping the original file details and getting visual confirmation for every step.,cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1207,I want to mirror my files to another location while keeping the original file details and getting visual confirmation for every step.,cp,ops-sync,"['-a', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 1185,"How do I replicate this entire folder path elsewhere while keeping ownership and date info intact, plus outputting a full report of what was done?",cp,cp,"['-a', '-v']","['--attributes-only', '--parents', '-a', '-p', '-r', '-t']",Yes,50.00,3.00,Partial Option Match (50.0%)
 578,Make an identical replica of this directory tree somewhere else and output the process details without losing any of the metadata.,cp,cp,"['-a', '-v']",['-r'],Yes,0.00,2.00,No Option Match
 572,Copy everything from source to the new folder and show me each step while keeping all the file metadata intact.,cp,cp,"['-a', '-v']","['--attributes-only', '--preserve', '-a', '-p', '-r', '-t']",Yes,50.00,3.00,Partial Option Match (50.0%)
 1221,"Could you provide a command that clones a folder and reports the status of every file, while also keeping the original file permissions and metadata preserved?",cp,cp,"['-a', '-v']","['--parents', '--preserve', '-a', '-p', '-r']",Yes,50.00,2.50,Partial Option Match (50.0%)
-1196,"Please sync these directories recursively, showing me the log of files and preserving every timestamp and privilege.",cp,cp,"['-a', '-v']","['-a', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
+1196,"Please sync these directories recursively, showing me the log of files and preserving every timestamp and privilege.",cp,ops-sync,"['-a', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 545,"Run a recursive copy of my source folder to the destination, keep the ownership and timing settings, and list out every action taken.",cp,cp,"['-a', '-v']",['-r'],Yes,0.00,2.00,No Option Match
 1180,"Perform an archive-style copy of this folder to that location, keeping all original timestamps and owner data while showing me the logs.",cp,cp,"['-a', '-v']",['-a'],Yes,50.00,2.00,Partial Option Match (50.0%)
 1199,Run a recursive copy of this path to the new destination; I need full verbosity and total preservation of the original file metadata.,cp,cp,"['-a', '-v']","['--no-preserve', '-a', '-r']",Yes,50.00,1.50,Partial Option Match (50.0%)
 535,"How do I duplicate a directory structure exactly, including the original owner info and stamps, while getting a log of what is happening?",cp,cp,"['-a', '-v']",['--parents'],Yes,0.00,2.00,No Option Match
-1188,Can you move this entire folder to the new location? Keep the original file identity and settings exactly the same and print out each operation.,cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1188,Can you move this entire folder to the new location? Keep the original file identity and settings exactly the same and print out each operation.,cp,mv,"['-a', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 1217,What command do I use to fully replicate a directory tree? I need full verbosity and to keep all the existing permissions and timestamp data on the new copies.,cp,cp,"['-a', '-v']","['--parents', '-a', '-p', '-r', '-t']",Yes,50.00,2.50,Partial Option Match (50.0%)
 587,"I want to clone this directory completely, keeping all permissions and times, and I need a readout of every file being processed.",cp,cp,"['-a', '-v']","['--parents', '--preserve', '-a', '-r', '-t', '-v']",Yes,100.00,3.00,Full Option Match
 539,"Please mirror this folder exactly—timestamps, owners, and permissions included—and let me see a running output of the operation.",cp,cp,"['-a', '-v']",['-a'],Yes,50.00,2.00,Partial Option Match (50.0%)
-1186,Safely transfer this whole tree to the target spot. Please ensure you show me what is happening and maintain all the original file attributes.,cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1186,Safely transfer this whole tree to the target spot. Please ensure you show me what is happening and maintain all the original file attributes.,cp,mv,"['-a', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 533,"Please replicate the folder at /source/path into /destination/path, making sure to keep all original file metadata, permissions, and timestamps intact while tracking progress.",cp,cp,"['-a', '-v']",['-a'],Yes,50.00,2.00,Partial Option Match (50.0%)
 555,Copy this entire folder structure recursively; please list out every file moved and preserve the exact metadata for each.,cp,cp,"['-a', '-v']",['-r'],Yes,0.00,2.00,No Option Match
 1215,Can you help me duplicate this folder structure into a new location? I need to track the process live and ensure no file properties are altered during the transfer.,cp,cp,"['-a', '-v']","['--parents', '-r', '-t', '-v']",Yes,50.00,2.00,Partial Option Match (50.0%)
 559,Perform a deep clone of the source to the destination. Show the work in the terminal and keep all ownership and system metadata consistent.,cp,cp,"['-a', '-v']","['--copy-contents', '--parents', '--reflink', '-a', '-d', '-l', '-p', '-r', '-t']",Yes,50.00,4.50,Partial Option Match (50.0%)
 557,Transfer all contents from here to there. I want a verbose report of the operation and need it to maintain the original file attributes.,cp,mv,"['-a', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
 586,Run a deep copy of this folder to that path and list the actions taken while ensuring ownership and timestamps don't change.,cp,cp,"['-a', '-v']",['-p'],Yes,0.00,2.00,No Option Match
-1194,How can I clone an entire directory elsewhere and make sure all metadata is preserved while watching the file copy progress in real-time?,cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-1168,"Move this entire folder structure recursively to the new path, tell me what's happening, and don't change any of the permissions or timestamp details.",cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-542,"Copy everything from the source to the target and show me a list of every file as it happens, making sure to keep all the original file attributes.",cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
-1173,I need to mirror this directory elsewhere; make sure permissions and timestamps stay the same and print out the process status.,cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1194,How can I clone an entire directory elsewhere and make sure all metadata is preserved while watching the file copy progress in real-time?,cp,cp,"['-a', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+1168,"Move this entire folder structure recursively to the new path, tell me what's happening, and don't change any of the permissions or timestamp details.",cp,mv,"['-a', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
+542,"Copy everything from the source to the target and show me a list of every file as it happens, making sure to keep all the original file attributes.",cp,cp,"['-a', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
+1173,I need to mirror this directory elsewhere; make sure permissions and timestamps stay the same and print out the process status.,cp,cp,"['-a', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 1182,Copy everything from source to destination recursively while keeping all original metadata and letting me see each file as it moves.,cp,cp,"['-a', '-v']","['-a', '-r']",Yes,50.00,1.00,Partial Option Match (50.0%)
 544,How do I duplicate this folder into another location while ensuring the metadata stays intact and outputting the details of the copy operation?,cp,cp,"['-a', '-v']","['-a', '-p']",Yes,50.00,1.00,Partial Option Match (50.0%)
 554,"How do I mirror this entire directory into another spot while keeping ownership and time details intact, and printing out each step?",cp,cp,"['-a', '-v']","['-a', '-p']",Yes,50.00,1.00,Partial Option Match (50.0%)
-1181,Just dump this folder contents into the other one; keep all metadata and list every file name it processes.,cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1181,Just dump this folder contents into the other one; keep all metadata and list every file name it processes.,cp,ops-sync,"['-a', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 1214,Sync these directories recursively. Please include the verbose output and guarantee that all file attributes and access rights remain exactly as they are.,cp,cp,"['-a', '-v']","['--parents', '-a', '-r', '-v']",Yes,100.00,2.00,Full Option Match
 548,"Give me the command to duplicate these files to the target folder, making sure it's recursive, verbose, and keeps all the system data attached.",cp,cp,"['-a', '-v']",['-r'],Yes,0.00,2.00,No Option Match
 1203,I need a recursive clone of the source directory to the target. Please keep all original file attributes and metadata intact and show me what's happening.,cp,cp,"['-a', '-v']","['-a', '-r', '-t']",Yes,50.00,1.50,Partial Option Match (50.0%)
 536,Can you run a recursive copy from /source/path to /destination/path that prints the status of each file and maintains all attributes?,cp,cp,"['-a', '-v']",['-r'],Yes,0.00,2.00,No Option Match
-1216,"Move all content from the source to the target, keeping the specific creation dates and owner info. Tell me exactly what you're doing for each file.",cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1216,"Move all content from the source to the target, keeping the specific creation dates and owner info. Tell me exactly what you're doing for each file.",cp,mv,"['-a', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 558,"Safely back up the directory while keeping all internal permissions and modification times, plus list everything as it copies.",cp,cp,"['-a', '-v']","['--backup', '--preserve', '-a']",Yes,50.00,1.50,Partial Option Match (50.0%)
 1191,"Please replicate the full directory tree, keeping all permissions, timestamps, and ownerships, and show me the list of files during the transfer.",cp,cp,"['-a', '-v']","['--preserve', '-a']",Yes,50.00,1.00,Partial Option Match (50.0%)
 1187,"I want to mirror this directory structure elsewhere, preserving all metadata like permissions and stamps, and I'd like a verbose readout of the process.",cp,cp,"['-a', '-v']","['--attributes-only', '--debug', '--no-preserve', '--parents', '-a', '-d', '-r', '-t', '-v']",Yes,100.00,4.50,Full Option Match
@@ -593,15 +593,15 @@ ID,Raw Query,Expected Tool,Generated Tool,Expected Options,Generated Options,Too
 1220,Perform a recursive copy that outputs each step while strictly maintaining original file attributes and timestamps.,cp,cp,"['-a', '-v']","['-a', '-p', '-r']",Yes,50.00,1.50,Partial Option Match (50.0%)
 538,"Recursively backup my source directory to the destination and display the full verbose list of files, ensuring no data metadata is lost.",cp,cp,"['-a', '-v']","['--backup', '-a', '-r', '-t', '-v']",Yes,100.00,2.50,Full Option Match
 553,"Show me the progress while copying everything from the first directory to the second, making sure permissions and dates don't change.",cp,cp,"['-a', '-v']","['-r', '-t', '-v']",Yes,50.00,1.50,Partial Option Match (50.0%)
-1219,Safely mirror this entire source folder to the target path. Please list every file copied and ensure that the permissions and original owners are perfectly maintained.,cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1219,Safely mirror this entire source folder to the target path. Please list every file copied and ensure that the permissions and original owners are perfectly maintained.,cp,cp,"['-a', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 564,How can I clone this directory to another path so that I see exactly what's happening and everything keeps its original metadata?,cp,cp,"['-a', '-v']",['--parents'],Yes,0.00,2.00,No Option Match
 1210,"Run an archive copy on these paths, listing all files processed and keeping the original modification times and owner settings.",cp,cp,"['-a', '-v']",['-a'],Yes,50.00,2.00,Partial Option Match (50.0%)
 534,"Help me move a directory recursively while keeping all ownership and time settings the same, and enable the verbose output mode.",cp,mv,"['-a', '-v']",[],No,N/A,N/A,Incorrect Tool Selected
-1202,Copy everything from /source/path over to /destination/path while showing me a list of all the files being moved.,cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+1202,Copy everything from /source/path over to /destination/path while showing me a list of all the files being moved.,cp,mv,"['-a', '-v']",[],No,N/A,N/A,Error: Disambiguation warning
 541,"Copy all files recursively to the new path, maintaining the original access details and modification history, and tell me everything that gets processed.",cp,cp,"['-a', '-v']","['-r', '-v']",Yes,50.00,1.00,Partial Option Match (50.0%)
 1174,"Recursively duplicate this path to that one, preserve all ownership and date settings, and keep me informed by listing all actions taken.",cp,cp,"['-a', '-v']","['--no-preserve', '--parents', '-p', '-r']",Yes,0.00,2.00,No Option Match
 1189,Copy these files over but don't lose the timestamps or ownership data. I also need to see exactly what gets copied as it happens.,cp,cp,"['-a', '-v']","['--attributes-only', '--no-preserve', '--preserve', '-p']",Yes,0.00,2.00,No Option Match
-582,"Copy everything from source to target, making sure to show me every single file transfer while keeping all original metadata intact.",cp,,"['-a', '-v']",[],N/A,N/A,N/A,Error: Disambiguation warning
+582,"Copy everything from source to target, making sure to show me every single file transfer while keeping all original metadata intact.",cp,cp,"['-a', '-v']",[],Yes,N/A,N/A,Error: Disambiguation warning
 1183,I need to duplicate this whole folder over there. Make sure it shows me the progress and keeps all the file permissions and timestamps exactly as they are.,cp,cp,"['-a', '-v']",['-a'],Yes,50.00,2.00,Partial Option Match (50.0%)
 588,"Please replicate the source folder to the target, preserving all original properties and telling me exactly what is happening in the terminal.",cp,cp,"['-a', '-v']","['--no-preserve', '-t']",Yes,0.00,1.00,No Option Match
 1179,"Sync these directories completely, keeping all permissions exactly as they are and telling me every step it takes.",cp,cp,"['-a', '-v']","['--preserve', '-a']",Yes,50.00,1.00,Partial Option Match (50.0%)

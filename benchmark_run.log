@@ -1,4 +1,3 @@
-nohup: ignoring input
 Loaded 609 test queries from CSV.
 Starting benchmark execution. Running sequentially to prevent SQLite contention...
 Processed 50/609 queries...
@@ -19,15 +18,15 @@ Processed 609/609 queries...
 TECHNICAL BENCHMARK SUMMARY REPORT
 ==================================================
 Total Test Queries (N):                   609
-Unsuccessful Retrievals (Errors):         256 (42.04%)
-Complete Failures (Incorrect Tool):       55 (9.03%)
-Successful Tool Selection:                298 (48.93%)
+Unsuccessful Retrievals (Errors):         259 (42.53%)
+Complete Failures (Incorrect Tool):       57 (9.36%)
+Successful Tool Selection:                293 (48.11%)
 --------------------------------------------------
-Within Successful Tool Selections (N_correct = 298):
-  Full Option Matches:                  74 (of total: 12.15%, of correct: 24.83%)
-  Partial Option Matches:               151 (of total: 24.79%, of correct: 50.67%)
-  No Option Matches:                    73 (of total: 11.99%, of correct: 24.50%)
-  Average Option Recall Score:          50.17%
+Within Successful Tool Selections (N_correct = 293):
+  Full Option Matches:                  73 (of total: 11.99%, of correct: 24.91%)
+  Partial Option Matches:               147 (of total: 24.14%, of correct: 50.17%)
+  No Option Matches:                    73 (of total: 11.99%, of correct: 24.91%)
+  Average Option Recall Score:          50.11%
   Average FLAGS/DEST Symmetric Error:   1.67
 ==================================================
 Detailed run log exported to: /home/sandbox-noadmin/RustroverProjects/command-finder/benchmark_results.csv

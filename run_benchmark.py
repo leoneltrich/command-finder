@@ -54,6 +54,17 @@ def extract_predicted_options(generated_command):
             
     return predicted
 
+def extract_tool_from_disambiguation(raw_stdout):
+    stripped = strip_ansi(raw_stdout).strip()
+    for line in stripped.split('\n'):
+        line = line.strip()
+        if " - " in line:
+            parts = line.split(" - ", 1)
+            tool_candidate = parts[0].strip()
+            if tool_candidate in ["mv", "cp", "ops-sync"]:
+                return tool_candidate
+    return ""
+
 def calculate_flags_dest(expected_opts, predicted_opts):
     e_len = len(expected_opts)
     p_len = len(predicted_opts)
@@ -158,6 +169,7 @@ def main():
         predicted_opts = set()
         recall_score = 0.0
         flags_dest = 1.0
+        tool_correctness = "N/A"
 
         if return_code != 0:
             is_error = True
@@ -175,6 +187,11 @@ def main():
         if is_error:
             n_error += 1
             status = f"Error: {error_reason}"
+            if error_reason == "Disambiguation warning":
+                generated_tool = extract_tool_from_disambiguation(raw_stdout)
+                tool_correctness = "Yes" if generated_tool.lower() == expected_tool.lower() else "No"
+            else:
+                tool_correctness = "N/A"
         else:
             # Successful retrieval -> extract command
             # Try matching green block first
@@ -229,7 +246,7 @@ def main():
             "Generated Tool": generated_tool,
             "Expected Options": sorted(list(expected_opts)),
             "Generated Options": sorted(list(predicted_opts)),
-            "Tool Correctness": "Yes" if generated_tool.lower() == expected_tool.lower() else ("No" if generated_tool else "N/A"),
+            "Tool Correctness": tool_correctness if is_error else ("Yes" if generated_tool.lower() == expected_tool.lower() else ("No" if generated_tool else "N/A")),
             "Option Recall Score (%)": f"{recall_score:.2f}" if not is_error and generated_tool.lower() == expected_tool.lower() else "N/A",
             "FLAGS/DEST Symmetric Error": f"{flags_dest:.2f}" if not is_error and generated_tool.lower() == expected_tool.lower() else "N/A",
             "Status": status
@@ -280,3 +297,6 @@ def main():
         print("  No correct tool selections to report option statistics.")
     print("="*50)
     print(f"Detailed run log exported to: {args.output}\n")
+
+if __name__ == "__main__":
+    main()
