@@ -40,9 +40,13 @@ def main():
     n_errors = len(error_rows)
 
     # Option categorization for correct tool rows
-    fully_correct = []
-    partially_correct = []
-    non_correct = []
+    fully_correct_recall = []
+    fully_correct_fd = []
+    partially_correct_recall = []
+    partially_correct_fd = []
+    non_correct_recall = []
+    non_correct_fd = []
+    overall_fd = []
 
     for row in correct_tool_rows:
         score_str = row.get("Option Recall Score (%)", "N/A").strip()
@@ -53,16 +57,31 @@ def main():
         except ValueError:
             continue
 
-        if score == 100.0:
-            fully_correct.append(score)
-        elif score == 0.0:
-            non_correct.append(score)
-        else:
-            partially_correct.append(score)
+        fd_str = row.get("FLAGS/DEST Symmetric Error", "N/A").strip()
+        fd = None
+        if fd_str != "N/A":
+            try:
+                fd = float(fd_str)
+                overall_fd.append(fd)
+            except ValueError:
+                pass
 
-    n_full = len(fully_correct)
-    n_partial = len(partially_correct)
-    n_none = len(non_correct)
+        if score == 100.0:
+            fully_correct_recall.append(score)
+            if fd is not None:
+                fully_correct_fd.append(fd)
+        elif score == 0.0:
+            non_correct_recall.append(score)
+            if fd is not None:
+                non_correct_fd.append(fd)
+        else:
+            partially_correct_recall.append(score)
+            if fd is not None:
+                partially_correct_fd.append(fd)
+
+    n_full = len(fully_correct_recall)
+    n_partial = len(partially_correct_recall)
+    n_none = len(non_correct_recall)
 
     p_full_tot = (n_full / total_queries) * 100.0
     p_partial_tot = (n_partial / total_queries) * 100.0
@@ -72,12 +91,16 @@ def main():
     p_partial_corr = (n_partial / n_correct) * 100.0 if n_correct > 0 else 0.0
     p_none_corr = (n_none / n_correct) * 100.0 if n_correct > 0 else 0.0
 
-    avg_recall_full = sum(fully_correct) / n_full if n_full > 0 else 0.0
-    avg_recall_partial = sum(partially_correct) / n_partial if n_partial > 0 else 0.0
-    avg_recall_none = sum(non_correct) / n_none if n_none > 0 else 0.0
+    avg_recall_full = sum(fully_correct_recall) / n_full if n_full > 0 else 0.0
+    avg_recall_partial = sum(partially_correct_recall) / n_partial if n_partial > 0 else 0.0
+    avg_recall_none = sum(non_correct_recall) / n_none if n_none > 0 else 0.0
     
-    all_correct_scores = fully_correct + partially_correct + non_correct
-    avg_recall_overall = sum(all_correct_scores) / len(all_correct_scores) if all_correct_scores else 0.0
+    avg_recall_overall = sum(fully_correct_recall + partially_correct_recall + non_correct_recall) / n_correct if n_correct > 0 else 0.0
+
+    avg_fd_full = sum(fully_correct_fd) / len(fully_correct_fd) if fully_correct_fd else 1.0
+    avg_fd_partial = sum(partially_correct_fd) / len(partially_correct_fd) if partially_correct_fd else 1.0
+    avg_fd_none = sum(non_correct_fd) / len(non_correct_fd) if non_correct_fd else 1.0
+    avg_fd_overall = sum(overall_fd) / len(overall_fd) if overall_fd else 1.0
 
     # Incorrect tool analysis
     incorrect_picks = {}  # How many times was a category generated/picked incorrectly
@@ -98,31 +121,43 @@ def main():
     )))
 
     # Print Option Report Table
-    print("\n" + "="*85)
+    print("\n" + "="*100)
     print("                      DETAILED OPTION ACCURACY ANALYTICS REPORT")
-    print("="*85)
+    print("="*100)
     print(f"Total Test Queries (N): {total_queries:<5}  |  Correct Tool Selections (N_correct): {n_correct}")
-    print("-"*85)
+    print("-"*100)
     
     # Table headers
-    print(f"{'Option Match Subcategory':<25} | {'Count':<8} | {'% of Total (N)':<16} | {'% of Correct':<14} | {'Avg Option Recall':<17}")
-    print("-"*85)
+    print(f"{'Option Match Subcategory':<25} | {'Count':<8} | {'% of Total (N)':<16} | {'% of Correct':<14} | {'Avg Option Recall':<17} | {'Avg FLAGS/DEST':<15}")
+    print("-"*100)
     
-    print(f"{'Fully Correct (100% Match)':<25} | {n_full:<8} | {p_full_tot:>13.2f}% | {p_full_corr:>11.2f}% | {avg_recall_full:>14.2f}%")
-    print(f"{'Partially Correct (1-99%)':<25} | {n_partial:<8} | {p_partial_tot:>13.2f}% | {p_partial_corr:>11.2f}% | {avg_recall_partial:>14.2f}%")
-    print(f"{'Non-Correct (0% Match)':<25} | {n_none:<8} | {p_none_tot:>13.2f}% | {p_none_corr:>11.2f}% | {avg_recall_none:>14.2f}%")
-    print("-"*85)
+    print(f"{'Fully Correct (100% Match)':<25} | {n_full:<8} | {p_full_tot:>13.2f}% | {p_full_corr:>11.2f}% | {avg_recall_full:>14.2f}% | {avg_fd_full:>13.2f}")
+    print(f"{'Partially Correct (1-99%)':<25} | {n_partial:<8} | {p_partial_tot:>13.2f}% | {p_partial_corr:>11.2f}% | {avg_recall_partial:>14.2f}% | {avg_fd_partial:>13.2f}")
+    print(f"{'Non-Correct (0% Match)':<25} | {n_none:<8} | {p_none_tot:>13.2f}% | {p_none_corr:>11.2f}% | {avg_recall_none:>14.2f}% | {avg_fd_none:>13.2f}")
+    print("-"*100)
 
     # Print Summary Averages
-    print("\n" + "="*85)
+    print("\n" + "="*100)
     print("                               SUMMARY AVERAGES")
-    print("="*85)
+    print("="*100)
     print(f"1. Overall Option Recall (Full, Partial, None):                  {avg_recall_overall:.2f}%")
     print(f"   (Average % of correct options generated across all correct tool selections)")
     print()
     print(f"2. Partial Match Option Recall (Partial Only):                   {avg_recall_partial:.2f}%")
     print(f"   (Average % of correct options generated only for partially matched cases)")
-    print("="*85)
+    print()
+    print(f"3. Overall FLAGS/DEST Symmetric Error:                           {avg_fd_overall:.2f}")
+    print(f"   (Average option count error across all correct tool selections; 1.00 is perfect)")
+    print()
+    print(f"4. Fully Correct FLAGS/DEST Symmetric Error:                     {avg_fd_full:.2f}")
+    print(f"   (Average option count error for 100% option matches)")
+    print()
+    print(f"5. Partially Correct FLAGS/DEST Symmetric Error:                  {avg_fd_partial:.2f}")
+    print(f"   (Average option count error for 1-99% option matches)")
+    print()
+    print(f"6. Non-Correct FLAGS/DEST Symmetric Error:                       {avg_fd_none:.2f}")
+    print(f"   (Average option count error for 0% option matches)")
+    print("="*100)
 
     # Print Incorrect Tool Analytics Report
     print("\n" + "="*85)
