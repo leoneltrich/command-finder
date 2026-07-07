@@ -77,13 +77,93 @@ def calculate_flags_dest(expected_opts, predicted_opts):
     else:
         return abs(e_len - p_len) + 1.0
 
+def run_single_query_and_exit(query_id):
+    # Verify input CSV exists
+    if not os.path.exists(CSV_PATH):
+        print(json.dumps({"status_code": -4, "stdout": "", "stderr": f"CSV path {CSV_PATH} not found", "execution_time_ms": 0.0, "peak_memory_kb": 0}))
+        sys.exit(0)
+        
+    row = None
+    with open(CSV_PATH, mode='r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            if r.get("ID", "").strip() == query_id:
+                row = r
+                break
+                
+    if not row:
+        print(json.dumps({"status_code": -5, "stdout": "", "stderr": f"Query ID {query_id} not found in CSV", "execution_time_ms": 0.0, "peak_memory_kb": 0}))
+        sys.exit(0)
+        
+    raw_query = row.get("Original Text", "")
+    
+    # Run the query
+    import resource
+    import time
+    
+    env = os.environ.copy()
+    env["DATABASE_PATH"] = DB_PATH
+    env["PYTHONIOENCODING"] = "utf-8"
+    
+    # Start timer exactly before executing the command
+    start_time = time.perf_counter()
+    try:
+        res = subprocess.run(
+            [BINARY_PATH, "query", raw_query],
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=10
+        )
+        # Stop timer immediately after the command is executed
+        end_time = time.perf_counter()
+        execution_time_ms = (end_time - start_time) * 1000.0
+        
+        # Get peak memory of the child process
+        child_usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        peak_memory_kb = child_usage.ru_maxrss
+        
+        print(json.dumps({
+            "status_code": res.returncode,
+            "stdout": res.stdout,
+            "stderr": res.stderr,
+            "execution_time_ms": execution_time_ms,
+            "peak_memory_kb": peak_memory_kb
+        }))
+    except subprocess.TimeoutExpired:
+        end_time = time.perf_counter()
+        execution_time_ms = (end_time - start_time) * 1000.0
+        print(json.dumps({
+            "status_code": -1,
+            "stdout": "",
+            "stderr": "Timeout expired",
+            "execution_time_ms": execution_time_ms,
+            "peak_memory_kb": 0
+        }))
+    except Exception as e:
+        end_time = time.perf_counter()
+        execution_time_ms = (end_time - start_time) * 1000.0
+        print(json.dumps({
+            "status_code": -2,
+            "stdout": "",
+            "stderr": str(e),
+            "execution_time_ms": execution_time_ms,
+            "peak_memory_kb": 0
+        }))
+    sys.exit(0)
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Run technical benchmark on command-finder.")
     parser.add_argument("-l", "--limit", type=int, default=None, help="Limit the number of queries to run for quick verification.")
     parser.add_argument("-o", "--output", type=str, default=OUTPUT_CSV_PATH, help="Path to output CSV results.")
     parser.add_argument("-t", "--track-time", action="store_true", help="Track and display command execution timing.")
+    parser.add_argument("--single-run", type=str, default=None, help=argparse.SUPPRESS)
     args = parser.parse_args()
+
+    if args.single_run is not None:
+        run_single_query_and_exit(args.single_run)
 
     # Verify binary exists
     if not os.path.exists(BINARY_PATH):
@@ -107,7 +187,7 @@ def main():
 
     total_queries = len(rows)
     print(f"Loaded {total_queries} test queries from CSV.")
-    print("Starting benchmark execution. Running sequentially to prevent SQLite contention...")
+    print("Starting benchmark execution. Spawning isolated subprocesses for timing and memory tracking...")
 
     # Environment variables
     env = os.environ.copy()
@@ -138,34 +218,34 @@ def main():
         expected_tool = ground_truth_cmd.split()[0] if ground_truth_cmd else ""
         expected_opts = parse_expected_options(expected_options_raw)
 
-        # Execute command-finder
+        # Execute command-finder in a fresh Python subprocess to isolate measurements
         execution_time_ms = None
+        peak_memory_kb = None
         try:
-            if args.track_time:
-                start_time = time.perf_counter()
+            cmd_args = [sys.executable, __file__, "--single-run", query_id]
             res = subprocess.run(
-                [BINARY_PATH, "query", raw_query],
-                env=env,
+                cmd_args,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                timeout=10 # 10 seconds safety timeout per query
+                timeout=15 # safety timeout
             )
-            if args.track_time:
-                end_time = time.perf_counter()
-                execution_time_ms = (end_time - start_time) * 1000.0
-
-            raw_stdout = res.stdout
-            raw_stderr = res.stderr
-            return_code = res.returncode
-        except subprocess.TimeoutExpired:
-            raw_stdout = ""
-            raw_stderr = "Timeout expired"
-            return_code = -1
+            if res.returncode == 0:
+                output_data = json.loads(res.stdout.strip())
+                return_code = output_data["status_code"]
+                raw_stdout = output_data["stdout"]
+                raw_stderr = output_data["stderr"]
+                if args.track_time:
+                    execution_time_ms = output_data["execution_time_ms"]
+                    peak_memory_kb = output_data["peak_memory_kb"]
+            else:
+                raw_stdout = ""
+                raw_stderr = f"Subprocess runner exited with code {res.returncode}. Stderr: {res.stderr}"
+                return_code = -3
         except Exception as e:
             raw_stdout = ""
-            raw_stderr = str(e)
-            return_code = -2
+            raw_stderr = f"Subprocess runner exception: {str(e)}"
+            return_code = -4
 
         stripped_stdout = strip_ansi(raw_stdout).strip()
         stripped_stderr = strip_ansi(raw_stderr).strip()
@@ -259,6 +339,7 @@ def main():
             "Option Recall Score (%)": f"{recall_score:.2f}" if not is_error and generated_tool.lower() == expected_tool.lower() else "N/A",
             "FLAGS/DEST Symmetric Error": f"{flags_dest:.2f}" if not is_error and generated_tool.lower() == expected_tool.lower() else "N/A",
             "Execution Time (ms)": f"{execution_time_ms:.2f}" if execution_time_ms is not None else "N/A",
+            "Peak Memory (KB)": f"{peak_memory_kb}" if peak_memory_kb is not None else "N/A",
             "Status": status
         })
 
@@ -267,7 +348,7 @@ def main():
 
     # Write detailed CSV log
     with open(args.output, mode='w', encoding='utf-8', newline='') as f:
-        fieldnames = ["ID", "Raw Query", "Expected Tool", "Generated Tool", "Expected Options", "Generated Options", "Tool Correctness", "Option Recall Score (%)", "FLAGS/DEST Symmetric Error", "Execution Time (ms)", "Status"]
+        fieldnames = ["ID", "Raw Query", "Expected Tool", "Generated Tool", "Expected Options", "Generated Options", "Tool Correctness", "Option Recall Score (%)", "FLAGS/DEST Symmetric Error", "Execution Time (ms)", "Peak Memory (KB)", "Status"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
@@ -280,13 +361,19 @@ def main():
     avg_recall = sum(option_recall_scores) / len(option_recall_scores) if option_recall_scores else 0.0
     avg_flags_dest = sum(flags_dest_scores) / len(flags_dest_scores) if flags_dest_scores else 1.0
 
-    # Compute average execution time
+    # Compute average execution time and peak memory usage
     avg_execution_time_str = ""
+    avg_memory_str = ""
     if args.track_time:
         valid_times = [float(r["Execution Time (ms)"]) for r in results if r["Execution Time (ms)"] != "N/A"]
         if valid_times:
             avg_time = sum(valid_times) / len(valid_times)
             avg_execution_time_str = f"Average Command Execution Time:           {avg_time:.2f} ms"
+
+        valid_mems = [float(r["Peak Memory (KB)"]) for r in results if r["Peak Memory (KB)"] != "N/A"]
+        if valid_mems:
+            avg_mem = sum(valid_mems) / len(valid_mems)
+            avg_memory_str = f"Average Peak Memory Usage:                 {avg_mem:.2f} KB"
 
     # Print summary report
     print("\n" + "="*50)
@@ -295,6 +382,8 @@ def main():
     print(f"Total Test Queries (N):                   {total_queries}")
     if avg_execution_time_str:
         print(avg_execution_time_str)
+    if avg_memory_str:
+        print(avg_memory_str)
     print(f"Unsuccessful Retrievals (Errors):         {n_error} ({p_error:.2f}%)")
     print(f"Complete Failures (Incorrect Tool):       {n_wrong_tool} ({p_wrong_tool:.2f}%)")
     print(f"Successful Tool Selection:                {n_correct_tool} ({p_correct_tool:.2f}%)")

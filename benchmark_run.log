@@ -1,5 +1,5 @@
 Loaded 609 test queries from CSV.
-Starting benchmark execution. Running sequentially to prevent SQLite contention...
+Starting benchmark execution. Spawning isolated subprocesses for timing and memory tracking...
 Processed 50/609 queries...
 Processed 100/609 queries...
 Processed 150/609 queries...
@@ -18,15 +18,17 @@ Processed 609/609 queries...
 TECHNICAL BENCHMARK SUMMARY REPORT
 ==================================================
 Total Test Queries (N):                   609
-Unsuccessful Retrievals (Errors):         259 (42.53%)
-Complete Failures (Incorrect Tool):       57 (9.36%)
-Successful Tool Selection:                293 (48.11%)
+Average Command Execution Time:           563.21 ms
+Average Peak Memory Usage:                 674425.00 KB
+Unsuccessful Retrievals (Errors):         255 (41.87%)
+Complete Failures (Incorrect Tool):       56 (9.20%)
+Successful Tool Selection:                298 (48.93%)
 --------------------------------------------------
-Within Successful Tool Selections (N_correct = 293):
-  Full Option Matches:                  73 (of total: 11.99%, of correct: 24.91%)
-  Partial Option Matches:               147 (of total: 24.14%, of correct: 50.17%)
-  No Option Matches:                    73 (of total: 11.99%, of correct: 24.91%)
-  Average Option Recall Score:          50.11%
+Within Successful Tool Selections (N_correct = 298):
+  Full Option Matches:                  72 (of total: 11.82%, of correct: 24.16%)
+  Partial Option Matches:               152 (of total: 24.96%, of correct: 51.01%)
+  No Option Matches:                    74 (of total: 12.15%, of correct: 24.83%)
+  Average Option Recall Score:          49.72%
   Average FLAGS/DEST Symmetric Error:   1.67
 ==================================================
 Detailed run log exported to: /home/sandbox-noadmin/RustroverProjects/command-finder/benchmark_results.csv

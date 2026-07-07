@@ -245,6 +245,46 @@ def main():
     print(f"  - No Tool identified (e.g. Unclear / Crash): {n_err_na:>4} ({p_err_na:>6.2f}%)")
     print("="*85 + "\n")
 
+    # Parse timing and memory statistics
+    times = []
+    mems = []
+    for row in all_rows:
+        time_str = row.get("Execution Time (ms)", "N/A").strip()
+        mem_str = row.get("Peak Memory (KB)", "N/A").strip()
+        if time_str != "N/A":
+            try:
+                times.append(float(time_str))
+            except ValueError:
+                pass
+        if mem_str != "N/A":
+            try:
+                mems.append(float(mem_str))
+            except ValueError:
+                pass
+
+    if times or mems:
+        print("="*85)
+        print("                      SYSTEM RESOURCE UTILITY REPORT")
+        print("="*85)
+        if times:
+            avg_time = sum(times) / len(times)
+            min_time = min(times)
+            max_time = max(times)
+            print("1. Command Execution Time (ms):")
+            print(f"   - Average: {avg_time:>10.2f} ms")
+            print(f"   - Minimum: {min_time:>10.2f} ms")
+            print(f"   - Maximum: {max_time:>10.2f} ms")
+            print()
+        if mems:
+            avg_mem = sum(mems) / len(mems)
+            min_mem = min(mems)
+            max_mem = max(mems)
+            print("2. Peak Memory Usage (KB):")
+            print(f"   - Average: {avg_mem:>10.2f} KB ({(avg_mem/1024.0):.2f} MB)")
+            print(f"   - Minimum: {min_mem:>10.2f} KB ({(min_mem/1024.0):.2f} MB)")
+            print(f"   - Maximum: {max_mem:>10.2f} KB ({(max_mem/1024.0):.2f} MB)")
+        print("="*85 + "\n")
+
     # Optionally print detailed incorrect tool selection cases
     if args.wrong_tools:
         print("="*100)
