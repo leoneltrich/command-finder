@@ -5,6 +5,7 @@ import json
 import subprocess
 import re
 import sys
+import time
 
 # Define file paths
 CSV_PATH = "/home/sandbox-noadmin/RustroverProjects/command-finder/test_set_with_options.csv"
@@ -81,6 +82,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run technical benchmark on command-finder.")
     parser.add_argument("-l", "--limit", type=int, default=None, help="Limit the number of queries to run for quick verification.")
     parser.add_argument("-o", "--output", type=str, default=OUTPUT_CSV_PATH, help="Path to output CSV results.")
+    parser.add_argument("-t", "--track-time", action="store_true", help="Track and display command execution timing.")
     args = parser.parse_args()
 
     # Verify binary exists
@@ -137,7 +139,10 @@ def main():
         expected_opts = parse_expected_options(expected_options_raw)
 
         # Execute command-finder
+        execution_time_ms = None
         try:
+            if args.track_time:
+                start_time = time.perf_counter()
             res = subprocess.run(
                 [BINARY_PATH, "query", raw_query],
                 env=env,
@@ -146,6 +151,10 @@ def main():
                 text=True,
                 timeout=10 # 10 seconds safety timeout per query
             )
+            if args.track_time:
+                end_time = time.perf_counter()
+                execution_time_ms = (end_time - start_time) * 1000.0
+
             raw_stdout = res.stdout
             raw_stderr = res.stderr
             return_code = res.returncode
@@ -249,6 +258,7 @@ def main():
             "Tool Correctness": tool_correctness if is_error else ("Yes" if generated_tool.lower() == expected_tool.lower() else ("No" if generated_tool else "N/A")),
             "Option Recall Score (%)": f"{recall_score:.2f}" if not is_error and generated_tool.lower() == expected_tool.lower() else "N/A",
             "FLAGS/DEST Symmetric Error": f"{flags_dest:.2f}" if not is_error and generated_tool.lower() == expected_tool.lower() else "N/A",
+            "Execution Time (ms)": f"{execution_time_ms:.2f}" if execution_time_ms is not None else "N/A",
             "Status": status
         })
 
@@ -257,7 +267,7 @@ def main():
 
     # Write detailed CSV log
     with open(args.output, mode='w', encoding='utf-8', newline='') as f:
-        fieldnames = ["ID", "Raw Query", "Expected Tool", "Generated Tool", "Expected Options", "Generated Options", "Tool Correctness", "Option Recall Score (%)", "FLAGS/DEST Symmetric Error", "Status"]
+        fieldnames = ["ID", "Raw Query", "Expected Tool", "Generated Tool", "Expected Options", "Generated Options", "Tool Correctness", "Option Recall Score (%)", "FLAGS/DEST Symmetric Error", "Execution Time (ms)", "Status"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
@@ -270,11 +280,21 @@ def main():
     avg_recall = sum(option_recall_scores) / len(option_recall_scores) if option_recall_scores else 0.0
     avg_flags_dest = sum(flags_dest_scores) / len(flags_dest_scores) if flags_dest_scores else 1.0
 
+    # Compute average execution time
+    avg_execution_time_str = ""
+    if args.track_time:
+        valid_times = [float(r["Execution Time (ms)"]) for r in results if r["Execution Time (ms)"] != "N/A"]
+        if valid_times:
+            avg_time = sum(valid_times) / len(valid_times)
+            avg_execution_time_str = f"Average Command Execution Time:           {avg_time:.2f} ms"
+
     # Print summary report
     print("\n" + "="*50)
     print("TECHNICAL BENCHMARK SUMMARY REPORT")
     print("="*50)
     print(f"Total Test Queries (N):                   {total_queries}")
+    if avg_execution_time_str:
+        print(avg_execution_time_str)
     print(f"Unsuccessful Retrievals (Errors):         {n_error} ({p_error:.2f}%)")
     print(f"Complete Failures (Incorrect Tool):       {n_wrong_tool} ({p_wrong_tool:.2f}%)")
     print(f"Successful Tool Selection:                {n_correct_tool} ({p_correct_tool:.2f}%)")
