@@ -9,6 +9,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Analyze benchmark results.")
     parser.add_argument("-w", "--wrong-tools", action="store_true", help="Print details of test cases where the incorrect tool was selected.")
+    parser.add_argument("-s", "--slow-runs", action="store_true", help="Print details of test cases that took more than 1000ms.")
     args = parser.parse_args()
 
     if not os.path.exists(CSV_PATH):
@@ -270,10 +271,14 @@ def main():
             avg_time = sum(times) / len(times)
             min_time = min(times)
             max_time = max(times)
+            slow_runs = [t for t in times if t > 1000.0]
+            n_slow = len(slow_runs)
+            p_slow = (n_slow / len(times)) * 100.0
             print("1. Command Execution Time (ms):")
             print(f"   - Average: {avg_time:>10.2f} ms")
             print(f"   - Minimum: {min_time:>10.2f} ms")
             print(f"   - Maximum: {max_time:>10.2f} ms")
+            print(f"   - Slow Runs (>1000ms): {n_slow} out of {len(times)} ({p_slow:.2f}%)")
             print()
         if mems:
             avg_mem = sum(mems) / len(mems)
@@ -298,6 +303,34 @@ def main():
             gen_tool = row.get("Generated Tool", "").strip()
             raw_query = row.get("Raw Query", "").strip()
             print(f"{query_id:<8} | {exp_tool:<10} | {gen_tool:<10} | {raw_query}")
+        print("="*100 + "\n")
+
+    # Optionally print detailed slow query runs
+    if args.slow_runs:
+        print("="*100)
+        print("                  DETAILED LIST OF SLOW RUNS (>1000ms)")
+        print("="*100)
+        print(f"{'ID':<8} | {'Time (ms)':<10} | {'Memory (MB)':<12} | {'Expected':<10} | {'Raw Query'}")
+        print("-"*100)
+        for row in all_rows:
+            time_str = row.get("Execution Time (ms)", "N/A").strip()
+            if time_str != "N/A":
+                try:
+                    duration = float(time_str)
+                    if duration > 1000.0:
+                        query_id = row.get("ID", "").strip()
+                        mem_str = row.get("Peak Memory (KB)", "N/A").strip()
+                        mem_mb_str = "N/A"
+                        if mem_str != "N/A":
+                            try:
+                                mem_mb_str = f"{(float(mem_str)/1024.0):.2f} MB"
+                            except ValueError:
+                                pass
+                        exp_tool = row.get("Expected Tool", "").strip()
+                        raw_query = row.get("Raw Query", "").strip()
+                        print(f"{query_id:<8} | {time_str:<10} | {mem_mb_str:<12} | {exp_tool:<10} | {raw_query}")
+                except ValueError:
+                    pass
         print("="*100 + "\n")
 
 if __name__ == "__main__":
